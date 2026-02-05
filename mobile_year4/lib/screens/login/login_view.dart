@@ -15,19 +15,35 @@ class _LoginViewState extends State<LoginView> {
   bool _obscureText = true;
   bool _isLoading = false;
 
-  // Controllers to capture input
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _handleLogin() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      _showError("Please enter email and password");
+      return;
+    }
+
     setState(() => _isLoading = true);
 
-    // REPLACE with your IP Address
-final url = Uri.parse('http://192.168.1.15:8000/api/login');
+    // Using your IP: 192.168.1.102
+    final url = Uri.parse('http://192.168.1.102:8000/api/login');
+
     try {
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          "Accept":
+              "application/json", // Critical for Laravel to send JSON errors
+        },
         body: jsonEncode({
           "email": _emailController.text,
           "password": _passwordController.text,
@@ -35,27 +51,31 @@ final url = Uri.parse('http://192.168.1.15:8000/api/login');
         }),
       );
 
+      if (!mounted) return;
+
+      final data = jsonDecode(response.body);
+
       if (response.statusCode == 200) {
-        // Success: Go to Home
-        if (!mounted) return;
+        // Success: Optional - save the token here later
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeView()),
         );
       } else {
-        // Error: Show message from Laravel
-        final error = jsonDecode(response.body);
-        _showError(error['message'] ?? "Login Failed");
+        // Show the actual error message from Laravel (like "Invalid credentials")
+        _showError(data['message'] ?? "Login Failed");
       }
     } catch (e) {
-      _showError("Could not connect to server");
+      _showError("Connection failed. Check if Laravel is running.");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 
   @override
@@ -70,22 +90,34 @@ final url = Uri.parse('http://192.168.1.15:8000/api/login');
               children: [
                 const Icon(Icons.book, size: 100, color: Colors.blue),
                 const SizedBox(height: 20),
-                const Text("Book Store Login", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                const Text(
+                  "Book Store Login",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 40),
                 TextField(
-                  controller: _emailController, // Added Controller
-                  decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.email),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
-                  controller: _passwordController, // Added Controller
+                  controller: _passwordController,
                   obscureText: _obscureText,
                   decoration: InputDecoration(
                     labelText: 'Password',
                     border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _obscureText = !_obscureText),
+                      icon: Icon(
+                        _obscureText ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscureText = !_obscureText),
                     ),
                   ),
                 ),
@@ -94,10 +126,17 @@ final url = Uri.parse('http://192.168.1.15:8000/api/login');
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _handleLogin, // Updated Login Logic
-                    child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white) 
-                      : const Text("LOGIN"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: _isLoading ? null : _handleLogin,
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            "LOGIN",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -106,8 +145,19 @@ final url = Uri.parse('http://192.168.1.15:8000/api/login');
                   children: [
                     const Text("Don't have an account? "),
                     GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterView())),
-                      child: const Text("Register Now", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterView(),
+                        ),
+                      ),
+                      child: const Text(
+                        "Register Now",
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),

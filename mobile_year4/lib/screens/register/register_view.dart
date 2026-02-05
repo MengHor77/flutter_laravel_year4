@@ -42,7 +42,10 @@ class _RegisterViewState extends State<RegisterView> {
     try {
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json", // Critical for Laravel!
+        },
         body: jsonEncode({
           "name": _nameController.text,
           "email": _emailController.text,

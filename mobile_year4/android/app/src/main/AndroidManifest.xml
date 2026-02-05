@@ -5,7 +5,6 @@
         android:label="mobile_year4"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        /* FIX 2: Add this line to allow http (non-https) connections */
         android:usesCleartextTraffic="true"> 
         
         <activity
