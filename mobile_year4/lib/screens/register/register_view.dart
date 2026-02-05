@@ -37,7 +37,7 @@ class _RegisterViewState extends State<RegisterView> {
     setState(() => _isLoading = true);
 
     // Updated with your IP: 192.168.1.102
-    final url = Uri.parse('http://192.168.1.102:8000/api/register');
+    final url = Uri.parse('http://192.168.1.105:8000/api/register');
 
     try {
       final response = await http.post(
