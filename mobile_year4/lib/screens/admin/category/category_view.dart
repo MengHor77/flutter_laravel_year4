@@ -4,6 +4,7 @@ import 'create_category.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../../../colors.dart'; // 1. Import your color config
 
 class CategoryView extends StatefulWidget {
   final VoidCallback openDrawer;
@@ -27,13 +28,15 @@ class _CategoryViewState extends State<CategoryView> {
     try {
       final response = await http.get(Uri.parse(ApiConfig.categories));
       if (response.statusCode == 200) {
-        setState(() {
-          categories = json.decode(response.body);
-          isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            categories = json.decode(response.body);
+            isLoading = false;
+          });
+        }
       }
     } catch (e) {
-      _showSnackBar("Connection Error", Colors.red);
+      _showSnackBar("Connection Error", AppColors.danger); // Use Danger (Red)
     }
   }
 
@@ -41,11 +44,11 @@ class _CategoryViewState extends State<CategoryView> {
     try {
       final response = await http.delete(Uri.parse("${ApiConfig.categories}/$id"));
       if (response.statusCode == 200) {
-        _showSnackBar("Deleted successfully", Colors.green);
+        _showSnackBar("Deleted successfully", AppColors.success); // Use Success (Green)
         fetchCategories();
       }
     } catch (e) {
-      _showSnackBar("Delete failed", Colors.red);
+      _showSnackBar("Delete failed", AppColors.danger);
     }
   }
 
@@ -58,30 +61,42 @@ class _CategoryViewState extends State<CategoryView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background, // Match dashboard background
       appBar: AppBar(
         title: const Text("Categories"),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.primary, // BlueGrey[900]
+        foregroundColor: AppColors.textOnDark,
         leading: IconButton(icon: const Icon(Icons.menu), onPressed: widget.openDrawer),
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
           : RefreshIndicator(
               onRefresh: fetchCategories,
+              color: AppColors.accent,
               child: ListView.builder(
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
                   final cat = categories[index];
                   return Card(
+                    color: AppColors.cardBg, // White
                     margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     child: ListTile(
-                      title: Text(cat['name']),
-                      subtitle: Text(cat['description'] ?? ''),
+                      title: Text(
+                        cat['name'],
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        cat['description'] ?? '',
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.orange),
+                            icon: const Icon(Icons.edit, color: AppColors.warning), // Orange
                             onPressed: () => showDialog(
                               context: context,
                               builder: (context) => EditCategory(
@@ -91,7 +106,7 @@ class _CategoryViewState extends State<CategoryView> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
+                            icon: const Icon(Icons.delete, color: AppColors.danger), // Red
                             onPressed: () => _confirmDelete(cat['id'], cat['name']),
                           ),
                         ],
@@ -102,8 +117,8 @@ class _CategoryViewState extends State<CategoryView> {
               ),
             ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: AppColors.accent, // Blue
+        child: const Icon(Icons.add, color: AppColors.textOnDark),
         onPressed: () => showDialog(
           context: context,
           builder: (context) => CreateCategory(onRefresh: fetchCategories),
@@ -119,14 +134,17 @@ class _CategoryViewState extends State<CategoryView> {
         title: const Text("Delete Category?"),
         content: Text("Are you sure you want to delete '$name'?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel", style: TextStyle(color: AppColors.textSecondary)),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () {
               deleteCategory(id);
               Navigator.pop(context);
             },
-            child: const Text("Delete", style: TextStyle(color: Colors.white)),
+            child: const Text("Delete", style: TextStyle(color: AppColors.textOnDark)),
           ),
         ],
       ),

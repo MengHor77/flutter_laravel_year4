@@ -7,6 +7,7 @@ import 'category/category_view.dart';
 import 'dashboard/dashboard_view.dart';
 import 'package:flutter/material.dart';
 import 'special/special_offer_view.dart';
+import '../../colors.dart'; // Ensure this points to your colors.dart
 
 class AdminMenuSidebar extends StatefulWidget {
   const AdminMenuSidebar({super.key});
@@ -22,52 +23,42 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      DashboardView(
-        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-      ), // Index 0
-      CategoryView(
-        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-      ), // Index 1
+      DashboardView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+      CategoryView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       ManageBooksView(
         openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-      ), // Index 2
-      OrdersView(
-        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-      ), // Index 3
+      ),
+      OrdersView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       SpecialOfferView(
         openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-      ), // Index 4
-      UserView(
-        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-      ), // Index 5
-      SaleView(
-        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-      ), // Index 6
+      ),
+      UserView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+      SaleView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
     ];
 
     return Scaffold(
       key: _scaffoldKey,
       drawer: Drawer(
-        // RoundedRectangleBorder with zero radius keeps it a sharp sidebar
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        backgroundColor: AppColors.cardBg,
         child: Column(
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blueGrey[900]),
+              decoration: const BoxDecoration(color: AppColors.primary),
               child: const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.admin_panel_settings,
-                      color: Colors.white,
+                      color: AppColors.textOnDark,
                       size: 40,
                     ),
                     SizedBox(height: 10),
                     Text(
                       "ADMIN PANEL",
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textOnDark,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,
                       ),
@@ -76,7 +67,7 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
                 ),
               ),
             ),
-            // Expanded allows the menu to take available space and keeps Logout at bottom
+            // We use Expanded to ensure the ListView takes the rest of the height
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
@@ -88,33 +79,33 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
                   _buildMenuItem(Icons.local_offer, "Special Offer", 4),
                   _buildMenuItem(Icons.people, "Users", 5),
                   _buildMenuItem(Icons.monetization_on, "Sales", 6),
+
+                  // MOVED: Logout is now part of the list, right after Sales
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: AppColors.danger),
+                    title: const Text(
+                      "Logout",
+                      style: TextStyle(
+                        color: AppColors.danger,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginView(),
+                        ),
+                        (route) => false,
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text(
-                "Logout",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onTap: () {
-                // Navigates to Login and clears the navigation stack
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginView()),
-                  (route) => false,
-                );
-              },
-            ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
-      // Displays the page corresponding to the selected index
       body: pages[_selectedIndex],
     );
   }
@@ -122,18 +113,19 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
   Widget _buildMenuItem(IconData icon, String title, int index) {
     bool isActive = _selectedIndex == index;
     return ListTile(
-      leading: Icon(icon, color: isActive ? Colors.blue : Colors.grey[700]),
+      leading: Icon(
+        icon,
+        color: isActive ? AppColors.accent : AppColors.textSecondary,
+      ),
       title: Text(
         title,
         style: TextStyle(
-          color: isActive ? Colors.blue : Colors.black87,
+          color: isActive ? AppColors.accent : AppColors.textPrimary,
           fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
         ),
       ),
       selected: isActive,
-      selectedTileColor: Colors.blue.withOpacity(
-        0.1,
-      ), 
+      selectedTileColor: AppColors.accent.withOpacity(0.1),
       onTap: () {
         setState(() => _selectedIndex = index);
         Navigator.pop(context);

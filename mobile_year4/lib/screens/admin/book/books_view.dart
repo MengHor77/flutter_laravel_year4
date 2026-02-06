@@ -4,6 +4,7 @@ import 'create_book.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../../../colors.dart'; // 1. Import your color config
 
 class ManageBooksView extends StatefulWidget {
   final VoidCallback openDrawer;
@@ -41,12 +42,14 @@ class _ManageBooksViewState extends State<ManageBooksView> {
     try {
       final response = await http.delete(Uri.parse("${ApiConfig.books}/$id"));
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Book deleted!"),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Book deleted successfully!"),
+              backgroundColor: AppColors.danger, // Use Danger color (Red)
+            ),
+          );
+        }
         _fetchBooks();
       }
     } catch (e) {
@@ -57,38 +60,44 @@ class _ManageBooksViewState extends State<ManageBooksView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background, // Use Background color (Grey[100])
       appBar: AppBar(
         title: const Text("Manage Books"),
-        backgroundColor: Colors.blueGrey[900],
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.primary, // Use Primary color (BlueGrey[900])
+        foregroundColor: AppColors.textOnDark, // Use Text on Dark (White)
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: widget.openDrawer,
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
           : ListView.builder(
               padding: const EdgeInsets.all(10),
               itemCount: _books.length,
               itemBuilder: (context, index) {
                 final book = _books[index];
                 return Card(
+                  color: AppColors.cardBg, // Use Card Background (White)
+                  elevation: 2,
                   child: ListTile(
-                    leading: const Icon(Icons.book, color: Colors.blue),
+                    leading: const Icon(Icons.book, color: AppColors.accent), // Use Accent (Blue)
                     title: Text(
                       book['name'],
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                     subtitle: Text(
-                      "${book['author']} ${book['category']['name']}",
+                      "${book['author']} | ${book['category']['name']}", // Fixed separator
+                      style: const TextStyle(color: AppColors.textSecondary),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.orange),
+                          icon: const Icon(Icons.edit, color: AppColors.warning), // Orange
                           onPressed: () => showDialog(
                             context: context,
                             builder: (context) =>
@@ -96,7 +105,7 @@ class _ManageBooksViewState extends State<ManageBooksView> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(Icons.delete, color: AppColors.danger), // Red
                           onPressed: () => _deleteBook(book['id']),
                         ),
                       ],
@@ -106,8 +115,8 @@ class _ManageBooksViewState extends State<ManageBooksView> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: AppColors.accent, // Use Accent (Blue)
+        child: const Icon(Icons.add, color: AppColors.textOnDark),
         onPressed: () => showDialog(
           context: context,
           builder: (context) => CreateBook(onRefresh: _fetchBooks),
