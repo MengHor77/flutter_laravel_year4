@@ -21,25 +21,34 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
 
   @override
   Widget build(BuildContext context) {
-    // Pass the openDrawer function so child AppBars can open this drawer
     final List<Widget> pages = [
-      DashboardView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+      DashboardView(
+        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+      ), // Index 0
+      CategoryView(
+        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+      ), // Index 1
       ManageBooksView(
         openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-      ),
-      CategoryView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
-      OrdersView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+      ), // Index 2
+      OrdersView(
+        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+      ), // Index 3
       SpecialOfferView(
         openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-      ),
-      UserView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
-      SaleView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+      ), // Index 4
+      UserView(
+        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+      ), // Index 5
+      SaleView(
+        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+      ), // Index 6
     ];
 
     return Scaffold(
       key: _scaffoldKey,
-      // We don't put an AppBar here so the child pages can have their own full-color ones
       drawer: Drawer(
+        // RoundedRectangleBorder with zero radius keeps it a sharp sidebar
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         child: Column(
           children: [
@@ -60,23 +69,40 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            _buildMenuItem(Icons.dashboard, "Dashboard", 0),
-           _buildMenuItem(Icons.category, "Category", 1),
-            _buildMenuItem(Icons.book, "Books", 2),
-            _buildMenuItem(Icons.shopping_cart, "Orders", 3),
-            _buildMenuItem(Icons.local_offer, "Special Offer", 4),
-            _buildMenuItem(Icons.people, "User", 5),
-            _buildMenuItem(Icons.monetization_on, "Sale", 6),
+            // Expanded allows the menu to take available space and keeps Logout at bottom
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  _buildMenuItem(Icons.dashboard, "Dashboard", 0),
+                  _buildMenuItem(Icons.category, "Category", 1),
+                  _buildMenuItem(Icons.book, "Books", 2),
+                  _buildMenuItem(Icons.shopping_cart, "Orders", 3),
+                  _buildMenuItem(Icons.local_offer, "Special Offer", 4),
+                  _buildMenuItem(Icons.people, "Users", 5),
+                  _buildMenuItem(Icons.monetization_on, "Sales", 6),
+                ],
+              ),
+            ),
+            const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text("Logout", style: TextStyle(color: Colors.red)),
+              title: const Text(
+                "Logout",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               onTap: () {
+                // Navigates to Login and clears the navigation stack
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginView()),
@@ -84,24 +110,30 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
                 );
               },
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
           ],
         ),
       ),
-      body:
-          pages[_selectedIndex], // Removed SafeArea here to let AppBar touch the top
+      // Displays the page corresponding to the selected index
+      body: pages[_selectedIndex],
     );
   }
 
   Widget _buildMenuItem(IconData icon, String title, int index) {
     bool isActive = _selectedIndex == index;
     return ListTile(
-      leading: Icon(icon, color: isActive ? Colors.blue : Colors.grey),
+      leading: Icon(icon, color: isActive ? Colors.blue : Colors.grey[700]),
       title: Text(
         title,
-        style: TextStyle(color: isActive ? Colors.blue : Colors.black),
+        style: TextStyle(
+          color: isActive ? Colors.blue : Colors.black87,
+          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+        ),
       ),
       selected: isActive,
+      selectedTileColor: Colors.blue.withOpacity(
+        0.1,
+      ), 
       onTap: () {
         setState(() => _selectedIndex = index);
         Navigator.pop(context);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\backend;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Category;
+use Illuminate\Support\Facades\Log;
 
 class CategoryController extends Controller
 {
@@ -17,13 +18,17 @@ class CategoryController extends Controller
     // 2. CREATE
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|unique:category,name|max:255',
-            'description' => 'required'
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|unique:category,name|max:255',
+                'description' => 'required'
+            ]);
 
-        $category = Category::create($validated);
-        return response()->json($category, 201);
+            $category = Category::create($validated);
+            return response()->json($category, 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 
     // 3. UPDATE
@@ -34,13 +39,17 @@ class CategoryController extends Controller
             return response()->json(['message' => 'Category not found'], 404);
         }
 
-        $validated = $request->validate([
-            'name' => 'required|max:255|unique:category,name,' . $id,
-            'description' => 'required'
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|max:255|unique:category,name,' . $id,
+                'description' => 'required'
+            ]);
 
-        $category->update($validated);
-        return response()->json($category, 200);
+            $category->update($validated);
+            return response()->json($category, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 
     // 4. DELETE

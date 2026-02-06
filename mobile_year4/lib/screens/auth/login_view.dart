@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'register_view.dart';
+import '../../api_config.dart';
 import '../home/home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../admin/admin_menu_sidebar.dart'; 
-
-// Ensure these paths match your actual folder structure
+import '../admin/admin_menu_sidebar.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -36,14 +35,15 @@ class _LoginViewState extends State<LoginView> {
 
     setState(() => _isLoading = true);
 
-    final url = Uri.parse('http://192.168.1.102:8000/api/login');
+    // 2. USE API CONFIG HERE
+    final url = Uri.parse(ApiConfig.login);
 
     try {
       final response = await http.post(
         url,
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json", 
+          "Accept": "application/json",
         },
         body: jsonEncode({
           "email": _emailController.text,
@@ -61,13 +61,11 @@ class _LoginViewState extends State<LoginView> {
         String role = data['role'] ?? 'user';
 
         if (role == 'admin') {
-          // SUCCESS: Opens the Admin Shell (Sidebar + Dashboard)
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const AdminMenuSidebar()),
           );
         } else {
-          // SUCCESS: Opens the Regular User Home
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const HomeView()),
@@ -77,7 +75,9 @@ class _LoginViewState extends State<LoginView> {
         _showError(data['message'] ?? "Login Failed");
       }
     } catch (e) {
-      _showError("Connection failed. Check if Laravel server is running.");
+      _showError(
+        "Connection failed. Check if Laravel server is running at ${ApiConfig.login}",
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -124,8 +124,11 @@ class _LoginViewState extends State<LoginView> {
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _obscureText = !_obscureText),
+                      icon: Icon(
+                        _obscureText ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscureText = !_obscureText),
                     ),
                   ),
                 ),
@@ -141,12 +144,20 @@ class _LoginViewState extends State<LoginView> {
                     onPressed: _isLoading ? null : _handleLogin,
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text("LOGIN", style: TextStyle(fontWeight: FontWeight.bold)),
+                        : const Text(
+                            "LOGIN",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 20),
                 TextButton(
-                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterView())),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RegisterView(),
+                    ),
+                  ),
                   child: const Text("Don't have an account? Register Now"),
                 ),
               ],

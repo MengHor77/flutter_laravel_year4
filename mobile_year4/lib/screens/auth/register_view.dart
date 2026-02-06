@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -17,7 +18,6 @@ class _RegisterViewState extends State<RegisterView> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // Always dispose controllers to save memory
   @override
   void dispose() {
     _nameController.dispose();
@@ -36,15 +36,15 @@ class _RegisterViewState extends State<RegisterView> {
 
     setState(() => _isLoading = true);
 
-    // Updated with your IP: 192.168.1.102
-    final url = Uri.parse('http://192.168.1.102:8000/api/register');
+    // 2. USE API CONFIG HERE
+    final url = Uri.parse(ApiConfig.register);
 
     try {
       final response = await http.post(
         url,
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json", // Critical for Laravel!
+          "Accept": "application/json",
         },
         body: jsonEncode({
           "name": _nameController.text,
@@ -57,7 +57,6 @@ class _RegisterViewState extends State<RegisterView> {
 
       if (response.statusCode == 201) {
         _showMessage("Registration Successful!");
-        // Wait a second so they can see the message, then go back
         Future.delayed(const Duration(seconds: 1), () {
           if (mounted) Navigator.pop(context);
         });
@@ -66,8 +65,9 @@ class _RegisterViewState extends State<RegisterView> {
         _showMessage(error['message'] ?? "Error occurred");
       }
     } catch (e) {
+      // 3. DYNAMIC ERROR MESSAGE
       _showMessage(
-        "Connection failed. Ensure Laravel is running at 192.168.1.102:8000",
+        "Connection failed. Ensure Laravel is running at ${ApiConfig.register}",
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -81,12 +81,17 @@ class _RegisterViewState extends State<RegisterView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Create Account")),
+      appBar: AppBar(
+        title: const Text("Create Account"),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(30.0),
         child: SingleChildScrollView(
           child: Column(
             children: [
+              const SizedBox(height: 20),
               TextField(
                 controller: _nameController,
                 decoration: const InputDecoration(
