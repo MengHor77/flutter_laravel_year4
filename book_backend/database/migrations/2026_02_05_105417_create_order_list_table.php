@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('order_list', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        $table->id();
+        $table->foreignId('book_id')->constrained('book')->onDelete('cascade');
+        $table->decimal('price', 8, 2); 
+        $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
+   
     public function down(): void
     {
         Schema::dropIfExists('order_list');

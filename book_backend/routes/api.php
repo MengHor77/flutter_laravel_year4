@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\backend\UserController;
 use App\Http\Controllers\backend\CategoryController;
 use App\Http\Controllers\backend\BookController;
+use App\Http\Controllers\backend\OrderListController;
 
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'login']);
@@ -19,4 +20,10 @@ Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 Route::get('/books', [BookController::class, 'index']);         
 Route::post('/books', [BookController::class, 'store']);         
 Route::put('/books/{id}', [BookController::class, 'update']);    
-Route::delete('/books/{id}', [BookController::class, 'destroy']); 
+Route::delete('/books/{id}', [BookController::class, 'destroy']);
+
+
+// If ApiConfig.orders is "$_domain/orders"
+Route::post('/orders', [OrderListController::class, 'store']);
+Route::get('/orders', [OrderListController::class, 'index']);
+Route::delete('/orders/{id}', [OrderListController::class, 'destroy']);
