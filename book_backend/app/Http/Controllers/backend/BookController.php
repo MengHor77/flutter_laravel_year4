@@ -9,10 +9,9 @@ use Illuminate\Support\Facades\Validator;
 
 class BookController extends Controller
 {
-    // 1. GET ALL BOOKS (With Category Details)
+    // 1. GET ALL BOOKS
     public function index()
     {
-        // We use 'with' to include the category name and info in the JSON response
         $books = Book::with('category')->get();
         return response()->json($books, 200);
     }
@@ -23,7 +22,8 @@ class BookController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'author' => 'required|string|max:255',
-            'category_id' => 'required|exists:category,id', // Must exist in category table
+            'price' => 'required|numeric', // Added price validation
+            'category_id' => 'required|exists:category,id',
         ]);
 
         if ($validator->fails()) {
@@ -32,7 +32,6 @@ class BookController extends Controller
 
         $book = Book::create($request->all());
         
-        // Return the book with its category info
         return response()->json($book->load('category'), 201);
     }
 
@@ -47,6 +46,7 @@ class BookController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'author' => 'required|string|max:255',
+            'price' => 'required|numeric', // Added price validation
             'category_id' => 'required|exists:category,id',
         ]);
 

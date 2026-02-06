@@ -1,26 +1,25 @@
 class Book {
   final String id;
-  final String title;
+  final String name;
   final String author;
   final String price;
-  final String imageUrl;
+  final String categoryName;
 
   Book({
     required this.id,
-    required this.title,
+    required this.name,
     required this.author,
     required this.price,
-    required this.imageUrl,
+    required this.categoryName,
   });
 
-  //  include a factory for JSON (Mock API ready)
   factory Book.fromJson(Map<String, dynamic> json) {
     return Book(
-      id: json['id'],
-      title: json['title'],
-      author: json['author'],
-      price: json['price'],
-      imageUrl: json['image'],
+      id: json['id'].toString(),
+      name: json['name'] ?? 'Untitled',
+      author: json['author'] ?? 'Unknown',
+      price: json['price']?.toString() ?? '0.00',
+      categoryName: json['category'] != null ? json['category']['name'] : 'General',
     );
   }
 }

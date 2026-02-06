@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/book_provider.dart';
+import '../../colors.dart'; // Import your colors
 import '../../widgets/frontent/menu_sidebar.dart';
 
 class OrderListView extends StatelessWidget {
@@ -11,11 +12,11 @@ class OrderListView extends StatelessWidget {
     final cartItems = context.watch<BookProvider>().cart;
 
     return Scaffold(
+      backgroundColor: AppColors.background, // Use theme background
       appBar: AppBar(
         title: const Text("Order List"),
-        // Move colors here to apply to the whole bar
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.primary, // Use Navy Primary
+        foregroundColor: AppColors.textOnDark,
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -25,19 +26,19 @@ class OrderListView extends StatelessWidget {
       ),
       drawer: const AppSidebar(currentRoute: 'Order List'),
       body: cartItems.isEmpty
-          ? const Center(
+          ? const  Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                   Icon(
                     Icons.shopping_cart_outlined,
                     size: 64,
-                    color: Colors.grey,
+                    color: AppColors.textSecondary,
                   ),
-                  SizedBox(height: 16),
+                   SizedBox(height: 16),
                   Text(
                     "Your order list is empty.",
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                    style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -48,38 +49,44 @@ class OrderListView extends StatelessWidget {
               itemBuilder: (context, index) {
                 final item = cartItems[index];
                 return Card(
+                  color: AppColors.cardBg,
                   elevation: 3,
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(10),
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: Image.network(
-                        item.imageUrl,
-                        width: 50,
-                        height: 70,
-                        fit: BoxFit.cover,
-                        // FIX: This prevents the "404 Error" text from showing
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 50,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.book, color: Colors.grey),
-                          );
-                        },
+                    leading: Container(
+                      width: 50,
+                      height: 70,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(4),
                       ),
+                      // Since Laravel doesn't have imageUrl yet, we show an icon
+                      child: const Icon(Icons.book, color: AppColors.accent),
                     ),
                     title: Text(
-                      item.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      item.name, // FIXED: Changed 'title' to 'name'
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                    subtitle: Text(item.price),
+                    subtitle: Text(
+                      "\$${item.price}", // Displays the price string
+                      style: const TextStyle(
+                        color: AppColors.success,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     trailing: IconButton(
-                      icon: const Icon(Icons.delete_sweep, color: Colors.red),
+                      icon: const Icon(Icons.delete_sweep, color: AppColors.danger),
                       onPressed: () {
                         context.read<BookProvider>().removeFromCart(index);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("${item.title} removed")),
+                          SnackBar(
+                            content: Text("${item.name} removed"), // FIXED: 'name'
+                            backgroundColor: AppColors.primary,
+                          ),
                         );
                       },
                     ),

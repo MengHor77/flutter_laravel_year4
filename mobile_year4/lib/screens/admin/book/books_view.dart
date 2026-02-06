@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'edit_book.dart';
 import 'create_book.dart';
+import '../../../colors.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../../../colors.dart'; // 1. Import your color config
+import '../../../models/book_model.dart'; // Ensure this is imported
 
 class ManageBooksView extends StatefulWidget {
   final VoidCallback openDrawer;
@@ -15,7 +16,8 @@ class ManageBooksView extends StatefulWidget {
 }
 
 class _ManageBooksViewState extends State<ManageBooksView> {
-  List _books = [];
+  // FIXED: Changed type from List to List<Book>
+  List<Book> _books = [];
   bool _isLoading = true;
 
   @override
@@ -25,20 +27,26 @@ class _ManageBooksViewState extends State<ManageBooksView> {
   }
 
   Future<void> _fetchBooks() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
+
     try {
       final response = await http.get(Uri.parse(ApiConfig.books));
       if (response.statusCode == 200) {
-        setState(() => _books = jsonDecode(response.body));
+        final List rawData = jsonDecode(response.body);
+        setState(() {
+          // FIXED: Map raw data into Book objects immediately
+          _books = rawData.map((json) => Book.fromJson(json)).toList();
+        });
       }
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint("Fetch Error: $e");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _deleteBook(int id) async {
+  Future<void> _deleteBook(String id) async {
     try {
       final response = await http.delete(Uri.parse("${ApiConfig.books}/$id"));
       if (response.statusCode == 200) {
@@ -46,58 +54,67 @@ class _ManageBooksViewState extends State<ManageBooksView> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Book deleted successfully!"),
-              backgroundColor: AppColors.danger, // Use Danger color (Red)
+              backgroundColor: AppColors.danger,
             ),
           );
         }
         _fetchBooks();
       }
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint("Delete Error: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background, // Use Background color (Grey[100])
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text("Manage Books"),
-        backgroundColor: AppColors.primary, // Use Primary color (BlueGrey[900])
-        foregroundColor: AppColors.textOnDark, // Use Text on Dark (White)
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnDark,
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: widget.openDrawer,
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.accent),
+            )
+          : _books.isEmpty
+          ? const Center(child: Text("No books found"))
           : ListView.builder(
               padding: const EdgeInsets.all(10),
               itemCount: _books.length,
               itemBuilder: (context, index) {
-                final book = _books[index];
+                final book =
+                    _books[index]; // This is now a 'Book' object, not a Map
                 return Card(
-                  color: AppColors.cardBg, // Use Card Background (White)
+                  color: AppColors.cardBg,
                   elevation: 2,
                   child: ListTile(
-                    leading: const Icon(Icons.book, color: AppColors.accent), // Use Accent (Blue)
+                    leading: const Icon(Icons.book, color: AppColors.accent),
+                    // FIXED: Use book.name (Object property) instead of book['name']
                     title: Text(
-                      book['name'],
+                      book.name,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
                       ),
                     ),
                     subtitle: Text(
-                      "${book['author']} | ${book['category']['name']}", // Fixed separator
+                      "${book.author} | ${book.categoryName}",
                       style: const TextStyle(color: AppColors.textSecondary),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.edit, color: AppColors.warning), // Orange
+                          icon: const Icon(
+                            Icons.edit,
+                            color: AppColors.warning,
+                          ),
                           onPressed: () => showDialog(
                             context: context,
                             builder: (context) =>
@@ -105,8 +122,36 @@ class _ManageBooksViewState extends State<ManageBooksView> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete, color: AppColors.danger), // Red
-                          onPressed: () => _deleteBook(book['id']),
+                          icon: const Icon(
+                            Icons.delete,
+                            color: AppColors.danger,
+                          ),
+                          onPressed: () {
+                            // Simple confirm dialog
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text("Confirm Delete"),
+                                content: const Text("Are you sure?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text("No"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      _deleteBook(book.id);
+                                    },
+                                    child: const Text(
+                                      "Yes",
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -115,7 +160,7 @@ class _ManageBooksViewState extends State<ManageBooksView> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.accent, // Use Accent (Blue)
+        backgroundColor: AppColors.accent,
         child: const Icon(Icons.add, color: AppColors.textOnDark),
         onPressed: () => showDialog(
           context: context,

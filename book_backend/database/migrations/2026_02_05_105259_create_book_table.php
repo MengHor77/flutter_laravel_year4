@@ -12,14 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('book', function (Blueprint $table) {
-           $table->id();
-        $table->string('name');
-        $table->string('author');
-        $table->foreignId('category_id')
-        ->constrained('category')
-        ->onDelete('cascade');
-        
-        $table->timestamps();
+            $table->id();
+            $table->string('name');
+            $table->string('author');
+            // ADDED: Price column (8 digits total, 2 after the decimal point)
+            $table->decimal('price', 8, 2)->default(0.00); 
+            
+            $table->foreignId('category_id')
+                ->constrained('category')
+                ->onDelete('cascade');
+            
+            $table->timestamps();
         });
     }
 

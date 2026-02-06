@@ -43,9 +43,9 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
         backgroundColor: AppColors.cardBg,
         child: Column(
           children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: AppColors.primary),
-              child: const Center(
+            const DrawerHeader(
+              decoration: BoxDecoration(color: AppColors.primary),
+              child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -125,7 +125,7 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
         ),
       ),
       selected: isActive,
-      selectedTileColor: AppColors.accent.withOpacity(0.1),
+      selectedTileColor: AppColors.accent.withValues(alpha: 0.1),
       onTap: () {
         setState(() => _selectedIndex = index);
         Navigator.pop(context);
