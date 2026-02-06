@@ -17,6 +17,8 @@ class ApiConfig {
   static const String orders = "$_domain/orders";
   static const String sales = "$_domain/sales";
   static const String specialOffers = "$_domain/special-offers";
+  static const String bestSelling = "$_domain/best-selling";
+
 
   // 5. Storage / Image Path
   // Use this for: Image.network("${ApiConfig.storage}${book.imagePath}")

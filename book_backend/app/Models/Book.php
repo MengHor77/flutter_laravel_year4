@@ -20,4 +20,9 @@ class Book extends Model
         // A book belongs to one category
         return $this->belongsTo(Category::class, 'category_id');
     }
+    
+        public function bestSelling()
+    {
+        return $this->hasOne(BestSelling::class);
+    }
 }
