@@ -9,12 +9,16 @@ class Category extends Model
 {
     use HasFactory;
 
-    // IMPORTANT: Match your migration table name
     protected $table = 'category';
 
-    // Allow these fields to be filled via the API
-    protected $fillable = [
-        'name',
-        'description',
-    ];
+    protected $fillable = ['name', 'description'];
+
+    /**
+     * Get the books for the category.
+     */
+    public function books()
+    {
+        // A category has many books
+        return $this->hasMany(Book::class, 'category_id');
+    }
 }

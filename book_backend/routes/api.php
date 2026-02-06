@@ -1,14 +1,17 @@
 <?php
-
+// in  D:\flutter\book_backend\routes\api.php
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\backend\UserController;
-use App\Http\Controllers\backend\CategoryController; // 1. Import the controller
+use App\Http\Controllers\backend\CategoryController;
+use App\Http\Controllers\backend\BookController;
+// Categories
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::post('/categories', [CategoryController::class, 'store']);
+Route::put('/categories/{id}', [CategoryController::class, 'update']);
+Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 
-Route::post('/register', [UserController::class, 'register']);
-Route::post('/login', [UserController::class, 'login']);
-
-// 2. Add these lines for Categories
-Route::get('/categories', [CategoryController::class, 'index']);      // Fetch all
-Route::post('/categories', [CategoryController::class, 'store']);     // Create
-Route::put('/categories/{id}', [CategoryController::class, 'update']); // Update
-Route::delete('/categories/{id}', [CategoryController::class, 'destroy']); // Delete
+// Books 
+Route::get('/books', [BookController::class, 'index']);         
+Route::post('/books', [BookController::class, 'store']);         
+Route::put('/books/{id}', [BookController::class, 'update']);    
+Route::delete('/books/{id}', [BookController::class, 'destroy']); 
