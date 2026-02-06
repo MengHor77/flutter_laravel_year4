@@ -51,8 +51,12 @@ class SpecialOfferView extends StatelessWidget {
                       subtitle: const Text("20% Off on all Fiction Books"),
                       trailing: Switch(
                         value: true,
-                        onChanged: (val) {},
-                        activeColor: Colors.green,
+                        onChanged: (val) {
+                          // Handle toggle logic here
+                        },
+                        // Modern switch properties (Flutter 3.31+)
+                        activeThumbColor: Colors.green,
+                        activeTrackColor: Colors.green.withValues(alpha: 0.5),
                       ),
                     ),
                   );

@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
 
 class DashboardView extends StatelessWidget {
-  final VoidCallback openDrawer; // Add this
+  final VoidCallback openDrawer;
 
-  const DashboardView({
-    super.key,
-    required this.openDrawer,
-  }); // Add to constructor
+  const DashboardView({super.key, required this.openDrawer});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
+        // Ensure no extra padding at the top
+        automaticallyImplyLeading: false,
         title: const Text("Admin Dashboard"),
-        backgroundColor: Colors.blueGrey[900],
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.blueGrey[900], // Your full blue color
+        foregroundColor: Colors.white, // White text and icons
+        elevation: 0,
+        centerTitle: false,
+        // Manual leading button to trigger the parent Scaffold's drawer
         leading: IconButton(
           icon: const Icon(Icons.menu),
-          onPressed: openDrawer, // Use the callback here!
+          onPressed: openDrawer,
         ),
       ),
       body: Padding(
@@ -64,7 +67,7 @@ class DashboardView extends StatelessWidget {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             blurRadius: 5,
             spreadRadius: 2,
           ),
@@ -79,7 +82,8 @@ class DashboardView extends StatelessWidget {
             value,
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
-          Text(title, style: const TextStyle(color: Colors.grey)),
+          const SizedBox(height: 4),
+          Text(title, style: const TextStyle(color: Colors.grey, fontSize: 14)),
         ],
       ),
     );

@@ -17,14 +17,12 @@ class AdminMenuSidebar extends StatefulWidget {
 
 class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
   int _selectedIndex = 0;
-
-  // 1. Create the Key to control the Scaffold
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
-    // 2. Pass the openDrawer function to every view
-    final List<Widget> _pages = [
+    // Pass the openDrawer function so child AppBars can open this drawer
+    final List<Widget> pages = [
       DashboardView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       ManageBooksView(
         openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
@@ -39,8 +37,10 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
     ];
 
     return Scaffold(
-      key: _scaffoldKey, // 3. Attach the key here
+      key: _scaffoldKey,
+      // We don't put an AppBar here so the child pages can have their own full-color ones
       drawer: Drawer(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         child: Column(
           children: [
             DrawerHeader(
@@ -77,7 +77,7 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text("Logout"),
+              title: const Text("Logout", style: TextStyle(color: Colors.red)),
               onTap: () {
                 Navigator.pushAndRemoveUntil(
                   context,
@@ -90,23 +90,20 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
           ],
         ),
       ),
-      body: _pages[_selectedIndex],
+      body:
+          pages[_selectedIndex], // Removed SafeArea here to let AppBar touch the top
     );
   }
 
   Widget _buildMenuItem(IconData icon, String title, int index) {
+    bool isActive = _selectedIndex == index;
     return ListTile(
-      leading: Icon(
-        icon,
-        color: _selectedIndex == index ? Colors.blue : Colors.grey,
-      ),
+      leading: Icon(icon, color: isActive ? Colors.blue : Colors.grey),
       title: Text(
         title,
-        style: TextStyle(
-          color: _selectedIndex == index ? Colors.blue : Colors.black,
-        ),
+        style: TextStyle(color: isActive ? Colors.blue : Colors.black),
       ),
-      selected: _selectedIndex == index,
+      selected: isActive,
       onTap: () {
         setState(() => _selectedIndex = index);
         Navigator.pop(context);
