@@ -34,7 +34,7 @@ class _LoginViewState extends State<LoginView> {
     setState(() => _isLoading = true);
 
     // Using your IP: 192.168.1.102
-    final url = Uri.parse('http://10.1.42.124:8000/api/login');
+    final url = Uri.parse('http://192.168.1.102:8000/api/login');
 
     try {
       final response = await http.post(
