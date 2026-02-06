@@ -31,13 +31,34 @@ class _CreateCategoryState extends State<CreateCategory> {
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Category added successfully!"),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
         widget.onRefresh();
         if (mounted) Navigator.pop(context);
+      } else {
+        // Show error message from server
+        final error = jsonDecode(response.body);
+        _showError(error['message'] ?? "Failed to add category");
       }
     } catch (e) {
-      debugPrint(e.toString());
+      _showError("Connection error: Could not reach server");
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _showError(String msg) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -56,7 +77,9 @@ class _CreateCategoryState extends State<CreateCategory> {
         TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
         ElevatedButton(
           onPressed: _isSaving ? null : _save,
-          child: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text("Save"),
+          child: _isSaving 
+            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+            : const Text("Save"),
         ),
       ],
     );

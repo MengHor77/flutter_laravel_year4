@@ -25,7 +25,9 @@ class _EditCategoryState extends State<EditCategory> {
   }
 
   Future<void> _update() async {
+    if (_nameController.text.isEmpty) return;
     setState(() => _isSaving = true);
+    
     try {
       final response = await http.put(
         Uri.parse("${ApiConfig.categories}/${widget.category['id']}"),
@@ -37,13 +39,32 @@ class _EditCategoryState extends State<EditCategory> {
       );
 
       if (response.statusCode == 200) {
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Category updated successfully!"),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
         widget.onRefresh();
         if (mounted) Navigator.pop(context);
+      } else {
+        _showError("Update failed: ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint(e.toString());
+      _showError("Connection error: Server is unreachable");
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _showError(String msg) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -62,7 +83,9 @@ class _EditCategoryState extends State<EditCategory> {
         TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
         ElevatedButton(
           onPressed: _isSaving ? null : _update,
-          child: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text("Update"),
+          child: _isSaving 
+            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+            : const Text("Update"),
         ),
       ],
     );

@@ -41,7 +41,7 @@ class _CategoryViewState extends State<CategoryView> {
     try {
       final response = await http.delete(Uri.parse("${ApiConfig.categories}/$id"));
       if (response.statusCode == 200) {
-        _showSnackBar("Deleted successfully", Colors.blue);
+        _showSnackBar("Deleted successfully", Colors.green);
         fetchCategories();
       }
     } catch (e) {
