@@ -1,8 +1,12 @@
+import 'user_view.dart';
+import 'sale_view.dart';
+import 'orders_view.dart';
+import 'category_view.dart';
 import 'dashboard_view.dart';
 import 'manage_books_view.dart';
+import 'special_offer_view.dart';
 import '../auth/login_view.dart';
 import 'package:flutter/material.dart';
-// Ensure this import points correctly to your login view
 
 class AdminMenuSidebar extends StatefulWidget {
   const AdminMenuSidebar({super.key});
@@ -14,33 +18,28 @@ class AdminMenuSidebar extends StatefulWidget {
 class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    const DashboardView(),
-    const ManageBooksView(),
-    const Center(child: Text("Orders Page")),
-  ];
-
-  final List<String> _titles = [
-    "Admin Dashboard",
-    "Manage Books",
-    "Orders List",
-  ];
+  // 1. Create the Key to control the Scaffold
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_titles[_selectedIndex]),
-        backgroundColor: Colors.blueGrey[900],
-        foregroundColor: Colors.white,
-        elevation: 4,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
+    // 2. Pass the openDrawer function to every view
+    final List<Widget> _pages = [
+      DashboardView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+      ManageBooksView(
+        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
       ),
+      CategoryView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+      OrdersView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+      SpecialOfferView(
+        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+      ),
+      UserView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+      SaleView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+    ];
+
+    return Scaffold(
+      key: _scaffoldKey, // 3. Attach the key here
       drawer: Drawer(
         child: Column(
           children: [
@@ -56,7 +55,7 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
                       size: 40,
                     ),
                     SizedBox(height: 10),
-                    const Text(
+                    Text(
                       "ADMIN PANEL",
                       style: TextStyle(
                         color: Colors.white,
@@ -69,14 +68,17 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
             ),
             _buildMenuItem(Icons.dashboard, "Dashboard", 0),
             _buildMenuItem(Icons.book, "Books", 1),
-            _buildMenuItem(Icons.shopping_cart, "Orders", 2),
+            _buildMenuItem(Icons.category, "Category", 2),
+            _buildMenuItem(Icons.shopping_cart, "Orders", 3),
+            _buildMenuItem(Icons.local_offer, "Special Offer", 4),
+            _buildMenuItem(Icons.people, "User", 5),
+            _buildMenuItem(Icons.monetization_on, "Sale", 6),
             const Spacer(),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text("Logout"),
               onTap: () {
-                // Completely clears the navigation stack
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginView()),
@@ -102,9 +104,6 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
         title,
         style: TextStyle(
           color: _selectedIndex == index ? Colors.blue : Colors.black,
-          fontWeight: _selectedIndex == index
-              ? FontWeight.bold
-              : FontWeight.normal,
         ),
       ),
       selected: _selectedIndex == index,
