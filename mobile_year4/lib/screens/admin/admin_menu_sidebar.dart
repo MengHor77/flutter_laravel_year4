@@ -7,6 +7,7 @@ import 'category/category_view.dart';
 import 'dashboard/dashboard_view.dart';
 import 'package:flutter/material.dart';
 import 'special/special_offer_view.dart';
+import 'best_selling/best_selling_view.dart';
 import '../../colors.dart'; // Ensure this points to your colors.dart
 
 class AdminMenuSidebar extends StatefulWidget {
@@ -34,6 +35,9 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
       ),
       UserView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       SaleView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+      BestSellingView(
+        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+      ),
     ];
 
     return Scaffold(
@@ -79,6 +83,7 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
                   _buildMenuItem(Icons.local_offer, "Special Offer", 4),
                   _buildMenuItem(Icons.people, "Users", 5),
                   _buildMenuItem(Icons.monetization_on, "Sales", 6),
+                  _buildMenuItem(Icons.star_rate_rounded, "Best Selling", 7),
 
                   // MOVED: Logout is now part of the list, right after Sales
                   ListTile(

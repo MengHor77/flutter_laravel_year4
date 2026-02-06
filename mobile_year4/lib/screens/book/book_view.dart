@@ -65,7 +65,9 @@ class _BookViewState extends State<BookView> {
       ),
       drawer: const AppSidebar(currentRoute: 'Books'),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.accent),
+            )
           : ListView.builder(
               padding: const EdgeInsets.all(12),
               itemCount: _books.length,
@@ -85,32 +87,44 @@ class _BookViewState extends State<BookView> {
         // 1. Logic: Add to cart
         context.read<BookProvider>().addToCart(book);
 
-        // 2. Clear previous snacks immediately
+        // 2. Prepare Messenger
         final messenger = ScaffoldMessenger.of(context);
-        messenger.clearSnackBars();
+        messenger
+            .clearSnackBars(); // Instantly remove any currently showing snacks
 
-        // 3. Show new SnackBar
+        // 3. Show Success SnackBar
         messenger.showSnackBar(
           SnackBar(
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.success, // Changed to success green
             behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 1), 
-            content: Text("${book.name} added!"),
+            duration: const Duration(seconds: 1),
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    "${book.name} added successfully!",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
             action: SnackBarAction(
               label: "VIEW",
-              textColor: AppColors.accent,
+              textColor: Colors.white,
               onPressed: () {
-                messenger.removeCurrentSnackBar();
+                messenger.hideCurrentSnackBar();
                 Navigator.pushNamed(context, '/order-list');
               },
             ),
           ),
         );
 
-        // 4. FORCE CLOSE TIMER
-        // This manually kills the snackbar after 1 second regardless of what Flutter wants
+        // 4. FORCE CLOSE TIMER (1 Second)
+        // This ensures the snackbar is removed exactly after 1 second
         Timer(const Duration(seconds: 1), () {
-          messenger.removeCurrentSnackBar();
+          messenger.hideCurrentSnackBar();
         });
       },
     );
