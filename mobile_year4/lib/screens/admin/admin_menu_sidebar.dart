@@ -1,12 +1,12 @@
-import 'user_view.dart';
-import 'sale_view.dart';
-import 'orders_view.dart';
-import 'category_view.dart';
-import 'dashboard_view.dart';
-import 'manage_books_view.dart';
-import 'special_offer_view.dart';
+import 'user/user_view.dart';
+import 'sale/sale_view.dart';
+import 'order/orders_view.dart';
 import '../auth/login_view.dart';
+import 'category/category_view.dart';
+import 'book/manage_books_view.dart';
+import 'dashboard/dashboard_view.dart';
 import 'package:flutter/material.dart';
+import 'special/special_offer_view.dart';
 
 class AdminMenuSidebar extends StatefulWidget {
   const AdminMenuSidebar({super.key});
