@@ -64,7 +64,7 @@ class _LoginViewState extends State<LoginView> {
           // SUCCESS: Opens the Admin Shell (Sidebar + Dashboard)
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const AdminLayout()),
+            MaterialPageRoute(builder: (context) => const AdminMenuSidebar()),
           );
         } else {
           // SUCCESS: Opens the Regular User Home

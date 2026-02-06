@@ -1,15 +1,17 @@
 import 'dashboard_view.dart';
 import 'manage_books_view.dart';
+import '../auth/login_view.dart';
 import 'package:flutter/material.dart';
+// Ensure this import points correctly to your login view
 
-class AdminLayout extends StatefulWidget {
-  const AdminLayout({super.key});
+class AdminMenuSidebar extends StatefulWidget {
+  const AdminMenuSidebar({super.key});
 
   @override
-  State<AdminLayout> createState() => _AdminLayoutState();
+  State<AdminMenuSidebar> createState() => _AdminMenuSidebarState();
 }
 
-class _AdminLayoutState extends State<AdminLayout> {
+class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
@@ -18,28 +20,27 @@ class _AdminLayoutState extends State<AdminLayout> {
     const Center(child: Text("Orders Page")),
   ];
 
-  final List<String> _titles = ["Admin Dashboard", "Manage Books", "Orders List"];
+  final List<String> _titles = [
+    "Admin Dashboard",
+    "Manage Books",
+    "Orders List",
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // --- THE APPBAR ---
-      // Adding the drawer automatically puts the hamburger icon here
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]),
         backgroundColor: Colors.blueGrey[900],
         foregroundColor: Colors.white,
         elevation: 4,
-        // Optional: If the icon doesn't show, you can force it like this:
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu), // The Hamburger Icon
+            icon: const Icon(Icons.menu),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
       ),
-      
-      // --- THE DRAWER (Sidebar) ---
       drawer: Drawer(
         child: Column(
           children: [
@@ -49,10 +50,19 @@ class _AdminLayoutState extends State<AdminLayout> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.admin_panel_settings, color: Colors.white, size: 40),
+                    Icon(
+                      Icons.admin_panel_settings,
+                      color: Colors.white,
+                      size: 40,
+                    ),
                     SizedBox(height: 10),
-                    Text("ADMIN PANEL", 
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    const Text(
+                      "ADMIN PANEL",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -65,8 +75,16 @@ class _AdminLayoutState extends State<AdminLayout> {
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text("Logout"),
-              onTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+              onTap: () {
+                // Completely clears the navigation stack
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginView()),
+                  (route) => false,
+                );
+              },
             ),
+            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -76,17 +94,23 @@ class _AdminLayoutState extends State<AdminLayout> {
 
   Widget _buildMenuItem(IconData icon, String title, int index) {
     return ListTile(
-      leading: Icon(icon, color: _selectedIndex == index ? Colors.blue : Colors.grey),
-      title: Text(title, 
+      leading: Icon(
+        icon,
+        color: _selectedIndex == index ? Colors.blue : Colors.grey,
+      ),
+      title: Text(
+        title,
         style: TextStyle(
           color: _selectedIndex == index ? Colors.blue : Colors.black,
-          fontWeight: _selectedIndex == index ? FontWeight.bold : FontWeight.normal,
+          fontWeight: _selectedIndex == index
+              ? FontWeight.bold
+              : FontWeight.normal,
         ),
       ),
       selected: _selectedIndex == index,
       onTap: () {
         setState(() => _selectedIndex = index);
-        Navigator.pop(context); // Close the drawer after selection
+        Navigator.pop(context);
       },
     );
   }
