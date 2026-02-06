@@ -3,6 +3,7 @@ class Book {
   final String name;
   final String author;
   final String price;
+  final String? image;
   final String categoryName;
 
   Book({
@@ -10,6 +11,7 @@ class Book {
     required this.name,
     required this.author,
     required this.price,
+    this.image,
     required this.categoryName,
   });
 
@@ -19,6 +21,7 @@ class Book {
       name: json['name'] ?? 'Untitled',
       author: json['author'] ?? 'Unknown',
       price: json['price']?.toString() ?? '0.00',
+      image: json['image'],
       categoryName: json['category'] != null ? json['category']['name'] : 'General',
     );
   }

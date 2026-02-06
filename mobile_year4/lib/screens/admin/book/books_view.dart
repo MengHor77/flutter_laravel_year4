@@ -5,7 +5,7 @@ import '../../../colors.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../../../models/book_model.dart'; // Ensure this is imported
+import '../../../models/book_model.dart';
 
 class ManageBooksView extends StatefulWidget {
   final VoidCallback openDrawer;
@@ -16,7 +16,6 @@ class ManageBooksView extends StatefulWidget {
 }
 
 class _ManageBooksViewState extends State<ManageBooksView> {
-  // FIXED: Changed type from List to List<Book>
   List<Book> _books = [];
   bool _isLoading = true;
 
@@ -35,7 +34,6 @@ class _ManageBooksViewState extends State<ManageBooksView> {
       if (response.statusCode == 200) {
         final List rawData = jsonDecode(response.body);
         setState(() {
-          // FIXED: Map raw data into Book objects immediately
           _books = rawData.map((json) => Book.fromJson(json)).toList();
         });
       }
@@ -79,86 +77,78 @@ class _ManageBooksViewState extends State<ManageBooksView> {
         ),
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.accent),
-            )
+          ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
           : _books.isEmpty
-          ? const Center(child: Text("No books found"))
-          : ListView.builder(
-              padding: const EdgeInsets.all(10),
-              itemCount: _books.length,
-              itemBuilder: (context, index) {
-                final book =
-                    _books[index]; // This is now a 'Book' object, not a Map
-                return Card(
-                  color: AppColors.cardBg,
-                  elevation: 2,
-                  child: ListTile(
-                    leading: const Icon(Icons.book, color: AppColors.accent),
-                    // FIXED: Use book.name (Object property) instead of book['name']
-                    title: Text(
-                      book.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    subtitle: Text(
-                      "${book.author} | ${book.categoryName}",
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.edit,
-                            color: AppColors.warning,
-                          ),
-                          onPressed: () => showDialog(
-                            context: context,
-                            builder: (context) =>
-                                EditBook(book: book, onRefresh: _fetchBooks),
+              ? const Center(child: Text("No books found"))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: _books.length,
+                  itemBuilder: (context, index) {
+                    final book = _books[index];
+                    return Card(
+                      color: AppColors.cardBg,
+                      elevation: 2,
+                      child: ListTile(
+                        leading: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            image: DecorationImage(
+                              image: NetworkImage(book.image ?? 'https://via.placeholder.com/150'),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete,
-                            color: AppColors.danger,
+                        title: Text(
+                          book.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
                           ),
-                          onPressed: () {
-                            // Simple confirm dialog
-                            showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text("Confirm Delete"),
-                                content: const Text("Are you sure?"),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx),
-                                    child: const Text("No"),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(ctx);
-                                      _deleteBook(book.id);
-                                    },
-                                    child: const Text(
-                                      "Yes",
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ),
-                                ],
+                        ),
+                        subtitle: Text(
+                          "${book.author} | \$${book.price}",
+                          style: const TextStyle(color: AppColors.textSecondary),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: AppColors.warning),
+                              onPressed: () => showDialog(
+                                context: context,
+                                builder: (context) => EditBook(book: book, onRefresh: _fetchBooks),
                               ),
-                            );
-                          },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: AppColors.danger),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text("Confirm Delete"),
+                                    content: const Text("Are you sure?"),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("No")),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(ctx);
+                                          _deleteBook(book.id);
+                                        },
+                                        child: const Text("Yes", style: TextStyle(color: Colors.red)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+                      ),
+                    );
+                  },
+                ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.accent,
         child: const Icon(Icons.add, color: AppColors.textOnDark),

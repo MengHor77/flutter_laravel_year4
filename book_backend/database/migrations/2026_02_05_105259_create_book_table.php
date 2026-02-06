@@ -15,9 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('author');
-            // ADDED: Price column (8 digits total, 2 after the decimal point)
+            $table->string('image')->nullable();
             $table->decimal('price', 8, 2)->default(0.00); 
-            
             $table->foreignId('category_id')
                 ->constrained('category')
                 ->onDelete('cascade');

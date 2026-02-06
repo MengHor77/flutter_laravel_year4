@@ -11,7 +11,7 @@ class Book extends Model
 
     protected $table = 'book'; // Explicitly naming the table
 
-    protected $fillable = ['name', 'author', 'category_id', 'price'];
+    protected $fillable = ['name', 'author', 'category_id', 'price','image'];
     /**
      * Get the category that owns the book.
      */
