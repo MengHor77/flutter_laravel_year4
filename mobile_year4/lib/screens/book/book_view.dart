@@ -1,8 +1,8 @@
-import '../../widgets/book_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../widgets/menu_sidebar.dart';
 import '../../providers/book_provider.dart';
+import '../../widgets/frontent/book_card.dart';
+import '../../widgets/frontent/menu_sidebar.dart';
 
 class BookView extends StatelessWidget {
   const BookView({super.key});

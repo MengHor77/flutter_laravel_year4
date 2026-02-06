@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'register_view.dart';
 import '../home/home_view.dart';
+import '../admin/admin_layout.dart'; 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../register/register_view.dart';
+
+// Ensure these paths match your actual folder structure
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -33,7 +36,6 @@ class _LoginViewState extends State<LoginView> {
 
     setState(() => _isLoading = true);
 
-    // Using your IP: 192.168.1.102
     final url = Uri.parse('http://192.168.1.102:8000/api/login');
 
     try {
@@ -41,8 +43,7 @@ class _LoginViewState extends State<LoginView> {
         url,
         headers: {
           "Content-Type": "application/json",
-          "Accept":
-              "application/json", // Critical for Laravel to send JSON errors
+          "Accept": "application/json", 
         },
         body: jsonEncode({
           "email": _emailController.text,
@@ -56,17 +57,27 @@ class _LoginViewState extends State<LoginView> {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        // Success: Optional - save the token here later
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeView()),
-        );
+        // Laravel returns 'role' => 'admin' or 'role' => 'user'
+        String role = data['role'] ?? 'user';
+
+        if (role == 'admin') {
+          // SUCCESS: Opens the Admin Shell (Sidebar + Dashboard)
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminLayout()),
+          );
+        } else {
+          // SUCCESS: Opens the Regular User Home
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeView()),
+          );
+        }
       } else {
-        // Show the actual error message from Laravel (like "Invalid credentials")
         _showError(data['message'] ?? "Login Failed");
       }
     } catch (e) {
-      _showError("Connection failed. Check if Laravel is running.");
+      _showError("Connection failed. Check if Laravel server is running.");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -113,11 +124,8 @@ class _LoginViewState extends State<LoginView> {
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureText ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscureText = !_obscureText),
+                      icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _obscureText = !_obscureText),
                     ),
                   ),
                 ),
@@ -133,33 +141,13 @@ class _LoginViewState extends State<LoginView> {
                     onPressed: _isLoading ? null : _handleLogin,
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            "LOGIN",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                        : const Text("LOGIN", style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have an account? "),
-                    GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RegisterView(),
-                        ),
-                      ),
-                      child: const Text(
-                        "Register Now",
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                TextButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterView())),
+                  child: const Text("Don't have an account? Register Now"),
                 ),
               ],
             ),

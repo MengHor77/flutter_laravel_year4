@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_year4/screens/home/home_view.dart';
 import 'package:mobile_year4/screens/book/book_view.dart';
-import 'package:mobile_year4/screens/login/login_view.dart';
+import 'package:mobile_year4/screens/auth/login_view.dart';
 import 'package:mobile_year4/screens/about/about_us_view.dart';
 import 'package:mobile_year4/screens/order_list/order_list_view.dart';
 import 'package:mobile_year4/screens/contact_us/contact_us_view.dart';
