@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'dart:convert';
-import '../../../colors.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../../models/book_model.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../colors.dart'; // Import now used below
 
 class EditBook extends StatefulWidget {
   final Book book;
@@ -36,7 +36,9 @@ class _EditBookState extends State<EditBook> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
     if (pickedFile != null) {
       setState(() => _imageFile = File(pickedFile.path));
     }
@@ -49,30 +51,42 @@ class _EditBookState extends State<EditBook> {
         setState(() {
           _categories = jsonDecode(response.body);
           try {
-            _selectedCategoryId = _categories.firstWhere((c) => c['name'] == widget.book.categoryName)['id'].toString();
-          } catch (e) { _selectedCategoryId = null; }
+            _selectedCategoryId = _categories
+                .firstWhere((c) => c['name'] == widget.book.categoryName)['id']
+                .toString();
+          } catch (e) {
+            _selectedCategoryId = null;
+          }
         });
       }
-    } catch (e) { debugPrint("Error: $e"); }
+    } catch (e) {
+      debugPrint("Error: $e");
+    }
   }
 
   Future<void> _update() async {
-    if (!_formKey.currentState!.validate() || _selectedCategoryId == null) return;
+    if (!_formKey.currentState!.validate() || _selectedCategoryId == null)
+      return;
     setState(() => _isSaving = true);
 
     try {
       // Laravel PUT with files works best as a POST request with _method field
-      var request = http.MultipartRequest('POST', Uri.parse("${ApiConfig.books}/${widget.book.id}"));
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse("${ApiConfig.books}/${widget.book.id}"),
+      );
       request.headers.addAll({"Accept": "application/json"});
       request.fields['_method'] = 'PUT'; // Laravel spoofing
-      
+
       request.fields['name'] = _nameController.text;
       request.fields['author'] = _authorController.text;
       request.fields['price'] = _priceController.text;
       request.fields['category_id'] = _selectedCategoryId!;
 
       if (_imageFile != null) {
-        request.files.add(await http.MultipartFile.fromPath('image', _imageFile!.path));
+        request.files.add(
+          await http.MultipartFile.fromPath('image', _imageFile!.path),
+        );
       }
 
       var response = await http.Response.fromStream(await request.send());
@@ -81,14 +95,21 @@ class _EditBookState extends State<EditBook> {
         widget.onRefresh();
         if (mounted) Navigator.pop(context);
       }
-    } catch (e) { debugPrint("Error: $e"); }
-    finally { if (mounted) setState(() => _isSaving = false); }
+    } catch (e) {
+      debugPrint("Error: $e");
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Edit Book"),
+      backgroundColor: AppColors.cardBg, // Use AppColors
+      title: const Text(
+        "Edit Book",
+        style: TextStyle(color: AppColors.textPrimary),
+      ),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -98,20 +119,56 @@ class _EditBookState extends State<EditBook> {
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
-                  height: 100, width: 100,
-                  decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-                  child: _imageFile != null 
-                    ? Image.file(_imageFile!, fit: BoxFit.cover) 
-                    : Image.network(widget.book.image ?? '', errorBuilder: (ctx, err, stack) => const Icon(Icons.add_a_photo)),
+                  height: 120,
+                  width: 120,
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    border: Border.all(
+                      color: AppColors.accent,
+                    ), // Use AppColors
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(9),
+                    child: _imageFile != null
+                        ? Image.file(_imageFile!, fit: BoxFit.cover)
+                        : Image.network(
+                            widget.book.image ?? '',
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, stack) => const Icon(
+                              Icons.add_a_photo,
+                              color: AppColors.accent,
+                            ),
+                          ),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
-              TextFormField(controller: _nameController, decoration: const InputDecoration(labelText: "Name")),
-              TextFormField(controller: _authorController, decoration: const InputDecoration(labelText: "Author")),
-              TextFormField(controller: _priceController, decoration: const InputDecoration(labelText: "Price")),
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: "Name"),
+              ),
+              TextFormField(
+                controller: _authorController,
+                decoration: const InputDecoration(labelText: "Author"),
+              ),
+              TextFormField(
+                controller: _priceController,
+                decoration: const InputDecoration(labelText: "Price"),
+              ),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _selectedCategoryId,
-                items: _categories.map((c) => DropdownMenuItem(value: c['id'].toString(), child: Text(c['name']))).toList(),
+                // FIX: Changed 'value' to 'initialValue' to resolve deprecation
+                initialValue: _selectedCategoryId,
+                decoration: const InputDecoration(labelText: "Category"),
+                items: _categories
+                    .map(
+                      (c) => DropdownMenuItem(
+                        value: c['id'].toString(),
+                        child: Text(c['name']),
+                      ),
+                    )
+                    .toList(),
                 onChanged: (val) => setState(() => _selectedCategoryId = val),
               ),
             ],
@@ -119,8 +176,30 @@ class _EditBookState extends State<EditBook> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-        ElevatedButton(onPressed: _isSaving ? null : _update, child: const Text("Update")),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text(
+            "Cancel",
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary, // Use AppColors
+            foregroundColor: AppColors.textOnDark,
+          ),
+          onPressed: _isSaving ? null : _update,
+          child: _isSaving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text("Update"),
+        ),
       ],
     );
   }
