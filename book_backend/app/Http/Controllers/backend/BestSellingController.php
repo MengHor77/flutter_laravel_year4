@@ -16,7 +16,22 @@ class BestSellingController extends Controller
      */
     public function index()
     {
-        $bestSellers = BestSelling::with('book')->latest()->get();
+        // Load the book, its category, and ONLY active special offers
+        $bestSellers = BestSelling::with(['book.category', 'book.specialOffers' => function($query) {
+            $query->where('is_active', true);
+        }])->latest()->get();
+
+        // Map through the collection to attach dynamic price logic
+        $bestSellers->map(function ($item) {
+            if ($item->book) {
+                $activeOffer = $item->book->specialOffers->first();
+                // Attach fields to the nested book object so Flutter finds them
+                $item->book->is_on_sale = $activeOffer ? true : false;
+                $item->book->display_price = $activeOffer ? $activeOffer->offer_price : $item->book->price;
+            }
+            return $item;
+        });
+
         return response()->json($bestSellers, 200);
     }
 

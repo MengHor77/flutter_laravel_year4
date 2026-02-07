@@ -9,7 +9,6 @@ import '../../../../models/book_model.dart';
 import '../../../../providers/book_provider.dart';
 import '../../../../widgets/frontent/menu_sidebar.dart';
 
-
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
@@ -28,7 +27,7 @@ class _HomeViewState extends State<HomeView> {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        // We map 'item['book']' because BestSelling is a relationship table
+        // Mapping item['book'] because BestSelling is a relationship table
         return data.map((item) => Book.fromJson(item['book'])).toList();
       } else {
         throw Exception('Failed to load books');
@@ -57,8 +56,9 @@ class _HomeViewState extends State<HomeView> {
               const Text(
                 'Best Selling Books',
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 22, 
                   fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -88,7 +88,7 @@ class _HomeViewState extends State<HomeView> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio: 0.62, // Adjusted to prevent button overflow
+                      childAspectRatio: 0.62, // Prevents button overflow
                     ),
                     itemCount: books.length,
                     itemBuilder: (context, index) {
@@ -107,21 +107,50 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildBookCard(Book book) {
     return Card(
       elevation: 4,
+      color: AppColors.cardBg,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Book Cover Image
           Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                borderRadius:  BorderRadius.vertical(top: Radius.circular(10)),
-                image: DecorationImage(
-                  // FIXED: Changed book.image to book.imagePath
-                  image: NetworkImage('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmf4NlFls31qGMTqzjbaNgxmoNwClN9140-A&s'),
-                  fit: BoxFit.cover,
+            child: Stack(
+              children: [
+                Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                    child: Image.network(
+                      book.image ?? '',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.book, size: 50, color: Colors.grey),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                // Show Sale Badge if isOnSale is true
+                if (book.isOnSale)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.danger,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        "SALE",
+                        style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           Padding(
@@ -131,32 +160,51 @@ class _HomeViewState extends State<HomeView> {
               children: [
                 Text(
                   book.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  "\$${book.price}",
-                  style: const TextStyle(
-                    color: AppColors.primary, 
-                    fontWeight: FontWeight.bold
-                  ),
+                const SizedBox(height: 4),
+                
+                // --- Price Logic ---
+                Wrap(
+                  spacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      "\$${book.displayPrice}",
+                      style: TextStyle(
+                        color: book.isOnSale ? AppColors.success : AppColors.primary, 
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    if (book.isOnSale)
+                      Text(
+                        "\$${book.price}",
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          decoration: TextDecoration.lineThrough,
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 6),
+                // -------------------
+
+                const SizedBox(height: 8),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.success,
                     foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 32),
+                    minimumSize: const Size(double.infinity, 36),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
                     ),
                   ),
                   onPressed: () {
-                    // 1. Logic: Add to cart
                     context.read<BookProvider>().addToCart(book);
 
-                    // 2. UI: Show 1-second success snackbar
                     final messenger = ScaffoldMessenger.of(context);
                     messenger.clearSnackBars();
                     messenger.showSnackBar(
@@ -164,14 +212,9 @@ class _HomeViewState extends State<HomeView> {
                         backgroundColor: AppColors.success,
                         behavior: SnackBarBehavior.floating,
                         duration: const Duration(seconds: 1),
-                        content: Text("${book.name} added successfully!"),
+                        content: Text("${book.name} added to cart!"),
                       ),
                     );
-                    
-                    // 3. Force Close at 1 second
-                    Timer(const Duration(seconds: 1), () {
-                      messenger.hideCurrentSnackBar();
-                    });
                   },
                   child: const Text('Buy Now'),
                 ),
