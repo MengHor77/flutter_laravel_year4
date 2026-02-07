@@ -23,16 +23,22 @@ class BookProvider extends ChangeNotifier {
         headers: ApiConfig.getHeaders(),
       );
 
+      // Inside fetchSavedOrders() in BookProvider.dart
       if (response.statusCode == 200) {
         final List rawData = jsonDecode(response.body);
         _cart.clear();
         for (var item in rawData) {
           if (item['book'] != null) {
-            final Map<String, dynamic> bookData = Map.from(item['book']);
-            // Inject price and quantity from the pivot table (order_list)
-            bookData['display_price'] = item['price']; 
-            bookData['quantity'] = item['quantity']; 
-            
+            // Create a clean map from the nested book object
+            final Map<String, dynamic> bookData = Map<String, dynamic>.from(
+              item['book'],
+            );
+
+            // Inject the current price and quantity from the order_list pivot
+            bookData['display_price'] = item['price'];
+            bookData['quantity'] = item['quantity'];
+
+            // The Book.fromJson will now receive the image URL exactly as it is in the DB
             _cart.add(Book.fromJson(bookData));
           }
         }
@@ -64,10 +70,7 @@ class BookProvider extends ChangeNotifier {
       final response = await http.post(
         Uri.parse(ApiConfig.orders),
         headers: ApiConfig.getHeaders(),
-        body: jsonEncode({
-          "book_id": book.id, 
-          "price": book.displayPrice 
-        }),
+        body: jsonEncode({"book_id": book.id, "price": book.displayPrice}),
       );
 
       if (response.statusCode != 201) {
