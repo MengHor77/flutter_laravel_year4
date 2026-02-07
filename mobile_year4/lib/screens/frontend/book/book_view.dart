@@ -38,11 +38,13 @@ class _BookViewState extends State<BookView> {
       if (response.statusCode == 200) {
         final List<dynamic> rawData = jsonDecode(response.body);
         setState(() {
+          // IMPORTANT: Book.fromJson now correctly picks up 'display_price'
+          // and 'is_on_sale' from your mapped Laravel response.
           _books = rawData.map((json) => Book.fromJson(json)).toList();
         });
       }
     } catch (e) {
-      debugPrint("Error: $e");
+      debugPrint("Error fetching books: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -68,10 +70,13 @@ class _BookViewState extends State<BookView> {
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.accent),
             )
-          : ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: _books.length,
-              itemBuilder: (ctx, index) => _buildCard(index),
+          : RefreshIndicator(
+              onRefresh: _fetchBooks, // Added refresh capability
+              child: ListView.builder(
+                padding: const EdgeInsets.all(12),
+                itemCount: _books.length,
+                itemBuilder: (ctx, index) => _buildCard(index),
+              ),
             ),
     );
   }
@@ -80,22 +85,20 @@ class _BookViewState extends State<BookView> {
     final book = _books[index];
 
     return BookCard(
-      book: book,
+      book: book, // Pass the whole book object (now containing discount info)
       buttonText: "Add to Cart",
       buttonColor: AppColors.success,
       onAction: () {
-        // 1. Logic: Add to cart
+        // This now correctly adds the book using book.displayPrice
+        // because we updated the Provider logic earlier.
         context.read<BookProvider>().addToCart(book);
 
-        // 2. Prepare Messenger
         final messenger = ScaffoldMessenger.of(context);
-        messenger
-            .clearSnackBars(); // Instantly remove any currently showing snacks
+        messenger.clearSnackBars();
 
-        // 3. Show Success SnackBar
         messenger.showSnackBar(
           SnackBar(
-            backgroundColor: AppColors.success, // Changed to success green
+            backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 1),
             content: Row(
@@ -121,8 +124,6 @@ class _BookViewState extends State<BookView> {
           ),
         );
 
-        // 4. FORCE CLOSE TIMER (1 Second)
-        // This ensures the snackbar is removed exactly after 1 second
         Timer(const Duration(seconds: 1), () {
           messenger.hideCurrentSnackBar();
         });
