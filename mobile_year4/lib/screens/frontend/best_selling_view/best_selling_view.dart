@@ -42,7 +42,7 @@ class _BestSellingViewState extends State<BestSellingView> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Best Selling'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.accent,
         foregroundColor: Colors.white,
       ),
       drawer: const AppSidebar(currentRoute: 'Best Selling'),
