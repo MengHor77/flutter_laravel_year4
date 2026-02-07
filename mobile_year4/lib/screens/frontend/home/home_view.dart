@@ -44,7 +44,7 @@ class _HomeViewState extends State<HomeView> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Home'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.accent,
         foregroundColor: Colors.white,
       ),
       drawer: const AppSidebar(currentRoute: 'Home'),
