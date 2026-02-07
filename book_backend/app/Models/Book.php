@@ -25,4 +25,10 @@ class Book extends Model
     {
         return $this->hasOne(BestSelling::class);
     }
+    
+        public function specialOffer()
+    {
+        return $this->hasOne(SpecialOffer::class);
+    }
+
 }

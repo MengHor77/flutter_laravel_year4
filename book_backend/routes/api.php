@@ -6,6 +6,7 @@ use App\Http\Controllers\backend\CategoryController;
 use App\Http\Controllers\backend\BookController;
 use App\Http\Controllers\backend\OrderListController;
 use App\Http\Controllers\backend\BestSellingController;
+use App\Http\Controllers\backend\SpecialOfferController;
 
 
 
@@ -40,3 +41,9 @@ Route::post('best-selling', [BestSellingController::class, 'store']);
 Route::put('best-selling/{id}', [BestSellingController::class, 'update']);
 // DELETE: Remove a book from the best-selling list
 Route::delete('best-selling/{id}', [BestSellingController::class, 'destroy']);
+
+
+
+Route::get('/special-offers', [SpecialOfferController::class, 'index']);
+Route::post('/special-offers', [SpecialOfferController::class, 'store']);
+Route::delete('/special-offers/{id}', [SpecialOfferController::class, 'destroy']);
