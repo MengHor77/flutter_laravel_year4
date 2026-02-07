@@ -31,15 +31,13 @@ Route::delete('/books/{id}', [BookController::class, 'destroy']);
 Route::post('/orders', [OrderListController::class, 'store']);
 Route::get('/orders', [OrderListController::class, 'index']);
 Route::delete('/orders/{id}', [OrderListController::class, 'destroy']);
+Route::post('/orders/decrement/{book_id}', [OrderListController::class, 'decrementQuantity']);
 
 
 // GET: Fetch all best sellers (For your Flutter lists)
 Route::get('best-selling', [BestSellingController::class, 'index']);
-// POST: Add a book to the best-selling list
 Route::post('best-selling', [BestSellingController::class, 'store']);
-// PUT: Update an existing best-selling record (change the book_id)
 Route::put('best-selling/{id}', [BestSellingController::class, 'update']);
-// DELETE: Remove a book from the best-selling list
 Route::delete('best-selling/{id}', [BestSellingController::class, 'destroy']);
 
 

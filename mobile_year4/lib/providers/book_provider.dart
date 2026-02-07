@@ -28,10 +28,10 @@ class BookProvider extends ChangeNotifier {
         _cart.clear();
         for (var item in rawData) {
           if (item['book'] != null) {
-            // Create a temporary map to inject the price saved in the order
-            // This ensures if a user bought it on sale, it shows the sale price
             final Map<String, dynamic> bookData = Map.from(item['book']);
+            // Inject price and quantity from the pivot table (order_list)
             bookData['display_price'] = item['price']; 
+            bookData['quantity'] = item['quantity']; 
             
             _cart.add(Book.fromJson(bookData));
           }
@@ -45,62 +45,96 @@ class BookProvider extends ChangeNotifier {
     }
   }
 
-  /// 2. Add a book to cart and Laravel Database
+  /// 2. ADD / PLUS LOGIC
+  /// Increments quantity locally and syncs with Laravel store()
   Future<void> addToCart(Book book) async {
-    // Prevent duplicates
-    if (_cart.any((item) => item.id == book.id)) return;
+    final existingIndex = _cart.indexWhere((item) => item.id == book.id);
 
-    // Local Update
-    _cart.add(book);
+    if (existingIndex != -1) {
+      // If exists, increment local quantity
+      _cart[existingIndex].quantity++;
+    } else {
+      // If new, add to cart
+      _cart.add(book);
+    }
     notifyListeners();
 
     try {
+      // Laravel store() logic handles incrementing the DB record
       final response = await http.post(
         Uri.parse(ApiConfig.orders),
         headers: ApiConfig.getHeaders(),
         body: jsonEncode({
           "book_id": book.id, 
-          "price": book.displayPrice // Uses the dynamic/special price
+          "price": book.displayPrice 
         }),
       );
 
       if (response.statusCode != 201) {
-        debugPrint("Server Error adding book: ${response.body}");
+        debugPrint("Server Error updating cart: ${response.body}");
       }
     } catch (e) {
-      debugPrint("Network Error adding to cart: $e");
+      debugPrint("Network Error: $e");
     }
   }
 
-  /// 3. Remove a book by index and Delete from Laravel Database
+  /// 3. SUBTRACT / MINUS LOGIC
+  /// Decrements quantity locally and syncs with Laravel decrementQuantity()
+  Future<void> decrementQuantity(int index) async {
+    if (index < 0 || index >= _cart.length) return;
+
+    final book = _cart[index];
+    final bookId = book.id;
+
+    if (book.quantity > 1) {
+      book.quantity--;
+      notifyListeners();
+    } else {
+      // If quantity is 1, remove it entirely
+      _cart.removeAt(index);
+      notifyListeners();
+    }
+
+    try {
+      // This matches the decrementQuantity route in your Laravel Controller
+      final response = await http.post(
+        Uri.parse("${ApiConfig.orders}/decrement/$bookId"),
+        headers: ApiConfig.getHeaders(),
+      );
+
+      if (response.statusCode != 200) {
+        debugPrint("Server Error decrementing: ${response.body}");
+      }
+    } catch (e) {
+      debugPrint("Network Error: $e");
+    }
+  }
+
+  /// 4. REMOVE LOGIC (Trash Icon)
+  /// Deletes the entire record regardless of quantity
   Future<void> removeFromCart(int index) async {
     if (index >= 0 && index < _cart.length) {
       final bookId = _cart[index].id;
-
       _cart.removeAt(index);
       notifyListeners();
 
       try {
-        final response = await http.delete(
+        await http.delete(
           Uri.parse("${ApiConfig.orders}/$bookId"),
           headers: ApiConfig.getHeaders(),
         );
-
-        if (response.statusCode != 200) {
-          debugPrint("Server Error deleting book: ${response.body}");
-        }
       } catch (e) {
         debugPrint("Network Error: $e");
       }
     }
   }
 
-  /// Helper to calculate total price using the dynamic price
+  /// Helper to calculate total price (Price * Quantity)
   double get totalCartPrice {
     return _cart.fold(0.0, (sum, item) {
-      // Remove any non-numeric characters (like $ signs) before parsing
       final cleanPrice = item.displayPrice.replaceAll(RegExp(r'[^0-9.]'), '');
-      return sum + (double.tryParse(cleanPrice) ?? 0.0);
+      final double priceValue = double.tryParse(cleanPrice) ?? 0.0;
+      return sum + (priceValue * item.quantity); // Dynamic total
     });
   }
 }

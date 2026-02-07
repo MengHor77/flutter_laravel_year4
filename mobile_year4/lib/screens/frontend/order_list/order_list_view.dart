@@ -9,13 +9,13 @@ class OrderListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    _clearOldSnacks(context);
-
+    // watch the provider for changes
     final provider = context.watch<BookProvider>();
     final cartItems = provider.cart;
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      // Keep AppBar and Drawer outside the conditional body to prevent "losing" them
       appBar: AppBar(
         title: const Text("Order List"),
         backgroundColor: AppColors.accent,
@@ -31,12 +31,7 @@ class OrderListView extends StatelessWidget {
       body: cartItems.isEmpty
           ? _buildEmptyState()
           : ListView.builder(
-              padding: const EdgeInsets.only(
-                top: 12,
-                left: 12,
-                right: 12,
-                bottom: 200,
-              ),
+              padding: const EdgeInsets.all(12),
               itemCount: cartItems.length,
               itemBuilder: (context, index) {
                 final item = cartItems[index];
@@ -47,82 +42,49 @@ class OrderListView extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: ListTile(
-                    leading: Container(
-                      width: 50,
-                      height: 70,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(Icons.book, color: AppColors.accent),
-                    ),
-                    title: Text(
-                      item.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    // --- UPDATED SUBTITLE FOR DYNAMIC PRICING ---
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
                       children: [
-                        if (item.isOnSale)
-                          Row(
+                        // Book Icon/Image
+                        Container(
+                          width: 50, height: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.book, color: AppColors.accent),
+                        ),
+                        const SizedBox(width: 12),
+                        // Text Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                "\$${item.displayPrice}", // Special Price
-                                style: const TextStyle(
-                                  color: AppColors.success,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "\$${item.price}", // Old Price
-                                style: const TextStyle(
-                                  color: AppColors.danger,
-                                  fontSize: 11,
-                                  decoration: TextDecoration.lineThrough,
-                                ),
-                              ),
+                              Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                              Text("\$${item.displayPrice}", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
                             ],
-                          )
-                        else
-                          Text(
-                            "\$${item.price}",
-                            style: const TextStyle(color: AppColors.success),
                           ),
+                        ),
+                        // Action Buttons (Match your image)
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.add, color: Colors.red, size: 30),
+                              onPressed: () => provider.addToCart(item),
+                            ),
+                            Text("${item.quantity}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                            IconButton(
+                              icon: const Icon(Icons.remove, color: Colors.red, size: 30),
+                              onPressed: () => provider.decrementQuantity(index),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              onPressed: () => provider.removeFromCart(index),
+                            ),
+                          ],
+                        ),
                       ],
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        color: AppColors.danger,
-                      ),
-                      onPressed: () {
-                        final String deletedName = item.name;
-                        context.read<BookProvider>().removeFromCart(index);
-
-                        ScaffoldMessenger.of(context).clearSnackBars();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "$deletedName removed from list",
-                              textAlign: TextAlign.center,
-                            ),
-                            backgroundColor: Colors.black87,
-                            duration: const Duration(seconds: 2),
-                            behavior: SnackBarBehavior.floating,
-                            margin: const EdgeInsets.only(
-                              bottom: 100,
-                              left: 20,
-                              right: 20,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        );
-                      },
                     ),
                   ),
                 );
@@ -132,37 +94,19 @@ class OrderListView extends StatelessWidget {
     );
   }
 
-  void _clearOldSnacks(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Logic for clearing snackbars if necessary
-    });
-  }
-
   Widget _buildEmptyState() {
     return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.shopping_basket_outlined, size: 80, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            "Your order list is empty.",
-            style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
-          ),
-        ],
-      ),
+      child: Text("Your order list is empty.", style: TextStyle(color: Colors.grey, fontSize: 16)),
     );
   }
 
   Widget _buildBottomBar(BookProvider provider) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: const BoxDecoration(
-        color: AppColors.cardBg,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
       child: SafeArea(
         child: Row(
@@ -172,40 +116,18 @@ class OrderListView extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Total Amount",
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-                Text(
-                  "\$${provider.totalCartPrice.toStringAsFixed(2)}",
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
+                const Text("Total Amount", style: TextStyle(color: Colors.grey)),
+                Text("\$${provider.totalCartPrice.toStringAsFixed(2)}", 
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               ],
             ),
             ElevatedButton(
-              onPressed: () => debugPrint("Checkout Clicked"),
+              onPressed: () {},
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
               ),
-              child: const Text(
-                "CHECKOUT",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              child: const Text("CHECKOUT", style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
