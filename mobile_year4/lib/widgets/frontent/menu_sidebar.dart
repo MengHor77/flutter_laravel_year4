@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_year4/screens/home/home_view.dart';
-import 'package:mobile_year4/screens/book/book_view.dart';
 import 'package:mobile_year4/screens/auth/login_view.dart';
-import 'package:mobile_year4/screens/about/about_us_view.dart';
-import 'package:mobile_year4/screens/order_list/order_list_view.dart';
-import 'package:mobile_year4/screens/contact_us/contact_us_view.dart';
-import 'package:mobile_year4/screens/book_pdf_free/book_pdf_view.dart';
-import 'package:mobile_year4/screens/special_offer/special_offers_view.dart';
-import 'package:mobile_year4/screens/best_selling_view/best_selling_view.dart';
+import 'package:mobile_year4/screens/frontend/book/book_view.dart';
+import 'package:mobile_year4/screens/frontend/home/home_view.dart';
+import 'package:mobile_year4/screens/frontend/about/about_us_view.dart';
+import 'package:mobile_year4/screens/frontend/order_list/order_list_view.dart';
+import 'package:mobile_year4/screens/frontend/contact_us/contact_us_view.dart';
+import 'package:mobile_year4/screens/frontend/book_pdf_free/book_pdf_view.dart';
+import 'package:mobile_year4/screens/frontend/special_offer/special_offers_view.dart';
+import 'package:mobile_year4/screens/frontend/best_selling_view/best_selling_view.dart';
 
 class AppSidebar extends StatelessWidget {
   final String currentRoute;

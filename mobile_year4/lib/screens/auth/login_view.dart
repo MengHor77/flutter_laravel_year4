@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'register_view.dart';
 import '../../api_config.dart';
-import '../home/home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../frontend/home/home_view.dart';
 import '../admin/admin_menu_sidebar.dart';
 
 class LoginView extends StatefulWidget {
