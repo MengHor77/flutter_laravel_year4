@@ -25,6 +25,13 @@ class _ManageBooksViewState extends State<ManageBooksView> {
     _fetchBooks();
   }
 
+  // Helper to handle image URL logic consistently
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
+    if (path.startsWith('http')) return path;
+    return "${ApiConfig.storage}${path.startsWith('/') ? path.substring(1) : path}";
+  }
+
   Future<void> _fetchBooks() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -80,74 +87,65 @@ class _ManageBooksViewState extends State<ManageBooksView> {
           ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
           : _books.isEmpty
               ? const Center(child: Text("No books found"))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(10),
-                  itemCount: _books.length,
-                  itemBuilder: (context, index) {
-                    final book = _books[index];
-                    return Card(
-                      color: AppColors.cardBg,
-                      elevation: 2,
-                      child: ListTile(
-                        leading: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            image: DecorationImage(
-                              image: NetworkImage(book.image ?? 'https://via.placeholder.com/150'),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          book.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        subtitle: Text(
-                          "${book.author} | \$${book.price}",
-                          style: const TextStyle(color: AppColors.textSecondary),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: AppColors.warning),
-                              onPressed: () => showDialog(
-                                context: context,
-                                builder: (context) => EditBook(book: book, onRefresh: _fetchBooks),
+              : RefreshIndicator(
+                  onRefresh: _fetchBooks,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(10),
+                    itemCount: _books.length,
+                    itemBuilder: (context, index) {
+                      final book = _books[index];
+                      return Card(
+                        color: AppColors.cardBg,
+                        elevation: 2,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          // --- UPDATED IMAGE CLIPPING LOGIC ---
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              width: 50, // Fixed width
+                              height: 70, // Slightly taller for book look
+                              color: Colors.grey[200],
+                              child: Image.network(
+                                _getImageUrl(book.image),
+                                fit: BoxFit.cover, // This crops the image to fill the box
+                                errorBuilder: (context, error, stackTrace) => 
+                                    const Icon(Icons.broken_image, color: Colors.grey),
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: AppColors.danger),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text("Confirm Delete"),
-                                    content: const Text("Are you sure?"),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("No")),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(ctx);
-                                          _deleteBook(book.id);
-                                        },
-                                        child: const Text("Yes", style: TextStyle(color: Colors.red)),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
+                          ),
+                          title: Text(
+                            book.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
                             ),
-                          ],
+                          ),
+                          subtitle: Text(
+                            "${book.author} | \$${book.price}",
+                            style: const TextStyle(color: AppColors.textSecondary),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: AppColors.warning),
+                                onPressed: () => showDialog(
+                                  context: context,
+                                  builder: (context) => EditBook(book: book, onRefresh: _fetchBooks),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: AppColors.danger),
+                                onPressed: () => _confirmDelete(book),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.accent,
@@ -156,6 +154,27 @@ class _ManageBooksViewState extends State<ManageBooksView> {
           context: context,
           builder: (context) => CreateBook(onRefresh: _fetchBooks),
         ),
+      ),
+    );
+  }
+
+  // Extracted confirmation dialog for cleaner build method
+  void _confirmDelete(Book book) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Confirm Delete"),
+        content: Text("Are you sure you want to delete '${book.name}'?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("No")),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _deleteBook(book.id);
+            },
+            child: const Text("Yes", style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }
