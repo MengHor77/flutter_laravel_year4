@@ -27,7 +27,10 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
   Future<void> _fetchBestSellers() async {
     setState(() => _isLoading = true);
     try {
-      final response = await http.get(Uri.parse(ApiConfig.bestSelling), headers: ApiConfig.getHeaders());
+      final response = await http.get(
+        Uri.parse(ApiConfig.bestSelling),
+        headers: ApiConfig.getHeaders(),
+      );
       if (response.statusCode == 200) {
         setState(() => _bestSellers = jsonDecode(response.body));
       }
@@ -39,10 +42,15 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
   }
 
   Future<void> _deleteBestSeller(int id) async {
-    final response = await http.delete(Uri.parse("${ApiConfig.bestSelling}/$id"), headers: ApiConfig.getHeaders());
+    final response = await http.delete(
+      Uri.parse("${ApiConfig.bestSelling}/$id"),
+      headers: ApiConfig.getHeaders(),
+    );
     if (response.statusCode == 200) {
       _fetchBestSellers();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Removed from Best Sellers")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Removed from Best Sellers")),
+      );
     }
   }
 
@@ -54,12 +62,18 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
         title: const Text("Manage Best Selling"),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        leading: IconButton(icon: const Icon(Icons.menu), onPressed: widget.openDrawer),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: widget.openDrawer,
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.accent,
         child: const Icon(Icons.add, color: Colors.white),
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateBestSelling())).then((_) => _fetchBestSellers()),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CreateBestSelling()),
+        ).then((_) => _fetchBestSellers()),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -70,7 +84,10 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
                 final item = _bestSellers[index];
                 return Card(
                   child: ListTile(
-                    leading: const CircleAvatar(backgroundColor: AppColors.accent, child: Icon(Icons.star, color: Colors.white)),
+                    leading: const CircleAvatar(
+                      backgroundColor: AppColors.accent,
+                      child: Icon(Icons.star, color: Colors.white),
+                    ),
                     title: Text(item['book']['name']),
                     subtitle: Text("Price: \$${item['book']['price']}"),
                     trailing: Row(
@@ -78,10 +95,18 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EditBestSelling(item: item))).then((_) => _fetchBestSellers()),
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EditBestSelling(item: item),
+                            ),
+                          ).then((_) => _fetchBestSellers()),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete, color: AppColors.danger),
+                          icon: const Icon(
+                            Icons.delete,
+                            color: AppColors.danger,
+                          ),
                           onPressed: () => _deleteBestSeller(item['id']),
                         ),
                       ],
