@@ -1,3 +1,8 @@
+import 'revenue_card.dart';
+import '../../../colors.dart';
+import 'total_book_card.dart';
+import 'total_user_card.dart';
+import 'active_order_card.dart';
 import 'package:flutter/material.dart';
 
 class DashboardView extends StatelessWidget {
@@ -8,83 +13,36 @@ class DashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        // Ensure no extra padding at the top
         automaticallyImplyLeading: false,
         title: const Text("Admin Dashboard"),
-        backgroundColor: Colors.blueGrey[900], // Your full blue color
-        foregroundColor: Colors.white, // White text and icons
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnDark,
         elevation: 0,
-        centerTitle: false,
-        // Manual leading button to trigger the parent Scaffold's drawer
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: openDrawer,
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 15,
-          mainAxisSpacing: 15,
-          children: [
-            _buildStatCard(
-              "Total Books",
-              "120",
-              Icons.library_books,
-              Colors.blue,
-            ),
-            _buildStatCard("Total Users", "45", Icons.people, Colors.green),
-            _buildStatCard(
-              "Active Orders",
-              "12",
-              Icons.shopping_cart,
-              Colors.orange,
-            ),
-            _buildStatCard(
-              "Revenue",
-              "\$450",
-              Icons.monetization_on,
-              Colors.purple,
-            ),
-          ],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Logic to trigger child updates if using a State Manager like Provider
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: GridView.count(
+            crossAxisCount: 2,
+            crossAxisSpacing: 15,
+            mainAxisSpacing: 15,
+            children: const [
+              TotalBookCard(),
+              TotalUserCard(),
+              ActiveOrderCard(),
+              RevenueCard(),
+            ],
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.2),
-            blurRadius: 5,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 40, color: color),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(title, style: const TextStyle(color: Colors.grey, fontSize: 14)),
-        ],
       ),
     );
   }
