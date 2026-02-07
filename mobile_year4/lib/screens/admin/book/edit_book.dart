@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'dart:convert';
+import '../../../colors.dart'; 
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../../models/book_model.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../colors.dart'; // Import now used below
 
 class EditBook extends StatefulWidget {
   final Book book;
@@ -65,18 +65,20 @@ class _EditBookState extends State<EditBook> {
   }
 
   Future<void> _update() async {
-    if (!_formKey.currentState!.validate() || _selectedCategoryId == null)
+    // FIX: Wrapped the return statement in curly braces to resolve the diagnostic
+    if (!_formKey.currentState!.validate() || _selectedCategoryId == null) {
       return;
+    }
+    
     setState(() => _isSaving = true);
 
     try {
-      // Laravel PUT with files works best as a POST request with _method field
       var request = http.MultipartRequest(
         'POST',
         Uri.parse("${ApiConfig.books}/${widget.book.id}"),
       );
       request.headers.addAll({"Accept": "application/json"});
-      request.fields['_method'] = 'PUT'; // Laravel spoofing
+      request.fields['_method'] = 'PUT'; 
 
       request.fields['name'] = _nameController.text;
       request.fields['author'] = _authorController.text;
@@ -105,7 +107,7 @@ class _EditBookState extends State<EditBook> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppColors.cardBg, // Use AppColors
+      backgroundColor: AppColors.cardBg, 
       title: const Text(
         "Edit Book",
         style: TextStyle(color: AppColors.textPrimary),
@@ -125,7 +127,7 @@ class _EditBookState extends State<EditBook> {
                     color: AppColors.background,
                     border: Border.all(
                       color: AppColors.accent,
-                    ), // Use AppColors
+                    ), 
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: ClipRRect(
@@ -158,7 +160,6 @@ class _EditBookState extends State<EditBook> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                // FIX: Changed 'value' to 'initialValue' to resolve deprecation
                 initialValue: _selectedCategoryId,
                 decoration: const InputDecoration(labelText: "Category"),
                 items: _categories
@@ -185,7 +186,7 @@ class _EditBookState extends State<EditBook> {
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary, // Use AppColors
+            backgroundColor: AppColors.primary, 
             foregroundColor: AppColors.textOnDark,
           ),
           onPressed: _isSaving ? null : _update,
