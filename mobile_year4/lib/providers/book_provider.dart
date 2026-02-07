@@ -27,9 +27,13 @@ class BookProvider extends ChangeNotifier {
         final List rawData = jsonDecode(response.body);
         _cart.clear();
         for (var item in rawData) {
-          // Laravel returns the book inside the 'book' relation
           if (item['book'] != null) {
-            _cart.add(Book.fromJson(item['book']));
+            // Create a temporary map to inject the price saved in the order
+            // This ensures if a user bought it on sale, it shows the sale price
+            final Map<String, dynamic> bookData = Map.from(item['book']);
+            bookData['display_price'] = item['price']; 
+            
+            _cart.add(Book.fromJson(bookData));
           }
         }
       }
@@ -43,6 +47,7 @@ class BookProvider extends ChangeNotifier {
 
   /// 2. Add a book to cart and Laravel Database
   Future<void> addToCart(Book book) async {
+    // Prevent duplicates
     if (_cart.any((item) => item.id == book.id)) return;
 
     // Local Update
@@ -55,7 +60,7 @@ class BookProvider extends ChangeNotifier {
         headers: ApiConfig.getHeaders(),
         body: jsonEncode({
           "book_id": book.id, 
-          "price": book.price
+          "price": book.displayPrice // Uses the dynamic/special price
         }),
       );
 
@@ -63,7 +68,7 @@ class BookProvider extends ChangeNotifier {
         debugPrint("Server Error adding book: ${response.body}");
       }
     } catch (e) {
-      debugPrint("Network Error: $e");
+      debugPrint("Network Error adding to cart: $e");
     }
   }
 
@@ -72,7 +77,6 @@ class BookProvider extends ChangeNotifier {
     if (index >= 0 && index < _cart.length) {
       final bookId = _cart[index].id;
 
-      // Local Update
       _cart.removeAt(index);
       notifyListeners();
 
@@ -91,10 +95,11 @@ class BookProvider extends ChangeNotifier {
     }
   }
 
-  /// Helper to calculate total price
+  /// Helper to calculate total price using the dynamic price
   double get totalCartPrice {
     return _cart.fold(0.0, (sum, item) {
-      final cleanPrice = item.price.toString().replaceAll(RegExp(r'[^0-9.]'), '');
+      // Remove any non-numeric characters (like $ signs) before parsing
+      final cleanPrice = item.displayPrice.replaceAll(RegExp(r'[^0-9.]'), '');
       return sum + (double.tryParse(cleanPrice) ?? 0.0);
     });
   }

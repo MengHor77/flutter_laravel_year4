@@ -10,11 +10,22 @@ use Illuminate\Support\Facades\Validator;
 class BookController extends Controller
 {
     // 1. GET ALL BOOKS
-    public function index()
-    {
-        $books = Book::with('category')->get();
-        return response()->json($books, 200);
-    }
+   public function index() {
+    // Load category and active offers in one query
+    $books = Book::with(['category', 'specialOffers' => function($query) {
+        $query->where('is_active', true);
+    }])->get();
+
+    // Attach dynamic price fields to the JSON response
+    $books->map(function ($book) {
+        $activeOffer = $book->specialOffers->first();
+        $book->is_on_sale = $activeOffer ? true : false;
+        $book->display_price = $activeOffer ? $activeOffer->offer_price : $book->price;
+        return $book;
+    });
+
+    return response()->json($books, 200);
+}
 
     public function store(Request $request)
     {

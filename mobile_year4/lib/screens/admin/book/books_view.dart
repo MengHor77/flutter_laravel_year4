@@ -25,7 +25,6 @@ class _ManageBooksViewState extends State<ManageBooksView> {
     _fetchBooks();
   }
 
-  // Helper to handle image URL logic consistently
   String _getImageUrl(String? path) {
     if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
     if (path.startsWith('http')) return path;
@@ -41,6 +40,8 @@ class _ManageBooksViewState extends State<ManageBooksView> {
       if (response.statusCode == 200) {
         final List rawData = jsonDecode(response.body);
         setState(() {
+          // The Book.fromJson now handles the dynamic pricing logic 
+          // we implemented in the Model earlier.
           _books = rawData.map((json) => Book.fromJson(json)).toList();
         });
       }
@@ -100,16 +101,15 @@ class _ManageBooksViewState extends State<ManageBooksView> {
                         margin: const EdgeInsets.only(bottom: 10),
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          // --- UPDATED IMAGE CLIPPING LOGIC ---
                           leading: ClipRRect(
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
-                              width: 50, // Fixed width
-                              height: 70, // Slightly taller for book look
+                              width: 50,
+                              height: 70,
                               color: Colors.grey[200],
                               child: Image.network(
                                 _getImageUrl(book.image),
-                                fit: BoxFit.cover, // This crops the image to fill the box
+                                fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) => 
                                     const Icon(Icons.broken_image, color: Colors.grey),
                               ),
@@ -122,9 +122,42 @@ class _ManageBooksViewState extends State<ManageBooksView> {
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          subtitle: Text(
-                            "${book.author} | \$${book.price}",
-                            style: const TextStyle(color: AppColors.textSecondary),
+                          // --- UPDATED DYNAMIC PRICE SUBTITLE ---
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(book.author, style: const TextStyle(color: AppColors.textSecondary)),
+                              const SizedBox(height: 2),
+                              if (book.isOnSale) 
+                                Row(
+                                  children: [
+                                    Text(
+                                      "\$${book.price}",
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 12,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      "\$${book.displayPrice}",
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              else
+                                Text(
+                                  "\$${book.price}",
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                            ],
                           ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -158,7 +191,6 @@ class _ManageBooksViewState extends State<ManageBooksView> {
     );
   }
 
-  // Extracted confirmation dialog for cleaner build method
   void _confirmDelete(Book book) {
     showDialog(
       context: context,

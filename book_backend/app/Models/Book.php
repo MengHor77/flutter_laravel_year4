@@ -28,7 +28,14 @@ class Book extends Model
     
         public function specialOffer()
     {
-        return $this->hasOne(SpecialOffer::class);
+        return $this->hasMany(SpecialOffer::class, 'book_id');
     }
 
+   
+
+    public function specialOffers() {
+        // Defines the link to the special_offers table
+        return $this->hasMany(SpecialOffer::class, 'book_id');
+    }
+    
 }
