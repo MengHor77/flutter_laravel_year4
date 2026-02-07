@@ -23,46 +23,99 @@ class _CreateBestSellingState extends State<CreateBestSelling> {
   }
 
   Future<void> _fetchBooks() async {
-    final response = await http.get(Uri.parse(ApiConfig.books), headers: ApiConfig.getHeaders());
-    if (response.statusCode == 200) {
-      setState(() => _books = jsonDecode(response.body));
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConfig.books), 
+        headers: ApiConfig.getHeaders()
+      );
+      if (response.statusCode == 200) {
+        if (mounted) {
+          setState(() => _books = jsonDecode(response.body));
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching books: $e");
     }
   }
 
   Future<void> _submit() async {
     if (_selectedBookId == null) return;
+    
     setState(() => _isSubmitting = true);
-    final response = await http.post(
-      Uri.parse(ApiConfig.bestSelling),
-      headers: ApiConfig.getHeaders(),
-      body: jsonEncode({"book_id": _selectedBookId}),
-    );
-    if (response.statusCode == 201) {
-      Navigator.pop(context);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Book already in list!")));
+    
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConfig.bestSelling),
+        headers: ApiConfig.getHeaders(),
+        body: jsonEncode({"book_id": _selectedBookId}),
+      );
+
+      // ASYNC GAP: Anything after 'await' needs a mounted check
+      if (!mounted) return;
+
+      if (response.statusCode == 201) {
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Book already in list!"),
+            behavior: SnackBarBehavior.floating,
+          )
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Connection Error"))
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
-    setState(() => _isSubmitting = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Add Best Seller")),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text("Add Best Seller"),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnDark,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             DropdownButtonFormField<String>(
-              decoration: const InputDecoration(labelText: "Select Book"),
-              items: _books.map((b) => DropdownMenuItem(value: b['id'].toString(), child: Text(b['name']))).toList(),
+              decoration: const InputDecoration(
+                labelText: "Select Book",
+                filled: true,
+                fillColor: AppColors.cardBg,
+              ),
+              items: _books.map((b) => DropdownMenuItem(
+                value: b['id'].toString(), 
+                child: Text(b['name'])
+              )).toList(),
               onChanged: (val) => setState(() => _selectedBookId = val),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _isSubmitting ? null : _submit,
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent, foregroundColor: Colors.white),
-              child: _isSubmitting ? const CircularProgressIndicator() : const Text("SAVE RECORD"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent, 
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+              ),
+              child: _isSubmitting 
+                ? const SizedBox(
+                    height: 20, 
+                    width: 20, 
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                  ) 
+                : const Text("SAVE RECORD"),
             )
           ],
         ),
