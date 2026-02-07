@@ -1,8 +1,8 @@
 import 'dart:convert';
-import '../../../colors.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../../../colors.dart'; // Now being used for styling
 
 class EditBestSelling extends StatefulWidget {
   final dynamic item;
@@ -24,9 +24,14 @@ class _EditBestSellingState extends State<EditBestSelling> {
   }
 
   Future<void> _fetchBooks() async {
-    final response = await http.get(Uri.parse(ApiConfig.books), headers: ApiConfig.getHeaders());
+    final response = await http.get(
+      Uri.parse(ApiConfig.books),
+      headers: ApiConfig.getHeaders(),
+    );
     if (response.statusCode == 200) {
-      setState(() => _books = jsonDecode(response.body));
+      if (mounted) {
+        setState(() => _books = jsonDecode(response.body));
+      }
     }
   }
 
@@ -36,25 +41,56 @@ class _EditBestSellingState extends State<EditBestSelling> {
       headers: ApiConfig.getHeaders(),
       body: jsonEncode({"book_id": _selectedBookId}),
     );
-    if (response.statusCode == 200) Navigator.pop(context);
+
+    if (response.statusCode == 200) {
+      // FIX: Check if widget is still mounted before using context across async gap
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Edit Best Seller")),
+      backgroundColor: AppColors.background, // Used AppColors here
+      appBar: AppBar(
+        title: const Text("Edit Best Seller"),
+        backgroundColor: AppColors.primary, // Used AppColors here
+        foregroundColor: AppColors.textOnDark,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             DropdownButtonFormField<String>(
-              value: _selectedBookId,
-              decoration: const InputDecoration(labelText: "Change Book"),
-              items: _books.map((b) => DropdownMenuItem(value: b['id'].toString(), child: Text(b['name']))).toList(),
+              // FIX: Use initialValue instead of value (deprecated in newer Flutter versions)
+              initialValue: _selectedBookId,
+              decoration: const InputDecoration(
+                labelText: "Change Book",
+                filled: true,
+                fillColor: AppColors.cardBg,
+              ),
+              items: _books
+                  .map(
+                    (b) => DropdownMenuItem(
+                      value: b['id'].toString(),
+                      child: Text(b['name']),
+                    ),
+                  )
+                  .toList(),
               onChanged: (val) => setState(() => _selectedBookId = val),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(onPressed: _update, child: const Text("UPDATE")),
+            ElevatedButton(
+              onPressed: _update,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+              ),
+              child: const Text("UPDATE"),
+            ),
           ],
         ),
       ),

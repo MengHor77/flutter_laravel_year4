@@ -47,9 +47,9 @@ class BookCard extends StatelessWidget {
                 left: 0,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppColors.danger,
-                    borderRadius: const BorderRadius.only(
+                    borderRadius:  BorderRadius.only(
                       topLeft: Radius.circular(8),
                       bottomRight: Radius.circular(8),
                     ),

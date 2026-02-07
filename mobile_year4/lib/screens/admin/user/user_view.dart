@@ -1,29 +1,89 @@
+import 'dart:convert';
+import '../../../colors.dart';
+import '../../../api_config.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-class UserView extends StatelessWidget {
+class UserView extends StatefulWidget {
   final VoidCallback openDrawer;
   const UserView({super.key, required this.openDrawer});
 
   @override
+  State<UserView> createState() => _UserViewState();
+}
+
+class _UserViewState extends State<UserView> {
+  Future<List<dynamic>> fetchUsers() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConfig.users),
+        headers: ApiConfig.getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load users');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Manage Users"),
-        backgroundColor: Colors.blueGrey[900],
-        foregroundColor: Colors.white,
+        title: const Text("Manage Users"), // Added const
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnDark,
         leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: openDrawer,
+          icon: const Icon(Icons.menu), // Added const
+          onPressed: widget.openDrawer,
         ),
       ),
-      body: ListView.builder(
-        itemCount: 10,
-        itemBuilder: (context, index) {
-          return ListTile(
-            leading: const Icon(Icons.person),
-            title: Text("User Customer #$index"),
-            subtitle: Text("user$index@gmail.com"),
-            trailing: const Icon(Icons.more_vert),
+      body: FutureBuilder<List<dynamic>>(
+        future: fetchUsers(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator()); // Added const
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text("No users found.")); // Added const
+          }
+
+          final users = snapshot.data!;
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: users.length,
+            itemBuilder: (context, index) {
+              final user = users[index];
+              return Card(
+                color: AppColors.cardBg,
+                elevation: 1,
+                margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                child: ListTile(
+                  leading: const CircleAvatar( // Added const
+                    backgroundColor: AppColors.accent,
+                    child: Icon(Icons.person, color: Colors.white), // Added const
+                  ),
+                  title: Text(
+                    user['name'] ?? "No Name",
+                    style: const TextStyle(fontWeight: FontWeight.bold), // Added const
+                  ),
+                  subtitle: Text(user['email'] ?? "No Email"),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline, color: AppColors.danger), // Added const
+                    onPressed: () {
+                      // Logic for deleting user
+                    },
+                  ),
+                ),
+              );
+            },
           );
         },
       ),
