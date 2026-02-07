@@ -80,7 +80,6 @@ class _CreateBookState extends State<CreateBook> {
 
       request.fields['name'] = _nameController.text.trim();
       request.fields['author'] = _authorController.text.trim();
-      // Ensure price is a clean number string
       request.fields['price'] = _priceController.text.trim().replaceAll(
         RegExp(r'[^0-9.]'),
         '',
@@ -133,7 +132,7 @@ class _CreateBookState extends State<CreateBook> {
   @override
   Widget build(BuildContext context) {
     // Crucial: Calculate max height to keep buttons on screen
-    double maxDialogHeight = MediaQuery.of(context).size.height * 0.6;
+    double maxDialogHeight = MediaQuery.of(context).size.height * 0.7;
 
     return AlertDialog(
       backgroundColor: Colors.white,
@@ -156,7 +155,7 @@ class _CreateBookState extends State<CreateBook> {
                   GestureDetector(
                     onTap: _pickImage,
                     child: Container(
-                      height: 120, // Reduced height to save space
+                      height: 160, // Set fixed height
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: Colors.blue.withOpacity(0.05),
@@ -170,23 +169,23 @@ class _CreateBookState extends State<CreateBook> {
                           ? const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.add_a_photo,
-                                  size: 30,
-                                  color: Colors.blue,
-                                ),
+                                Icon(Icons.add_a_photo, size: 40, color: Colors.blue),
+                                SizedBox(height: 8),
                                 Text(
                                   "Upload Cover",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.blue,
-                                  ),
+                                  style: TextStyle(fontSize: 14, color: Colors.blue),
                                 ),
                               ],
                             )
                           : ClipRRect(
                               borderRadius: BorderRadius.circular(13),
-                              child: Image.file(_imageFile!, fit: BoxFit.cover),
+                              // Added BoxFit.cover to CROP the image to fit the box
+                              child: Image.file(
+                                _imageFile!, 
+                                fit: BoxFit.cover, 
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
                             ),
                     ),
                   ),
@@ -205,9 +204,7 @@ class _CreateBookState extends State<CreateBook> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _priceController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: _inputStyle("Price", Icons.attach_money),
                     validator: (v) => v!.isEmpty ? "Required" : null,
                   ),
@@ -215,19 +212,11 @@ class _CreateBookState extends State<CreateBook> {
                   DropdownButtonFormField<String>(
                     isExpanded: true,
                     decoration: _inputStyle("Category", Icons.category),
-                    items: _categories
-                        .map(
-                          (c) => DropdownMenuItem<String>(
-                            value: c['id'].toString(),
-                            child: Text(
-                              c['name'],
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (val) =>
-                        setState(() => _selectedCategoryId = val),
+                    items: _categories.map((c) => DropdownMenuItem<String>(
+                      value: c['id'].toString(),
+                      child: Text(c['name'], overflow: TextOverflow.ellipsis),
+                    )).toList(),
+                    onChanged: (val) => setState(() => _selectedCategoryId = val),
                     validator: (v) => v == null ? "Required" : null,
                   ),
                 ],
@@ -246,19 +235,14 @@ class _CreateBookState extends State<CreateBook> {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
           onPressed: _isSaving ? null : _save,
           child: _isSaving
               ? const SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                 )
               : const Text("Save"),
         ),
