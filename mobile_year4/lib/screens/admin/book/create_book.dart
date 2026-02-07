@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'dart:convert';
-import '../../../colors.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import '../../../colors.dart'; // Import now used below
 
 class CreateBook extends StatefulWidget {
   final VoidCallback onRefresh;
@@ -49,7 +49,7 @@ class _CreateBookState extends State<CreateBook> {
       debugPrint("Error picking image: $e");
       _showSnackBar(
         "Error: Please restart your app to activate the gallery.",
-        Colors.red,
+        AppColors.danger, // Use AppColors
       );
     }
   }
@@ -68,7 +68,10 @@ class _CreateBookState extends State<CreateBook> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
-      _showSnackBar("Please select a category", Colors.orange);
+      _showSnackBar(
+        "Please select a category",
+        AppColors.warning,
+      ); // Use AppColors
       return;
     }
 
@@ -96,15 +99,18 @@ class _CreateBookState extends State<CreateBook> {
       var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        _showSnackBar("Book added successfully!", Colors.green);
+        _showSnackBar(
+          "Book added successfully!",
+          AppColors.success,
+        ); // Use AppColors
         widget.onRefresh();
         if (mounted) Navigator.pop(context);
       } else {
         debugPrint("Server Error Body: ${response.body}");
-        _showSnackBar("Error: ${response.statusCode}", Colors.red);
+        _showSnackBar("Error: ${response.statusCode}", AppColors.danger);
       }
     } catch (e) {
-      _showSnackBar("Connection error.", Colors.red);
+      _showSnackBar("Connection error.", AppColors.danger);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -123,7 +129,11 @@ class _CreateBookState extends State<CreateBook> {
   InputDecoration _inputStyle(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon, color: Colors.blue, size: 20),
+      prefixIcon: Icon(
+        icon,
+        color: AppColors.accent,
+        size: 20,
+      ), // Use AppColors
       contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
     );
@@ -131,11 +141,10 @@ class _CreateBookState extends State<CreateBook> {
 
   @override
   Widget build(BuildContext context) {
-    // Crucial: Calculate max height to keep buttons on screen
     double maxDialogHeight = MediaQuery.of(context).size.height * 0.7;
 
     return AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBg, // Use AppColors
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: const Text(
@@ -155,13 +164,14 @@ class _CreateBookState extends State<CreateBook> {
                   GestureDetector(
                     onTap: _pickImage,
                     child: Container(
-                      height: 160, // Set fixed height
+                      height: 160,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.05),
+                        // FIX: Changed .withOpacity() to .withValues()
+                        color: AppColors.accent.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(15),
                         border: Border.all(
-                          color: Colors.blue.withOpacity(0.2),
+                          color: AppColors.accent.withValues(alpha: 0.2),
                           width: 1.5,
                         ),
                       ),
@@ -169,20 +179,26 @@ class _CreateBookState extends State<CreateBook> {
                           ? const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.add_a_photo, size: 40, color: Colors.blue),
+                                Icon(
+                                  Icons.add_a_photo,
+                                  size: 40,
+                                  color: AppColors.accent,
+                                ),
                                 SizedBox(height: 8),
                                 Text(
                                   "Upload Cover",
-                                  style: TextStyle(fontSize: 14, color: Colors.blue),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.accent,
+                                  ),
                                 ),
                               ],
                             )
                           : ClipRRect(
                               borderRadius: BorderRadius.circular(13),
-                              // Added BoxFit.cover to CROP the image to fit the box
                               child: Image.file(
-                                _imageFile!, 
-                                fit: BoxFit.cover, 
+                                _imageFile!,
+                                fit: BoxFit.cover,
                                 width: double.infinity,
                                 height: double.infinity,
                               ),
@@ -204,7 +220,9 @@ class _CreateBookState extends State<CreateBook> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _priceController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: _inputStyle("Price", Icons.attach_money),
                     validator: (v) => v!.isEmpty ? "Required" : null,
                   ),
@@ -212,11 +230,19 @@ class _CreateBookState extends State<CreateBook> {
                   DropdownButtonFormField<String>(
                     isExpanded: true,
                     decoration: _inputStyle("Category", Icons.category),
-                    items: _categories.map((c) => DropdownMenuItem<String>(
-                      value: c['id'].toString(),
-                      child: Text(c['name'], overflow: TextOverflow.ellipsis),
-                    )).toList(),
-                    onChanged: (val) => setState(() => _selectedCategoryId = val),
+                    items: _categories
+                        .map(
+                          (c) => DropdownMenuItem<String>(
+                            value: c['id'].toString(),
+                            child: Text(
+                              c['name'],
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) =>
+                        setState(() => _selectedCategoryId = val),
                     validator: (v) => v == null ? "Required" : null,
                   ),
                 ],
@@ -233,16 +259,21 @@ class _CreateBookState extends State<CreateBook> {
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            backgroundColor: AppColors.accent, // Use AppColors
+            foregroundColor: AppColors.textOnDark,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           onPressed: _isSaving ? null : _save,
           child: _isSaving
               ? const SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    color: AppColors.textOnDark,
+                    strokeWidth: 2,
+                  ),
                 )
               : const Text("Save"),
         ),
