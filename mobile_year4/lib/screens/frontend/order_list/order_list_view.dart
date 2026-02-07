@@ -18,7 +18,7 @@ class OrderListView extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text("Order List"),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.accent,
         foregroundColor: AppColors.textOnDark,
         leading: Builder(
           builder: (context) => IconButton(

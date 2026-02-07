@@ -56,7 +56,7 @@ class _BookViewState extends State<BookView> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text("Book Store"),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.accent,
         foregroundColor: AppColors.textOnDark,
         leading: Builder(
           builder: (context) => IconButton(
