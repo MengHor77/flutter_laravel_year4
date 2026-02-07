@@ -25,32 +25,51 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
   }
 
   Future<void> _fetchBestSellers() async {
+    // Safety check to ensure widget is still in the tree
+    if (!mounted) return;
     setState(() => _isLoading = true);
+
     try {
       final response = await http.get(
         Uri.parse(ApiConfig.bestSelling),
         headers: ApiConfig.getHeaders(),
       );
       if (response.statusCode == 200) {
-        setState(() => _bestSellers = jsonDecode(response.body));
+        if (mounted) {
+          setState(() => _bestSellers = jsonDecode(response.body));
+        }
       }
     } catch (e) {
       debugPrint("Error: $e");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _deleteBestSeller(int id) async {
-    final response = await http.delete(
-      Uri.parse("${ApiConfig.bestSelling}/$id"),
-      headers: ApiConfig.getHeaders(),
-    );
-    if (response.statusCode == 200) {
-      _fetchBestSellers();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Removed from Best Sellers")),
+    try {
+      final response = await http.delete(
+        Uri.parse("${ApiConfig.bestSelling}/$id"),
+        headers: ApiConfig.getHeaders(),
       );
+
+      if (response.statusCode == 200) {
+        _fetchBestSellers();
+
+        // FIX: Check if widget is mounted before using BuildContext across async gap
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Removed from Best Sellers"),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Delete Error: $e");
     }
   }
 
@@ -77,18 +96,22 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
+          : _bestSellers.isEmpty
+          ? const Center(child: Text("No Best Selling books found."))
           : ListView.builder(
               padding: const EdgeInsets.all(10),
               itemCount: _bestSellers.length,
               itemBuilder: (context, index) {
                 final item = _bestSellers[index];
                 return Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(vertical: 5),
                   child: ListTile(
                     leading: const CircleAvatar(
                       backgroundColor: AppColors.accent,
                       child: Icon(Icons.star, color: Colors.white),
                     ),
-                    title: Text(item['book']['name']),
+                    title: Text(item['book']['name'] ?? "Unknown Book"),
                     subtitle: Text("Price: \$${item['book']['price']}"),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
