@@ -1,11 +1,26 @@
 import '../../../colors.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../api_config.dart'; // ADD THIS
 import '../../../providers/book_provider.dart';
 import '../../../widgets/frontent/menu_sidebar.dart';
 
 class OrderListView extends StatelessWidget {
   const OrderListView({super.key});
+
+  // Helper to handle the URL correctly
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
+
+    // If the DB already contains the full URL (http://192.168.1.102...)
+    if (path.startsWith('http')) {
+      return path;
+    }
+
+    // Otherwise, append the storage base URL
+    String cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return "${ApiConfig.storage}$cleanPath";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +30,6 @@ class OrderListView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      // Keep AppBar and Drawer outside the conditional body to prevent "losing" them
       appBar: AppBar(
         title: const Text("Order List"),
         backgroundColor: AppColors.accent,
@@ -46,40 +60,81 @@ class OrderListView extends StatelessWidget {
                     padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
-                        // Book Icon/Image
+                        // --- FIXED IMAGE SECTION ---
                         Container(
-                          width: 50, height: 60,
+                          width: 50,
+                          height: 60,
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.book, color: AppColors.accent),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              _getImageUrl(item.image), // Use the helper
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                    Icons.broken_image,
+                                    color: AppColors.accent,
+                                  ),
+                            ),
+                          ),
                         ),
+                        // ---------------------------
                         const SizedBox(width: 12),
                         // Text Info
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                              Text("\$${item.displayPrice}", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                              Text(
+                                item.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                "\$${item.displayPrice}",
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                        // Action Buttons (Match your image)
+                        // Action Buttons
                         Row(
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.add, color: Colors.red, size: 30),
+                              icon: const Icon(
+                                Icons.add_circle_outline,
+                                color: Colors.red,
+                                size: 28,
+                              ),
                               onPressed: () => provider.addToCart(item),
                             ),
-                            Text("${item.quantity}", style: const TextStyle(fontWeight: FontWeight.bold)),
-                            IconButton(
-                              icon: const Icon(Icons.remove, color: Colors.red, size: 30),
-                              onPressed: () => provider.decrementQuantity(index),
+                            Text(
+                              "${item.quantity}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              icon: const Icon(
+                                Icons.remove_circle_outline,
+                                color: Colors.red,
+                                size: 28,
+                              ),
+                              onPressed: () =>
+                                  provider.decrementQuantity(index),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.grey,
+                              ),
                               onPressed: () => provider.removeFromCart(index),
                             ),
                           ],
@@ -96,7 +151,10 @@ class OrderListView extends StatelessWidget {
 
   Widget _buildEmptyState() {
     return const Center(
-      child: Text("Your order list is empty.", style: TextStyle(color: Colors.grey, fontSize: 16)),
+      child: Text(
+        "Your order list is empty.",
+        style: TextStyle(color: Colors.grey, fontSize: 16),
+      ),
     );
   }
 
@@ -116,18 +174,34 @@ class OrderListView extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Total Amount", style: TextStyle(color: Colors.grey)),
-                Text("\$${provider.totalCartPrice.toStringAsFixed(2)}", 
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                const Text(
+                  "Total Amount",
+                  style: TextStyle(color: Colors.grey),
+                ),
+                Text(
+                  "\$${provider.totalCartPrice.toStringAsFixed(2)}",
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                // Add your checkout logic here
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 15,
+                ),
               ),
-              child: const Text("CHECKOUT", style: TextStyle(color: Colors.white)),
+              child: const Text(
+                "CHECKOUT",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),
