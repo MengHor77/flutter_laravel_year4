@@ -1,4 +1,5 @@
-import '../../colors.dart'; 
+import '../../colors.dart';
+import '../../api_config.dart';
 import '../../models/book_model.dart';
 import 'package:flutter/material.dart';
 
@@ -15,6 +16,22 @@ class BookCard extends StatelessWidget {
     required this.buttonText,
     required this.buttonColor,
   });
+
+  // Helper function to handle the URL logic
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) {
+      return 'https://via.placeholder.com/150';
+    }
+
+    // If the database path already starts with http, return it as is
+    if (path.startsWith('http')) {
+      return path;
+    }
+
+    // Otherwise, clean the path and append the storage base URL
+    String cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return "${ApiConfig.storage}$cleanPath";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,10 +52,27 @@ class BookCard extends StatelessWidget {
                 color: AppColors.background,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.book, 
-                size: 40, 
-                color: AppColors.accent,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  _getImageUrl(
+                    book.image,
+                  ), // FIXED: Uses the dynamic URL helper
+                  fit: BoxFit.cover,
+                  // Shows a broken image icon if the URL fails to load
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.broken_image,
+                    size: 40,
+                    color: Colors.grey,
+                  ),
+                  // Optional: Shows a loading spinner while the image downloads
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    );
+                  },
+                ),
               ),
             ),
             if (book.isOnSale)
@@ -46,10 +80,13 @@ class BookCard extends StatelessWidget {
                 top: 0,
                 left: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
                   decoration: const BoxDecoration(
                     color: AppColors.danger,
-                    borderRadius:  BorderRadius.only(
+                    borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(8),
                       bottomRight: Radius.circular(8),
                     ),
@@ -67,7 +104,7 @@ class BookCard extends StatelessWidget {
           ],
         ),
         title: Text(
-          book.name, 
+          book.name,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
@@ -79,7 +116,10 @@ class BookCard extends StatelessWidget {
           children: [
             Text(
               "By ${book.author}",
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
             ),
             const SizedBox(height: 6),
             if (book.isOnSale)
