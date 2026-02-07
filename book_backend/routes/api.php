@@ -10,6 +10,9 @@ use App\Http\Controllers\backend\SpecialOfferController;
 
 
 
+
+
+Route::get('/users', [UserController::class, 'index']);
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'login']);
 
