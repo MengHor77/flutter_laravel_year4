@@ -1,10 +1,10 @@
 import 'dart:convert';
-import '../../../colors.dart';
 import 'edit_special_offer.dart';
 import '../../../api_config.dart';
 import 'create_special_offer.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../../../colors.dart'; // Now being used
 
 class SpecialOfferView extends StatefulWidget {
   final VoidCallback openDrawer;
@@ -43,9 +43,11 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
 
   Future<void> _deleteOffer(int id) async {
     try {
-      final response = await http.delete(Uri.parse("${ApiConfig.specialOffers}/$id"));
+      final response = await http.delete(
+        Uri.parse("${ApiConfig.specialOffers}/$id"),
+      );
       if (response.statusCode == 200) {
-        _showSnackBar("Offer removed", Colors.red);
+        _showSnackBar("Offer removed", AppColors.danger); // Using AppColors
         _fetchOffers();
       }
     } catch (e) {
@@ -55,18 +57,26 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
 
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: color, behavior: SnackBarBehavior.floating),
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background, // Using AppColors
       appBar: AppBar(
         title: const Text("Special Offers"),
-        backgroundColor: Colors.blueGrey[900],
-        foregroundColor: Colors.white,
-        leading: IconButton(icon: const Icon(Icons.menu), onPressed: widget.openDrawer),
+        backgroundColor: AppColors.primary, // Using AppColors
+        foregroundColor: AppColors.textOnDark, // Using AppColors
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: widget.openDrawer,
+        ),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchOffers),
           IconButton(
@@ -85,7 +95,14 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Active Promotions", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Active Promotions",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary, // Using AppColors
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   Expanded(
                     child: _offers.isEmpty
@@ -98,25 +115,52 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
                                 final offer = _offers[index];
                                 final book = offer['book'];
                                 return Card(
+                                  color: AppColors.cardBg, // Using AppColors
                                   elevation: 3,
-                                  margin: const EdgeInsets.symmetric(vertical: 8),
+                                  margin: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
                                   child: ListTile(
-                                    leading: const Icon(Icons.local_offer, color: Colors.orange),
-                                    title: Text(offer['title']),
-                                    subtitle: Text("${offer['discount_percentage']}% Off on ${book?['name'] ?? 'Book'}\nNow: \$${offer['offer_price']}"),
+                                    leading: const Icon(
+                                      Icons.local_offer,
+                                      color: AppColors.warning,
+                                    ), // Using AppColors
+                                    title: Text(
+                                      offer['title'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      "${offer['discount_percentage']}% Off on ${book?['name'] ?? 'Book'}\nNow: \$${offer['offer_price']}",
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                      ), // Using AppColors
+                                    ),
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         IconButton(
-                                          icon: const Icon(Icons.edit, color: Colors.blue),
+                                          icon: const Icon(
+                                            Icons.edit,
+                                            color: AppColors.accent,
+                                          ), // Using AppColors
                                           onPressed: () => showDialog(
                                             context: context,
-                                            builder: (context) => EditSpecialOffer(offer: offer, onRefresh: _fetchOffers),
+                                            builder: (context) =>
+                                                EditSpecialOffer(
+                                                  offer: offer,
+                                                  onRefresh: _fetchOffers,
+                                                ),
                                           ),
                                         ),
                                         IconButton(
-                                          icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                          onPressed: () => _deleteOffer(offer['id']),
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                            color: AppColors.danger,
+                                          ), // Using AppColors
+                                          onPressed: () =>
+                                              _deleteOffer(offer['id']),
                                         ),
                                       ],
                                     ),
