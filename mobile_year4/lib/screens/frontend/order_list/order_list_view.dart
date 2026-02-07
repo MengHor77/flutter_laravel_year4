@@ -9,8 +9,6 @@ class OrderListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // FIX: Only clear messages when we FIRST enter the screen.
-    // This prevents the "Remove" alert from being killed during a rebuild.
     _clearOldSnacks(context);
 
     final provider = context.watch<BookProvider>();
@@ -63,9 +61,37 @@ class OrderListView extends StatelessWidget {
                       item.name,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(
-                      "\$${item.price}",
-                      style: const TextStyle(color: AppColors.success),
+                    // --- UPDATED SUBTITLE FOR DYNAMIC PRICING ---
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (item.isOnSale)
+                          Row(
+                            children: [
+                              Text(
+                                "\$${item.displayPrice}", // Special Price
+                                style: const TextStyle(
+                                  color: AppColors.success,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "\$${item.price}", // Old Price
+                                style: const TextStyle(
+                                  color: AppColors.danger,
+                                  fontSize: 11,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          Text(
+                            "\$${item.price}",
+                            style: const TextStyle(color: AppColors.success),
+                          ),
+                      ],
                     ),
                     trailing: IconButton(
                       icon: const Icon(
@@ -74,11 +100,8 @@ class OrderListView extends StatelessWidget {
                       ),
                       onPressed: () {
                         final String deletedName = item.name;
-
-                        // 1. Logic
                         context.read<BookProvider>().removeFromCart(index);
 
-                        // 2. Alert (Inside onPressed, we use clearSnackBars to avoid stacking)
                         ScaffoldMessenger.of(context).clearSnackBars();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -109,13 +132,9 @@ class OrderListView extends StatelessWidget {
     );
   }
 
-  // Helper to clear snacks ONLY when moving between screens
   void _clearOldSnacks(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Check if we are still on this screen before clearing
-      if (Navigator.of(context).canPop() || true) {
-        // We only want to clear the "Book Added" message once
-      }
+      // Logic for clearing snackbars if necessary
     });
   }
 
@@ -140,7 +159,7 @@ class OrderListView extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
       decoration: const BoxDecoration(
         color: AppColors.cardBg,
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
@@ -171,12 +190,22 @@ class OrderListView extends StatelessWidget {
               ],
             ),
             ElevatedButton(
-              onPressed: () => debugPrint("Checkout"),
+              onPressed: () => debugPrint("Checkout Clicked"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
                 foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-              child: const Text("CHECKOUT"),
+              child: const Text(
+                "CHECKOUT",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
