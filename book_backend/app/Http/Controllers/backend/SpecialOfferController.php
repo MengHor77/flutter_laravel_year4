@@ -47,6 +47,43 @@ class SpecialOfferController extends Controller
 
         return response()->json($offer->load('book'), 201);
     }
+    
+    // Add this inside your SpecialOfferController class
+
+    public function update(Request $request, $id)
+    {
+        $offer = SpecialOffer::find($id);
+
+        if (!$offer) {
+            return response()->json(['message' => 'Offer not found'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'book_id' => 'required|exists:book,id',
+            'title' => 'required|string|max:255',
+            'discount_percentage' => 'required|numeric|min:0|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Recalculate price based on the (potentially new) book or discount
+        $book = Book::find($request->book_id);
+        $discountAmount = $book->price * ($request->discount_percentage / 100);
+        $offerPrice = $book->price - $discountAmount;
+
+        $offer->update([
+            'book_id' => $request->book_id,
+            'title' => $request->title,
+            'discount_percentage' => $request->discount_percentage,
+            'offer_price' => $offerPrice,
+            // Keep existing is_active status or update if needed
+        ]);
+
+        return response()->json($offer->load('book'), 200);
+    }
+
 
     // Remove a special offer
     public function destroy($id)

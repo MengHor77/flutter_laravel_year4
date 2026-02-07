@@ -47,3 +47,4 @@ Route::delete('best-selling/{id}', [BestSellingController::class, 'destroy']);
 Route::get('/special-offers', [SpecialOfferController::class, 'index']);
 Route::post('/special-offers', [SpecialOfferController::class, 'store']);
 Route::delete('/special-offers/{id}', [SpecialOfferController::class, 'destroy']);
+Route::put('special-offers/{id}', [SpecialOfferController::class, 'update']);
