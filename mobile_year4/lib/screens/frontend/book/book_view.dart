@@ -38,8 +38,6 @@ class _BookViewState extends State<BookView> {
       if (response.statusCode == 200) {
         final List<dynamic> rawData = jsonDecode(response.body);
         setState(() {
-          // IMPORTANT: Book.fromJson now correctly picks up 'display_price'
-          // and 'is_on_sale' from your mapped Laravel response.
           _books = rawData.map((json) => Book.fromJson(json)).toList();
         });
       }
@@ -71,7 +69,7 @@ class _BookViewState extends State<BookView> {
               child: CircularProgressIndicator(color: AppColors.accent),
             )
           : RefreshIndicator(
-              onRefresh: _fetchBooks, // Added refresh capability
+              onRefresh: _fetchBooks,
               child: ListView.builder(
                 padding: const EdgeInsets.all(12),
                 itemCount: _books.length,
@@ -85,14 +83,31 @@ class _BookViewState extends State<BookView> {
     final book = _books[index];
 
     return BookCard(
-      book: book, // Pass the whole book object (now containing discount info)
+      book: book,
       buttonText: "Add to Cart",
       buttonColor: AppColors.success,
-      onAction: () {
-        // This now correctly adds the book using book.displayPrice
-        // because we updated the Provider logic earlier.
-        context.read<BookProvider>().addToCart(book);
+      onAction: () async {
+        // 1. Check if logged in before calling provider
+        if (ApiConfig.userToken == null) {
+          final snack = ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Please Login first to add items!"),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
 
+          // Example of using Timer to close the message manually
+          Timer(const Duration(seconds: 3), () {
+            snack.close();
+          });
+          return;
+        }
+
+        // 2. Call provider to sync with MySQL
+        await context.read<BookProvider>().addToCart(book);
+
+        // 3. UI Feedback
         final messenger = ScaffoldMessenger.of(context);
         messenger.clearSnackBars();
 
@@ -100,14 +115,14 @@ class _BookViewState extends State<BookView> {
           SnackBar(
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 1),
+            duration: const Duration(seconds: 2), // Auto-close after 2 seconds
             content: Row(
               children: [
                 const Icon(Icons.check_circle, color: Colors.white, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    "${book.name} added successfully!",
+                    "${book.name} have added to order list!",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -124,8 +139,11 @@ class _BookViewState extends State<BookView> {
           ),
         );
 
-        Timer(const Duration(seconds: 1), () {
-          messenger.hideCurrentSnackBar();
+        // Optional: Using Timer to ensure the SnackBar is hidden after a set period
+        Timer(const Duration(seconds: 2), () {
+          if (mounted) {
+            messenger.hideCurrentSnackBar();
+          }
         });
       },
     );

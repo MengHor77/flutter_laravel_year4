@@ -59,17 +59,20 @@ class _LoginViewState extends State<LoginView> {
       if (response.statusCode == 200) {
         debugPrint("Full Login Response: $data");
 
+        final String? token = data['token'];
         final userData = data['user']; 
+
         if (userData != null) {
           debugPrint("Extracted Name: ${userData['name']}");
           
+         
           context.read<BookProvider>().setUser(
             userData['name'] ?? "User",
             userData['email'] ?? "",
+            token, 
           );
         }
         
-        // Fetch cart items immediately
         context.read<BookProvider>().fetchSavedOrders();
 
         String role = data['role'] ?? 'user';
@@ -89,6 +92,7 @@ class _LoginViewState extends State<LoginView> {
         _showError(data['message'] ?? "Login Failed");
       }
     } catch (e) {
+      debugPrint("Login Error: $e");
       _showError("Connection failed. Check if Laravel server is running.");
     } finally {
       if (mounted) setState(() => _isLoading = false);

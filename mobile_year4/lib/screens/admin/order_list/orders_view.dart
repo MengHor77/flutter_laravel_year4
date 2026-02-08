@@ -23,32 +23,15 @@ class _OrdersViewState extends State<OrdersView> {
     _fetchOrders();
   }
 
-  // Helper to handle the URL correctly (Matches your storage configuration)
-  String _getImageUrl(String? path) {
-    if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
-    if (path.startsWith('http')) return path;
-    String cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    return "${ApiConfig.storage}$cleanPath";
-  }
-
-  String _formatDateTime(String? timestamp) {
-    if (timestamp == null) return "N/A";
-    try {
-      DateTime dt = DateTime.parse(timestamp).toLocal();
-      return DateFormat('MMM dd, yyyy  •  hh:mm a').format(dt);
-    } catch (e) {
-      return timestamp;
-    }
-  }
-
   Future<void> _fetchOrders() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
-      // Points to the new Admin endpoint: /api/admin-orders
       final response = await http.get(
-        Uri.parse("${ApiConfig.orders}/../admin-orders"),
+        Uri.parse(
+          ApiConfig.adminOrders,
+        ), 
         headers: ApiConfig.getHeaders(),
       );
 
@@ -58,13 +41,19 @@ class _OrdersViewState extends State<OrdersView> {
           _isLoading = false;
         });
       } else {
-        debugPrint("Server Error: ${response.statusCode}");
+        debugPrint("Admin API Error: ${response.statusCode}");
         if (mounted) setState(() => _isLoading = false);
       }
     } catch (e) {
-      debugPrint("Order Fetch Error: $e");
+      debugPrint("Fetch Error: $e");
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
+    if (path.startsWith('http')) return path;
+    return "${ApiConfig.storage}${path.startsWith('/') ? path.substring(1) : path}";
   }
 
   @override
@@ -72,7 +61,7 @@ class _OrdersViewState extends State<OrdersView> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Customer Orders"),
+        title: const Text("Admin: Order Management"),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnDark,
         leading: IconButton(
@@ -88,7 +77,7 @@ class _OrdersViewState extends State<OrdersView> {
               child: CircularProgressIndicator(color: AppColors.accent),
             )
           : _orders.isEmpty
-          ? const Center(child: Text("No customer orders found"))
+          ? _buildEmptyState()
           : RefreshIndicator(
               onRefresh: _fetchOrders,
               child: ListView.builder(
@@ -97,11 +86,15 @@ class _OrdersViewState extends State<OrdersView> {
                 itemBuilder: (context, index) {
                   final order = _orders[index];
                   final book = order['book'];
-                  final user =
-                      order['user']; // The User object from Laravel .with('user')
+                  final user = order['user'];
+
+                  double price =
+                      double.tryParse(order['price'].toString()) ?? 0.0;
+                  int qty = int.tryParse(order['quantity'].toString()) ?? 1;
+                  double total = price * qty;
 
                   return Card(
-                    color: AppColors.cardBg,
+                    elevation: 3,
                     margin: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 6,
@@ -109,165 +102,93 @@ class _OrdersViewState extends State<OrdersView> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    elevation: 3,
                     child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
+                      padding: const EdgeInsets.all(10),
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // --- CUSTOMER HEADER SECTION ---
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 14,
-                                backgroundColor: AppColors.accent.withOpacity(
-                                  0.1,
-                                ),
-                                child: const Icon(
-                                  Icons.person,
-                                  size: 16,
-                                  color: AppColors.accent,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      user?['name'] ?? "Unknown Customer",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    Text(
-                                      user?['email'] ?? "No Email Provided",
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  "UID: ${order['user_id']}",
+                          // Book Image
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              _getImageUrl(book?['image']),
+                              width: 70,
+                              height: 90,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, e, s) =>
+                                  const Icon(Icons.book, size: 70),
+                            ),
+                          ),
+                          const SizedBox(width: 15),
+                          // Order Details
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  book?['name'] ?? "Deleted Book",
                                   style: const TextStyle(
-                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 16,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 10),
-                            child: Divider(height: 1, thickness: 0.5),
-                          ),
-
-                          // --- ORDER DETAILS SECTION ---
-                          Row(
-                            children: [
-                              // Book Image
-                              Container(
-                                width: 60,
-                                height: 85,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(
-                                    _getImageUrl(book?['image']),
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Icon(
-                                              Icons.book,
-                                              color: Colors.grey,
-                                            ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 15),
-                              // Product Info
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                const SizedBox(height: 5),
+                                Row(
                                   children: [
-                                    Text(
-                                      book?['name'] ?? "Deleted Product",
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      "Quantity: ${order['quantity'] ?? 1}",
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.calendar_today,
-                                          size: 12,
-                                          color: Colors.grey,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          _formatDateTime(order['created_at']),
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Price Tag
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    "\$${order['price']}",
-                                    style: const TextStyle(
-                                      color: AppColors.success,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  const Text(
-                                    "Total Paid",
-                                    style: TextStyle(
-                                      fontSize: 10,
+                                    const Icon(
+                                      Icons.person,
+                                      size: 14,
                                       color: Colors.grey,
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      user?['name'] ?? "Guest User",
+                                      style: const TextStyle(
+                                        color: Colors.blueGrey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  "Qty: $qty x \$${price.toStringAsFixed(2)}",
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                                const Divider(),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "Total: \$${total.toStringAsFixed(2)}",
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(5),
+                                      ),
+                                      child: const Text(
+                                        "PENDING",
+                                        style: TextStyle(
+                                          color: Colors.orange,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -276,6 +197,22 @@ class _OrdersViewState extends State<OrdersView> {
                 },
               ),
             ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.grey[300]),
+          const SizedBox(height: 10),
+          const Text(
+            "No customer orders found",
+            style: TextStyle(color: Colors.grey),
+          ),
+        ],
+      ),
     );
   }
 }

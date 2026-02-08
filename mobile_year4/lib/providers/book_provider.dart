@@ -17,12 +17,11 @@ class BookProvider extends ChangeNotifier {
   int get itemCount => _cart.length;
   bool get isSyncing => _isSyncing;
 
-  // FIX: Added token parameter here
   void setUser(String name, String email, [String? token]) {
     _userName = name;
     _userEmail = email;
     if (token != null) {
-      ApiConfig.userToken = token; // Store it globally
+      ApiConfig.userToken = token;
     }
     notifyListeners();
   }
@@ -42,10 +41,7 @@ class BookProvider extends ChangeNotifier {
         _cart.clear();
         for (var item in rawData) {
           if (item['book'] != null) {
-            final Map<String, dynamic> bookData = Map<String, dynamic>.from(
-              item['book'],
-            );
-            // Inject pivot data from order_list table
+            final Map<String, dynamic> bookData = Map<String, dynamic>.from(item['book']);
             bookData['display_price'] = item['price'].toString();
             bookData['quantity'] = item['quantity'];
             _cart.add(Book.fromJson(bookData));
@@ -61,8 +57,8 @@ class BookProvider extends ChangeNotifier {
   }
 
   Future<void> addToCart(Book book) async {
+    // 1. Local UI update
     final existingIndex = _cart.indexWhere((item) => item.id == book.id);
-
     if (existingIndex != -1) {
       _cart[existingIndex].quantity++;
     } else {
@@ -70,25 +66,36 @@ class BookProvider extends ChangeNotifier {
     }
     notifyListeners();
 
+    if (ApiConfig.userToken == null) return;
+
     try {
-      await http.post(
+      final String cleanPrice = book.displayPrice.toString().replaceAll(RegExp(r'[^0-9.]'), '');
+
+      final response = await http.post(
         Uri.parse(ApiConfig.orders),
         headers: ApiConfig.getHeaders(),
-        body: jsonEncode({"book_id": book.id, "price": book.displayPrice}),
+        body: jsonEncode({
+          "book_id": int.parse(book.id),
+          "price": cleanPrice,
+        }),
       );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        debugPrint("✅ SUCCESS: Inserted into order_list table!");
+      } else {
+        debugPrint("❌ DB ERROR: ${response.body}");
+      }
     } catch (e) {
-      debugPrint("Network Error: $e");
+      debugPrint("❌ Connection Error: $e");
     }
   }
 
   Future<void> decrementQuantity(int index) async {
     if (index < 0 || index >= _cart.length) return;
 
-    final book = _cart[index];
-    final bookId = book.id;
-
-    if (book.quantity > 1) {
-      book.quantity--;
+    final bookId = _cart[index].id;
+    if (_cart[index].quantity > 1) {
+      _cart[index].quantity--;
     } else {
       _cart.removeAt(index);
     }
@@ -123,20 +130,15 @@ class BookProvider extends ChangeNotifier {
 
   double get totalCartPrice {
     return _cart.fold(0.0, (sum, item) {
-
-      final String priceString = item.displayPrice.toString().replaceAll(
-        RegExp(r'[^0-9.]'),
-        '',
-      );
-      final double priceValue = double.tryParse(priceString) ?? 0.0;
-      return sum + (priceValue * item.quantity);
+      final String priceString = item.displayPrice.toString().replaceAll(RegExp(r'[^0-9.]'), '');
+      return sum + ((double.tryParse(priceString) ?? 0.0) * item.quantity);
     });
   }
 
   void logout() {
     _userName = "Guest User";
     _userEmail = "guest@example.com";
-    ApiConfig.userToken = null; 
+    ApiConfig.userToken = null;
     _cart.clear();
     notifyListeners();
   }
