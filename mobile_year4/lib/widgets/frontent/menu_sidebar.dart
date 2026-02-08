@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:mobile_year4/screens/auth/login_view.dart';
 import 'package:mobile_year4/screens/frontend/book/book_view.dart';
 import 'package:mobile_year4/screens/frontend/home/home_view.dart';
 import 'package:mobile_year4/screens/frontend/about/about_us_view.dart';
+import 'package:mobile_year4/colors.dart'; // Ensure correct path to AppColors
 import 'package:mobile_year4/screens/frontend/order_list/order_list_view.dart';
 import 'package:mobile_year4/screens/frontend/contact_us/contact_us_view.dart';
 import 'package:mobile_year4/screens/frontend/book_pdf_free/book_pdf_view.dart';
+import '../../../providers/book_provider.dart'; // Import provider to get user data
 import 'package:mobile_year4/screens/frontend/special_offer/special_offers_view.dart';
 import 'package:mobile_year4/screens/frontend/best_selling_view/best_selling_view.dart';
 
@@ -15,18 +18,22 @@ class AppSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bookProvider = context.watch<BookProvider>();
+    final String userName = bookProvider.userName;
+    final String userEmail = bookProvider.userEmail;
+
     return Drawer(
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       child: ListView(
-        // Changed from Column to ListView for the whole drawer
         padding: EdgeInsets.zero,
         children: [
-           const UserAccountsDrawerHeader(
-            accountName:  Text('Nita Vann'),
-            accountEmail:  Text('account@example.com'),
-            // ADD THIS LINE TO CHANGE COLOR:
-            decoration:  BoxDecoration(color: Color.fromARGB(255, 45, 135, 208)),
-            currentAccountPicture:  CircleAvatar(
+          UserAccountsDrawerHeader(
+            accountName: Text(bookProvider.userName),
+            accountEmail: Text(bookProvider.userEmail),
+            // USE APPCOLOR: Replaced hardcoded Color.fromARGB
+            decoration: const BoxDecoration(color: AppColors.accent),
+            currentAccountPicture: const CircleAvatar(
+              backgroundColor: AppColors.accent,
               backgroundImage: NetworkImage(
                 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmf4NlFls31qGMTqzjbaNgxmoNwClN9140-A&s',
               ),
@@ -78,14 +85,20 @@ class AppSidebar extends StatelessWidget {
             const AboutUsView(),
           ),
 
-          // Logout Item (Now directly under the menu)
+          // Logout Item
           ListTile(
-            leading: const Icon(Icons.logout_rounded, color: Colors.red),
+            leading: const Icon(Icons.logout_rounded, color: AppColors.danger),
             title: const Text(
               'Logout',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.danger,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             onTap: () {
+              // Clear snackbars on logout to be safe
+            context.read<BookProvider>().logout();
+
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginView()),
@@ -93,7 +106,7 @@ class AppSidebar extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 20), // Padding at the bottom
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -108,15 +121,25 @@ class AppSidebar extends StatelessWidget {
     bool isActive = currentRoute == title;
     return ListTile(
       selected: isActive,
-      selectedTileColor: Colors.blue.withValues(alpha: 0.1),
-      leading: Icon(icon, color: isActive ? Colors.blue : Colors.grey),
+      // USE APPCOLOR: Replaced Colors.blue
+      selectedTileColor: AppColors.accent.withValues(alpha: 0.1),
+      leading: Icon(
+        icon,
+        color: isActive ? AppColors.accent : AppColors.textSecondary,
+      ),
       title: Text(
         title,
-        style: TextStyle(color: isActive ? Colors.blue : Colors.black),
+        style: TextStyle(
+          color: isActive ? AppColors.accent : AppColors.textPrimary,
+          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+        ),
       ),
       onTap: () {
         Navigator.pop(context); // Close drawer
         if (!isActive) {
+          // Clear any active snackbars when switching pages via sidebar
+          ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => destination),

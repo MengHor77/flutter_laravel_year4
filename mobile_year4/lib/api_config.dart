@@ -1,7 +1,7 @@
 class ApiConfig {
   // 1. The Base URL (Using your machine's Wi-Fi IP)
   // This works for both Physical Devices and Emulators on the same Wi-Fi
-  static const String _baseUrl = "http://192.168.1.102:8000";
+  static const String _baseUrl = "http://192.168.1.103:8000";
 
   // 2. The API Domain
   static const String _domain = "$_baseUrl/api";

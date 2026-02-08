@@ -8,6 +8,19 @@ class BookProvider extends ChangeNotifier {
   final List<Book> _cart = [];
   bool _isSyncing = false;
 
+  String _userName = "Guest User";
+  String _userEmail = "guest@example.com";
+
+  String get userName => _userName;
+  String get userEmail => _userEmail;
+
+  void setUser(String name, String email) {
+    _userName = name;
+    _userEmail = email;
+    notifyListeners(); // This tells the Sidebar to refresh with the new name
+  }
+
+
   List<Book> get cart => List.unmodifiable(_cart);
   int get itemCount => _cart.length;
   bool get isSyncing => _isSyncing;
@@ -133,11 +146,22 @@ class BookProvider extends ChangeNotifier {
   }
 
   /// Helper to calculate total price (Price * Quantity)
+  
   double get totalCartPrice {
+
     return _cart.fold(0.0, (sum, item) {
       final cleanPrice = item.displayPrice.replaceAll(RegExp(r'[^0-9.]'), '');
       final double priceValue = double.tryParse(cleanPrice) ?? 0.0;
       return sum + (priceValue * item.quantity); // Dynamic total
     });
   }
+
+  void logout() {
+  _userName = "Guest User";
+  _userEmail = "guest@example.com";
+  _cart.clear();
+  notifyListeners();
 }
+
+}
+

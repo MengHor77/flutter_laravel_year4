@@ -35,7 +35,7 @@ class UserController extends Controller
                 'status' => 'success',
                 'role' => 'user',
                 'token' => $token,
-                'data' => $user,
+                'user' => $user,
             ], 200);
         }
 
@@ -49,7 +49,7 @@ class UserController extends Controller
                 'status' => 'success',
                 'role' => 'admin',
                 'token' => 'admin_session_token', // Placeholder or generated token
-                'data' => $admin,
+                'user' => $admin,
             ], 200);
         }
 

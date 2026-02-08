@@ -3,8 +3,10 @@ import 'register_view.dart';
 import '../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import '../frontend/home/home_view.dart';
 import '../admin/admin_menu_sidebar.dart';
+import '../../providers/book_provider.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -57,6 +59,17 @@ class _LoginViewState extends State<LoginView> {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+
+        final userData = data['user']; 
+        if (userData != null) {
+          // Send name and email to the BookProvider
+          context.read<BookProvider>().setUser(
+            userData['name'] ?? "User",
+            userData['email'] ?? "",
+          );
+        }
+        context.read<BookProvider>().fetchSavedOrders();
+
         // Laravel returns 'role' => 'admin' or 'role' => 'user'
         String role = data['role'] ?? 'user';
 
