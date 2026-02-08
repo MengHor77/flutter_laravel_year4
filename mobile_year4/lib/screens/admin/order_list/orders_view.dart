@@ -61,7 +61,7 @@ class _OrdersViewState extends State<OrdersView> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Admin: Order Management"),
+        title: const Text("Order Management"),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnDark,
         leading: IconButton(
