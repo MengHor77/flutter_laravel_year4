@@ -5,30 +5,33 @@ namespace App\Http\Controllers\backend;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
-
 
 class UserController extends Controller
 {
-    
+    /**
+     * Get list of all regular users
+     */
     public function index()
     {
-            $users = User::all();
-            return response()->json($users, 200);
+        $users = User::all();
+        return response()->json($users, 200);
     }
     
+    /**
+     * Unified Login for User and Admin
+     */
     public function login(Request $request)
-     {
+    {
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
             'device_name' => 'required', 
         ]);
 
-        // 1. Try to find the person in the Users table
+        // 1. Check User Table
         $user = User::where('email', $request->email)->first();
-        
         if ($user && Hash::check($request->password, $user->password)) {
             $token = $user->createToken($request->device_name)->plainTextToken;
             return response()->json([
@@ -39,29 +42,30 @@ class UserController extends Controller
             ], 200);
         }
 
-        // 2. If not found in Users, try the Admin table
-        $admin = DB::table('admin')->where('email', $request->email)->first();
-
+        // 2. Check Admin Table
+        $admin = Admin::where('email', $request->email)->first();
         if ($admin && Hash::check($request->password, $admin->password)) {
-            // Note: If you want to use Sanctum tokens for Admin, 
-            // the Admin needs to be a Model using the HasApiTokens trait.
+            $token = $admin->createToken($request->device_name)->plainTextToken;
             return response()->json([
                 'status' => 'success',
                 'role' => 'admin',
-                'token' => 'admin_session_token', // Placeholder or generated token
-               'user' => [
-                'name' => $admin->name ?? $admin->username ?? 'Admin User', 
-                'email' => $admin->email,
-            ],
+                'token' => $token, 
+                'user' => [
+                    'id' => $admin->id,
+                    'name' => $admin->name ?? $admin->username ?? 'Admin User', 
+                    'email' => $admin->email,
+                ],
             ], 200);
         }
 
         return response()->json(['message' => 'Invalid credentials'], 401);
-     }
+    }
 
-    // Register Logic (unchanged)
+    /**
+     * Regular User Registration
+     */
     public function register(Request $request)
-     {
+    {
         $validateData = $request->validate([
             'name' => 'required|max:255',
             'email' => 'required|email|unique:users',
@@ -75,5 +79,5 @@ class UserController extends Controller
         ]);
 
         return response()->json(['message' => 'User created successfully', 'user' => $user], 201); 
-     }
+    }
 }
