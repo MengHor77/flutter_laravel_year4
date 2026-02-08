@@ -41,7 +41,9 @@ class BookProvider extends ChangeNotifier {
         _cart.clear();
         for (var item in rawData) {
           if (item['book'] != null) {
-            final Map<String, dynamic> bookData = Map<String, dynamic>.from(item['book']);
+            final Map<String, dynamic> bookData = Map<String, dynamic>.from(
+              item['book'],
+            );
             bookData['display_price'] = item['price'].toString();
             bookData['quantity'] = item['quantity'];
             _cart.add(Book.fromJson(bookData));
@@ -69,15 +71,15 @@ class BookProvider extends ChangeNotifier {
     if (ApiConfig.userToken == null) return;
 
     try {
-      final String cleanPrice = book.displayPrice.toString().replaceAll(RegExp(r'[^0-9.]'), '');
+      final String cleanPrice = book.displayPrice.toString().replaceAll(
+        RegExp(r'[^0-9.]'),
+        '',
+      );
 
       final response = await http.post(
         Uri.parse(ApiConfig.orders),
         headers: ApiConfig.getHeaders(),
-        body: jsonEncode({
-          "book_id": int.parse(book.id),
-          "price": cleanPrice,
-        }),
+        body: jsonEncode({"book_id": int.parse(book.id), "price": cleanPrice}),
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
@@ -130,7 +132,10 @@ class BookProvider extends ChangeNotifier {
 
   double get totalCartPrice {
     return _cart.fold(0.0, (sum, item) {
-      final String priceString = item.displayPrice.toString().replaceAll(RegExp(r'[^0-9.]'), '');
+      final String priceString = item.displayPrice.toString().replaceAll(
+        RegExp(r'[^0-9.]'),
+        '',
+      );
       return sum + ((double.tryParse(priceString) ?? 0.0) * item.quantity);
     });
   }
@@ -141,5 +146,49 @@ class BookProvider extends ChangeNotifier {
     ApiConfig.userToken = null;
     _cart.clear();
     notifyListeners();
+  }
+
+  Future<bool> processCheckout() async {
+    if (ApiConfig.userToken == null || _cart.isEmpty) return false;
+
+    _isSyncing = true;
+    notifyListeners();
+
+    try {
+      final response = await http.post(
+        Uri.parse("${ApiConfig.baseUrl}/api/checkout"),
+        headers: ApiConfig.getHeaders(),
+        body: jsonEncode({
+          "total_amount": totalCartPrice,
+          "items": _cart.map((item) {
+            // Ensure price is sent as a clean number string
+            final String cleanPrice = item.displayPrice.toString().replaceAll(
+              RegExp(r'[^0-9.]'),
+              '',
+            );
+            return {
+              "book_id": item.id,
+              "quantity": item.quantity,
+              "price": cleanPrice,
+            };
+          }).toList(),
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        _cart.clear();
+        notifyListeners();
+        return true;
+      } else {
+        debugPrint("Checkout Failed: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      debugPrint("Checkout Error: $e");
+      return false;
+    } finally {
+      _isSyncing = false;
+      notifyListeners();
+    }
   }
 }

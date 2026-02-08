@@ -1,7 +1,8 @@
 import '../../../colors.dart';
-import '../../../api_config.dart'; 
+import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../checkout_view/checkout_view.dart';
 import '../../../providers/book_provider.dart';
 import '../../../widgets/frontent/menu_sidebar.dart';
 
@@ -12,19 +13,17 @@ class OrderListView extends StatelessWidget {
   String _getImageUrl(String? path) {
     if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
 
-    // If the DB already contains the full URL (http://192.168.1.102...)
     if (path.startsWith('http')) {
       return path;
     }
 
-    // Otherwise, append the storage base URL
     String cleanPath = path.startsWith('/') ? path.substring(1) : path;
     return "${ApiConfig.storage}$cleanPath";
   }
 
   @override
   Widget build(BuildContext context) {
-    // watch the provider for changes
+    // Watch the provider for changes
     final provider = context.watch<BookProvider>();
     final cartItems = provider.cart;
 
@@ -60,7 +59,7 @@ class OrderListView extends StatelessWidget {
                     padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
-                        // --- FIXED IMAGE SECTION ---
+                        // --- IMAGE SECTION ---
                         Container(
                           width: 50,
                           height: 60,
@@ -71,7 +70,7 @@ class OrderListView extends StatelessWidget {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: Image.network(
-                              _getImageUrl(item.image), // Use the helper
+                              _getImageUrl(item.image),
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Icon(
@@ -81,9 +80,8 @@ class OrderListView extends StatelessWidget {
                             ),
                           ),
                         ),
-                        // ---------------------------
                         const SizedBox(width: 12),
-                        // Text Info
+                        // --- TEXT INFO ---
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,13 +102,13 @@ class OrderListView extends StatelessWidget {
                             ],
                           ),
                         ),
-                        // Action Buttons
+                        // --- ACTION BUTTONS ---
                         Row(
                           children: [
                             IconButton(
                               icon: const Icon(
                                 Icons.add_circle_outline,
-                                color: Colors.red,
+                                color: Colors.blue,
                                 size: 28,
                               ),
                               onPressed: () => provider.addToCart(item),
@@ -145,7 +143,9 @@ class OrderListView extends StatelessWidget {
                 );
               },
             ),
-      bottomNavigationBar: cartItems.isEmpty ? null : _buildBottomBar(provider),
+      bottomNavigationBar: cartItems.isEmpty
+          ? null
+          : _buildBottomBar(context, provider),
     );
   }
 
@@ -158,7 +158,7 @@ class OrderListView extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomBar(BookProvider provider) {
+  Widget _buildBottomBar(BuildContext context, BookProvider provider) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: const BoxDecoration(
@@ -189,7 +189,11 @@ class OrderListView extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                // Add your checkout logic here
+                // NAVIGATION FIX: Go to CheckoutView
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CheckoutView()),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
@@ -200,7 +204,10 @@ class OrderListView extends StatelessWidget {
               ),
               child: const Text(
                 "CHECKOUT",
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],

@@ -1,6 +1,7 @@
 class ApiConfig {
-  static const String _baseUrl = "http://192.168.1.103:8000";
-  static const String _domain = "$_baseUrl/api";
+  // Removed underscore to make it public and accessible to BookProvider
+  static const String baseUrl = "http://192.168.1.103:8000";
+  static const String _domain = "$baseUrl/api";
 
   static String? userToken;
 
@@ -24,7 +25,7 @@ class ApiConfig {
   static const String bestSelling = "$_domain/best-selling";
 
   // Storage / Image Path
-  static const String storage = "$_baseUrl/storage/";
+  static const String storage = "$baseUrl/storage/";
 
   // Helper for Headers (Consistency across all files)
   static Map<String, String> getHeaders() {
