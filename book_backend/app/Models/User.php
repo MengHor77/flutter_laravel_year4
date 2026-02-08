@@ -21,4 +21,11 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+    // app/Models/User.php
+
+public function orders()
+{
+    return $this->hasMany(OrderList::class, 'user_id');
+}
+
 }
