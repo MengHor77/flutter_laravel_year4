@@ -11,18 +11,16 @@ class CheckoutController extends Controller
 {
     public function processCheckout(Request $request)
     {
-        // 1. Validate data from Flutter
         $request->validate([
             'total_amount' => 'required',
             'items' => 'required|array',
         ]);
 
         try {
-            // Use Database Transaction for safety
             return DB::transaction(function () use ($request) {
                 $user = $request->user();
 
-                // 2. Create the main Order record
+                //  Create the main Order record
                 // This assumes you have an 'orders' table for history
                 $orderId = DB::table('orders')->insertGetId([
                     'user_id' => $user->id,
@@ -32,19 +30,21 @@ class CheckoutController extends Controller
                     'updated_at' => now(),
                 ]);
 
-                // 3. Save each item from the cart into an 'order_items' table
-                foreach ($request->items as $item) {
-                    DB::table('order_items')->insert([
-                        'order_id' => $orderId,
-                        'book_id'  => $item['book_id'],
-                        'quantity' => $item['quantity'],
-                        'price'    => $item['price'],
-                        'created_at' => now(),
-                    ]);
-                }
+                        foreach ($request->items as $item) {
+                $itemTotal = $item['price'] * $item['quantity'];
 
-                // 4. CLEAR THE CART (The temporary 'order_list' table)
-                // This makes the cart empty in Flutter after a successful purchase
+                DB::table('order_items')->insert([
+                    'order_id'     => $orderId,
+                    'user_id'      => $user->id,
+                    'book_id'      => $item['book_id'],
+                    'quantity'     => $item['quantity'],
+                    'price'        => $item['price'],
+                    'total_amount' => $itemTotal, // Now this works
+                    'created_at'   => now(),
+                    'updated_at'   => now(), 
+                ]);
+            }
+
                 DB::table('order_list')->where('user_id', $user->id)->delete();
 
                 return response()->json([
