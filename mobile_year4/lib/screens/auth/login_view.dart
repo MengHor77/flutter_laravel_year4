@@ -36,8 +36,6 @@ class _LoginViewState extends State<LoginView> {
     }
 
     setState(() => _isLoading = true);
-
-    // 2. USE API CONFIG HERE
     final url = Uri.parse(ApiConfig.login);
 
     try {
@@ -59,18 +57,21 @@ class _LoginViewState extends State<LoginView> {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        debugPrint("Full Login Response: $data");
 
         final userData = data['user']; 
         if (userData != null) {
-          // Send name and email to the BookProvider
+          debugPrint("Extracted Name: ${userData['name']}");
+          
           context.read<BookProvider>().setUser(
             userData['name'] ?? "User",
             userData['email'] ?? "",
           );
         }
+        
+        // Fetch cart items immediately
         context.read<BookProvider>().fetchSavedOrders();
 
-        // Laravel returns 'role' => 'admin' or 'role' => 'user'
         String role = data['role'] ?? 'user';
 
         if (role == 'admin') {
@@ -88,9 +89,7 @@ class _LoginViewState extends State<LoginView> {
         _showError(data['message'] ?? "Login Failed");
       }
     } catch (e) {
-      _showError(
-        "Connection failed. Check if Laravel server is running at ${ApiConfig.login}",
-      );
+      _showError("Connection failed. Check if Laravel server is running.");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -137,11 +136,8 @@ class _LoginViewState extends State<LoginView> {
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureText ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscureText = !_obscureText),
+                      icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _obscureText = !_obscureText),
                     ),
                   ),
                 ),
@@ -157,19 +153,14 @@ class _LoginViewState extends State<LoginView> {
                     onPressed: _isLoading ? null : _handleLogin,
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            "LOGIN",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                        : const Text("LOGIN", style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 20),
                 TextButton(
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const RegisterView(),
-                    ),
+                    MaterialPageRoute(builder: (context) => const RegisterView()),
                   ),
                   child: const Text("Don't have an account? Register Now"),
                 ),

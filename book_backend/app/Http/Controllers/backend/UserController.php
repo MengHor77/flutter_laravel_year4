@@ -49,7 +49,10 @@ class UserController extends Controller
                 'status' => 'success',
                 'role' => 'admin',
                 'token' => 'admin_session_token', // Placeholder or generated token
-                'user' => $admin,
+               'user' => [
+                'name' => $admin->name ?? $admin->username ?? 'Admin User', 
+                'email' => $admin->email,
+            ],
             ], 200);
         }
 
