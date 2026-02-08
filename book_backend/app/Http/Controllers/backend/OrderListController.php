@@ -9,9 +9,17 @@ use Illuminate\Support\Facades\Validator;
 
 class OrderListController extends Controller
 {
-    public function index()
+    
+    public function index(Request $request)
     {
-        $orders = OrderList::with('book')->orderBy('created_at', 'desc')->get();
+        // 1. Filter by the logged-in user's ID
+        $userId = $request->user()->id; 
+        
+        $orders = OrderList::where('user_id', $userId)
+            ->with('book')
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
         return response()->json($orders, 200);
     }
 
@@ -22,13 +30,19 @@ class OrderListController extends Controller
             'price'   => 'required|numeric',
         ]);
 
-        $existingOrder = OrderList::where('book_id', $request->book_id)->first();
+        $userId = $request->user()->id;
+
+        // 2. Check for existing order belonging ONLY to THIS user
+        $existingOrder = OrderList::where('user_id', $userId)
+            ->where('book_id', $request->book_id)
+            ->first();
 
         if ($existingOrder) {
             $existingOrder->increment('quantity');
             $orderItem = $existingOrder;
         } else {
             $orderItem = OrderList::create([
+                'user_id' => $userId, // Save the user owner
                 'book_id' => $request->book_id,
                 'price'   => $request->price,
                 'quantity' => 1,
@@ -38,12 +52,14 @@ class OrderListController extends Controller
         return response()->json(['data' => $orderItem->load('book')], 201);
     }
 
-    /**
-     * Handle the Minus button logic
-     */
-    public function decrementQuantity($bookId)
+    public function decrementQuantity(Request $request, $bookId)
     {
-        $item = OrderList::where('book_id', $bookId)->first();
+        $userId = $request->user()->id;
+        
+        // 3. Ensure we only decrement the logged-in user's items
+        $item = OrderList::where('user_id', $userId)
+            ->where('book_id', $bookId)
+            ->first();
         
         if (!$item) {
             return response()->json(['message' => 'Not found'], 404);
@@ -58,9 +74,15 @@ class OrderListController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $item = OrderList::where('book_id', $id)->first();
+        $userId = $request->user()->id;
+
+        // 4. Ensure user can only delete their own order
+        $item = OrderList::where('user_id', $userId)
+            ->where('book_id', $id)
+            ->first();
+
         if ($item) {
             $item->delete();
             return response()->json(['message' => 'Item removed'], 200);

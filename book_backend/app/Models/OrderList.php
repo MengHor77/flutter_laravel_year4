@@ -10,7 +10,7 @@ class OrderList extends Model
     use HasFactory;
 
     protected $table = 'order_list';
-    protected $fillable = ['book_id', 'price'];
+   protected $fillable = ['user_id', 'book_id', 'price', 'quantity'];
 
     // Relationship to get Book info
     public function book()
