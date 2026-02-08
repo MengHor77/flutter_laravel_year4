@@ -7,16 +7,23 @@ class ApiConfig {
   static const String login = "$_domain/login";
   static const String register = "$_domain/register";
 
-  //  Admin Endpoints
+  // Admin Endpoints
   static const String categories = "$_domain/categories";
   static const String books = "$_domain/books";
   static const String users = "$_domain/users";
+  
+  // Cart/User Orders (Frontend)
   static const String orders = "$_domain/orders";
+  
+  // NEW: Admin specific order list (Backend)
+  // This route returns user names and details along with the books
+  static const String adminOrders = "$_domain/admin-orders";
+
   static const String sales = "$_domain/sales";
   static const String specialOffers = "$_domain/special-offers";
   static const String bestSelling = "$_domain/best-selling";
 
-  //  Storage / Image Path
+  // Storage / Image Path
   static const String storage = "$_baseUrl/storage/";
 
   // Helper for Headers (Consistency across all files)
