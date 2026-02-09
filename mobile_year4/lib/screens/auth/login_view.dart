@@ -1,11 +1,9 @@
-import 'dart:convert';
 import 'register_view.dart';
-import '../../api_config.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../frontend/home/home_view.dart';
 import '../admin/admin_menu_sidebar.dart';
+import '../../services/auth_service.dart'; 
 import '../../providers/book_provider.dart';
 
 class LoginView extends StatefulWidget {
@@ -22,6 +20,9 @@ class _LoginViewState extends State<LoginView> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  // 2. Initialize the Service
+  final AuthService _authService = AuthService();
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -36,48 +37,32 @@ class _LoginViewState extends State<LoginView> {
     }
 
     setState(() => _isLoading = true);
-    final url = Uri.parse(ApiConfig.login);
 
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: jsonEncode({
-          "email": _emailController.text,
-          "password": _passwordController.text,
-          "device_name": "mobile_app",
-        }),
+      // 3. Call the Login Service instead of http.post
+      final result = await _authService.login(
+        _emailController.text,
+        _passwordController.text,
       );
 
       if (!mounted) return;
 
-      final data = jsonDecode(response.body);
+      if (result['success']) {
+        debugPrint("Login Success: ${result['user']['name']}");
 
-      if (response.statusCode == 200) {
-        debugPrint("Full Login Response: $data");
+        // 4. Update BookProvider with user data
+        final bookProvider = context.read<BookProvider>();
+        bookProvider.setUser(
+          result['user']['name'] ?? "User",
+          result['user']['email'] ?? "",
+          result['token'],
+        );
 
-        final String? token = data['token'];
-        final userData = data['user']; 
+        // Sync cart/orders
+        bookProvider.fetchSavedOrders();
 
-        if (userData != null) {
-          debugPrint("Extracted Name: ${userData['name']}");
-          
-         
-          context.read<BookProvider>().setUser(
-            userData['name'] ?? "User",
-            userData['email'] ?? "",
-            token, 
-          );
-        }
-        
-        context.read<BookProvider>().fetchSavedOrders();
-
-        String role = data['role'] ?? 'user';
-
-        if (role == 'admin') {
+        // 5. Navigate based on role
+        if (result['role'] == 'admin') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const AdminMenuSidebar()),
@@ -89,11 +74,11 @@ class _LoginViewState extends State<LoginView> {
           );
         }
       } else {
-        _showError(data['message'] ?? "Login Failed");
+        // Show error message from service
+        _showError(result['message']);
       }
     } catch (e) {
-      debugPrint("Login Error: $e");
-      _showError("Connection failed. Check if Laravel server is running.");
+      _showError("An unexpected error occurred.");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -140,8 +125,11 @@ class _LoginViewState extends State<LoginView> {
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _obscureText = !_obscureText),
+                      icon: Icon(
+                        _obscureText ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscureText = !_obscureText),
                     ),
                   ),
                 ),
@@ -157,14 +145,19 @@ class _LoginViewState extends State<LoginView> {
                     onPressed: _isLoading ? null : _handleLogin,
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text("LOGIN", style: TextStyle(fontWeight: FontWeight.bold)),
+                        : const Text(
+                            "LOGIN",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 20),
                 TextButton(
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const RegisterView()),
+                    MaterialPageRoute(
+                      builder: (context) => const RegisterView(),
+                    ),
                   ),
                   child: const Text("Don't have an account? Register Now"),
                 ),

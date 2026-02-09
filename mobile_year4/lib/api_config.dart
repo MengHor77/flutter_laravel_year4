@@ -1,6 +1,6 @@
 class ApiConfig {
   // Removed underscore to make it public and accessible to BookProvider
-  static const String baseUrl = "http://192.168.1.103:8000";
+  static const String baseUrl = "http://10.1.42.124:8000";
   static const String _domain = "$baseUrl/api";
 
   static String? userToken;
