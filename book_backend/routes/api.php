@@ -8,6 +8,8 @@ use App\Http\Controllers\backend\BookController;
 use App\Http\Controllers\backend\BestSellingController;
 use App\Http\Controllers\backend\SpecialOfferController;
 use App\Http\Controllers\frontend\CheckoutController;
+use App\Http\Controllers\backend\SaleController;
+
 
 // FIX: Import both controllers with different names
 use App\Http\Controllers\frontend\OrderListController as FrontendOrder;
@@ -44,6 +46,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/orders/{id}', [FrontendOrder::class, 'destroy']);
     Route::post('/orders/decrement/{book_id}', [FrontendOrder::class, 'decrementQuantity']);
     Route::post('/checkout', [CheckoutController::class, 'processCheckout']);
+    Route::get('/sales', [SaleController::class, 'getSummary']);
+    
 });
 
 // --- END ORDERS SECTION ---
@@ -58,4 +62,4 @@ Route::delete('best-selling/{id}', [BestSellingController::class, 'destroy']);
 Route::get('/special-offers', [SpecialOfferController::class, 'index']);
 Route::post('/special-offers', [SpecialOfferController::class, 'store']);
 Route::delete('/special-offers/{id}', [SpecialOfferController::class, 'destroy']);
-Route::put('special-offers/{id}', [SpecialOfferController::class, 'update']);
+Route::put('special-offers/{id}', [SpecialOfferController::class, 'update']);  
