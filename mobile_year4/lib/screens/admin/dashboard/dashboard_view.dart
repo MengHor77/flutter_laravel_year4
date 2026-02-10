@@ -1,14 +1,28 @@
 import 'revenue_card.dart';
 import '../../../colors.dart';
 import 'total_book_card.dart';
+import 'total_user_card.dart';
 import 'active_order_card.dart';
 import 'package:flutter/material.dart';
-import 'total_user_card.dart'; // Verify this file name is exactly 'total_user_card.dart'
+import 'package:provider/provider.dart'; 
+import '../../../providers/sale_provider.dart'; 
 
-class DashboardView extends StatelessWidget {
+class DashboardView extends StatefulWidget {
   final VoidCallback openDrawer;
-
   const DashboardView({super.key, required this.openDrawer});
+
+  @override
+  State<DashboardView> createState() => _DashboardViewState();
+}
+
+class _DashboardViewState extends State<DashboardView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<SaleProvider>(context, listen: false).fetchSales();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,15 +36,12 @@ class DashboardView extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.menu),
-          onPressed: openDrawer,
+          onPressed: widget.openDrawer,
         ),
       ),
-      // Using a CustomScrollView or ListView with RefreshIndicator 
-      // is more reliable for "Pull to Refresh" than a basic GridView.
       body: RefreshIndicator(
         onRefresh: () async {
-          // This triggers a rebuild of the dashboard
-          (context as Element).markNeedsBuild();
+          await Provider.of<SaleProvider>(context, listen: false).fetchSales();
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -38,12 +49,12 @@ class DashboardView extends StatelessWidget {
             crossAxisCount: 2,
             crossAxisSpacing: 15,
             mainAxisSpacing: 15,
-            physics: const AlwaysScrollableScrollPhysics(), // Important for RefreshIndicator
+            physics: const AlwaysScrollableScrollPhysics(),
             children: const [
               TotalBookCard(),
               TotalUserCard(),
               ActiveOrderCard(),
-              RevenueCard(),
+              RevenueCard(), 
             ],
           ),
         ),
