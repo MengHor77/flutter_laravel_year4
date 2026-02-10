@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/sale_provider.dart';
 
-class ActiveOrderCard extends StatelessWidget {
-  const ActiveOrderCard({super.key});
+class TotalMonthlyOrderCard extends StatelessWidget {
+  const TotalMonthlyOrderCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +37,7 @@ class ActiveOrderCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -61,7 +61,7 @@ class ActiveOrderCard extends StatelessWidget {
                 ),
               ),
               const Text(
-                "Monthly Orders", // Updated label for clarity
+                "Monthly Orders",
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
             ],
