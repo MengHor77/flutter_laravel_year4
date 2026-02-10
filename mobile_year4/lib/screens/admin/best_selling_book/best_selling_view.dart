@@ -25,7 +25,6 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
   }
 
   Future<void> _fetchBestSellers() async {
-    // Safety check to ensure widget is still in the tree
     if (!mounted) return;
     setState(() => _isLoading = true);
 
@@ -58,12 +57,12 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
       if (response.statusCode == 200) {
         _fetchBestSellers();
 
-        // FIX: Check if widget is mounted before using BuildContext across async gap
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Removed from Best Sellers"),
               behavior: SnackBarBehavior.floating,
+              backgroundColor: AppColors.success,
             ),
           );
         }
@@ -81,62 +80,81 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
         title: const Text("Manage Best Selling"),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: widget.openDrawer,
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: Colors.white),
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const CreateBestSelling()),
-        ).then((_) => _fetchBestSellers()),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: "Fetch Data",
+            onPressed: _fetchBestSellers,
+          ),
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            tooltip: "Add Best Seller",
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CreateBestSelling()),
+            ).then((_) => _fetchBestSellers()),
+          ),
+        ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _bestSellers.isEmpty
-          ? const Center(child: Text("No Best Selling books found."))
-          : ListView.builder(
-              padding: const EdgeInsets.all(10),
-              itemCount: _bestSellers.length,
-              itemBuilder: (context, index) {
-                final item = _bestSellers[index];
-                return Card(
-                  elevation: 2,
-                  margin: const EdgeInsets.symmetric(vertical: 5),
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: AppColors.accent,
-                      child: Icon(Icons.star, color: Colors.white),
-                    ),
-                    title: Text(item['book']['name'] ?? "Unknown Book"),
-                    subtitle: Text("Price: \$${item['book']['price']}"),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => EditBestSelling(item: item),
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.accent),
+            )
+          : RefreshIndicator(
+              onRefresh: _fetchBestSellers,
+              color: AppColors.accent,
+              child: _bestSellers.isEmpty
+                  ? const Center(child: Text("No Best Selling books found."))
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(10),
+                      itemCount: _bestSellers.length,
+                      itemBuilder: (context, index) {
+                        final item = _bestSellers[index];
+                        return Card(
+                          elevation: 2,
+                          margin: const EdgeInsets.symmetric(vertical: 5),
+                          child: ListTile(
+                            leading: const CircleAvatar(
+                              backgroundColor: AppColors.accent,
+                              child: Icon(Icons.star, color: Colors.white),
                             ),
-                          ).then((_) => _fetchBestSellers()),
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete,
-                            color: AppColors.danger,
+                            title: Text(item['book']['name'] ?? "Unknown Book"),
+                            subtitle: Text("Price: \$${item['book']['price']}"),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.edit,
+                                    color: Colors.blue,
+                                  ),
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          EditBestSelling(item: item),
+                                    ),
+                                  ).then((_) => _fetchBestSellers()),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: AppColors.danger,
+                                  ),
+                                  onPressed: () =>
+                                      _deleteBestSeller(item['id']),
+                                ),
+                              ],
+                            ),
                           ),
-                          onPressed: () => _deleteBestSeller(item['id']),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  ),
-                );
-              },
             ),
     );
   }
