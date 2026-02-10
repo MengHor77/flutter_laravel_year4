@@ -1,4 +1,5 @@
 import '../../../colors.dart';
+import '../home/home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/book_provider.dart';
@@ -34,7 +35,7 @@ class _CheckoutViewState extends State<CheckoutView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Checkout Failed. Please check your connection."),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.danger, // Use AppColors.danger (red)
         ),
       );
     }
@@ -45,7 +46,11 @@ class _CheckoutViewState extends State<CheckoutView> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Icon(Icons.check_circle, color: Colors.green, size: 60),
+        title: const Icon(
+          Icons.check_circle,
+          color: AppColors.success,
+          size: 60,
+        ), // Use AppColors.success
         content: const Text(
           "Order Placed Successfully!",
           textAlign: TextAlign.center,
@@ -54,11 +59,15 @@ class _CheckoutViewState extends State<CheckoutView> {
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-              // If you don't have '/home' defined in routes,
-              // you can use Navigator.pushAndRemoveUntil here.
-              Navigator.pushReplacementNamed(context, '/home');
+
+              // FIX: Using MaterialPageRoute to go to HomeView safely
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeView()),
+                (route) => false, // Clears the navigation stack
+              );
             },
-            child: const Text("OK"),
+            child: const Text("OK", style: TextStyle(color: AppColors.accent)),
           ),
         ],
       ),
@@ -70,11 +79,11 @@ class _CheckoutViewState extends State<CheckoutView> {
     final provider = context.watch<BookProvider>();
 
     return Scaffold(
+      backgroundColor: AppColors.background, 
       appBar: AppBar(
         title: const Text("Checkout"),
         backgroundColor: AppColors.accent,
-        foregroundColor:
-            Colors.white, // Ensures text is visible on accent color
+        foregroundColor: AppColors.textOnDark, 
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -83,27 +92,48 @@ class _CheckoutViewState extends State<CheckoutView> {
           children: [
             const Text(
               "Order Summary",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             const Divider(),
             Expanded(
               child: provider.cart.isEmpty
-                  ? const Center(child: Text("No items in cart"))
+                  ? const Center(
+                      child: Text(
+                        "No items in cart",
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                    )
                   : ListView.builder(
                       itemCount: provider.cart.length,
                       itemBuilder: (context, index) {
                         final item = provider.cart[index];
 
-                        // FIX: Safe parsing to prevent crashes if price contains "$"
                         double unitPrice = _parseSafePrice(
                           item.displayPrice.toString(),
                         );
                         double subtotal = unitPrice * item.quantity;
 
                         return ListTile(
-                          title: Text(item.name),
-                          subtitle: Text("Qty: ${item.quantity}"),
-                          trailing: Text("\$${subtotal.toStringAsFixed(2)}"),
+                          title: Text(
+                            item.name,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          subtitle: Text(
+                            "Qty: ${item.quantity}",
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          trailing: Text(
+                            "\$${subtotal.toStringAsFixed(2)}",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         );
                       },
                     ),
@@ -114,14 +144,18 @@ class _CheckoutViewState extends State<CheckoutView> {
               children: [
                 const Text(
                   "Total",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
                 Text(
                   "\$${provider.totalCartPrice.toStringAsFixed(2)}",
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                    color: AppColors.success, 
                   ),
                 ),
               ],
@@ -133,11 +167,16 @@ class _CheckoutViewState extends State<CheckoutView> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.accent,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textOnDark,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 onPressed: _isProcessing ? null : () => _handlePayment(context),
                 child: _isProcessing
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const CircularProgressIndicator(
+                        color: AppColors.textOnDark,
+                      )
                     : const Text(
                         "CONFIRM AND PAY",
                         style: TextStyle(
