@@ -49,7 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/sales', [SaleController::class, 'getSummary']);
     Route::get('/orders', [OrderController::class, 'getUserOrders']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
-    
+    Route::get('/sale-details', [SaleController::class, 'getDetailedSales']);
     
 });
 

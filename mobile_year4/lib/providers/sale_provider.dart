@@ -6,20 +6,21 @@ class SaleProvider extends ChangeNotifier {
   double _monthlyRevenue = 0.0;
   bool _isLoading = false;
   String? _errorMessage;
+  List<dynamic> _saleDetails = [];
 
   // Getters
   double get todaySales => _todaySales;
   double get monthlyRevenue => _monthlyRevenue;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-
-  // Check if no sales exist
+  List<dynamic> get saleDetails => _saleDetails;
   bool get hasNoSales => _todaySales == 0 && _monthlyRevenue == 0;
 
+  // Method to fetch Summary
   Future<void> fetchSales() async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners(); // Tell the UI to show loading spinner
+    notifyListeners();
 
     final result = await SaleService.getSalesSummary();
 
@@ -31,6 +32,24 @@ class SaleProvider extends ChangeNotifier {
     }
 
     _isLoading = false;
-    notifyListeners(); // Tell the UI to update with new data
+    notifyListeners();
+  }
+
+  // Method to fetch individual transactions (Details)
+  Future<void> fetchSaleDetails() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await SaleService.getDetailedSales();
+
+    if (result['success']) {
+      _saleDetails = result['data'];
+    } else {
+      _errorMessage = result['message'];
+    }
+
+    _isLoading = false;
+    notifyListeners();
   }
 }

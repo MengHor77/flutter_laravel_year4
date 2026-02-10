@@ -2,7 +2,7 @@ import 'dart:convert';
 import '../api_config.dart';
 import '../models/book_model.dart';
 import 'package:flutter/material.dart';
-import '../services/book_service.dart'; 
+import '../services/book_service.dart';
 
 class BookProvider extends ChangeNotifier {
   final List<Book> _cart = [];
@@ -52,7 +52,7 @@ class BookProvider extends ChangeNotifier {
     }
   }
 
-  // 3. Add to Cart
+  // 3. Add to Cart (LOGS ADDED)
   Future<void> addToCart(Book book) async {
     final existingIndex = _cart.indexWhere((item) => item.id == book.id);
     if (existingIndex != -1) {
@@ -62,6 +62,11 @@ class BookProvider extends ChangeNotifier {
     }
     notifyListeners();
 
+    // Debug Log for Local Cart Success
+    debugPrint(
+      "🛒 [LOCAL CART] Added Success: ${book.name} (Qty: ${book.quantity})",
+    );
+
     if (ApiConfig.userToken == null) return;
     try {
       final String cleanPrice = book.displayPrice.toString().replaceAll(
@@ -69,7 +74,11 @@ class BookProvider extends ChangeNotifier {
         '',
       );
       final response = await BookService.addToCart(book.id, cleanPrice);
-      if (response.statusCode != 201 && response.statusCode != 200) {
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // Debug Log for Server Sync Success
+        debugPrint("✅ [SERVER CART] Sync Success for: ${book.name}");
+      } else {
         debugPrint("❌ DB ERROR: ${response.body}");
       }
     } catch (e) {
@@ -128,9 +137,12 @@ class BookProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 8. Process Checkout
+  // 8. Process Checkout (LOGS ADDED)
   Future<bool> processCheckout() async {
-    if (ApiConfig.userToken == null || _cart.isEmpty) return false;
+    if (ApiConfig.userToken == null || _cart.isEmpty) {
+      debugPrint("⚠️ Checkout aborted: Token null or Cart empty");
+      return false;
+    }
     _isSyncing = true;
     notifyListeners();
     try {
@@ -153,13 +165,23 @@ class BookProvider extends ChangeNotifier {
 
       final response = await BookService.checkout(checkoutData);
       if (response.statusCode == 200 || response.statusCode == 201) {
+        // Debug Log for Payment Success
+        debugPrint(
+          "✅[PAYMENT SUCCESS] Total Paid: \$${totalCartPrice.toStringAsFixed(2)}",
+        );
+        debugPrint("Response: ${response.body}");
+
         _cart.clear();
         notifyListeners();
         return true;
+      } else {
+        debugPrint(
+          "❌ [PAYMENT FAILED] Status: ${response.statusCode} Body: ${response.body}",
+        );
+        return false;
       }
-      return false;
     } catch (e) {
-      debugPrint("Checkout Error: $e");
+      debugPrint("❌ Checkout Exception: $e");
       return false;
     } finally {
       _isSyncing = false;

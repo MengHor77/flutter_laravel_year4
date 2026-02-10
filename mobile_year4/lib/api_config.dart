@@ -21,9 +21,11 @@ class ApiConfig {
   static const String adminOrders = "$_domain/admin-orders";
 
   static const String sales = "$_domain/sales";
+  static const String saleDetails = "$_domain/sale-details";
+  
   static const String specialOffers = "$_domain/special-offers";
   static const String bestSelling = "$_domain/best-selling";
-
+  
   // Storage / Image Path
   static const String storage = "$baseUrl/storage/";
 
