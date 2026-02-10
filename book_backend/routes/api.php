@@ -9,7 +9,7 @@ use App\Http\Controllers\backend\BestSellingController;
 use App\Http\Controllers\backend\SpecialOfferController;
 use App\Http\Controllers\frontend\CheckoutController;
 use App\Http\Controllers\backend\SaleController;
-
+use App\Http\Controllers\frontend\OrderController;
 
 // FIX: Import both controllers with different names
 use App\Http\Controllers\frontend\OrderListController as FrontendOrder;
@@ -47,6 +47,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/decrement/{book_id}', [FrontendOrder::class, 'decrementQuantity']);
     Route::post('/checkout', [CheckoutController::class, 'processCheckout']);
     Route::get('/sales', [SaleController::class, 'getSummary']);
+    Route::get('/orders', [OrderController::class, 'getUserOrders']);
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
+    
     
 });
 

@@ -45,5 +45,5 @@ class Sale extends Model
         // Note: Change 'book' to 'Book' class name and ensure 
         // the table name in migration matches (you used 'book' singular)
         return $this->belongsTo(Book::class, 'book_id');
-    }
+    }  
 }
