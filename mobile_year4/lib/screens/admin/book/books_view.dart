@@ -39,11 +39,11 @@ class _ManageBooksViewState extends State<ManageBooksView> {
       final response = await http.get(Uri.parse(ApiConfig.books));
       if (response.statusCode == 200) {
         final List rawData = jsonDecode(response.body);
-        setState(() {
-          // The Book.fromJson now handles the dynamic pricing logic 
-          // we implemented in the Model earlier.
-          _books = rawData.map((json) => Book.fromJson(json)).toList();
-        });
+        if (mounted) {
+          setState(() {
+            _books = rawData.map((json) => Book.fromJson(json)).toList();
+          });
+        }
       }
     } catch (e) {
       debugPrint("Fetch Error: $e");
@@ -79,115 +79,154 @@ class _ManageBooksViewState extends State<ManageBooksView> {
         title: const Text("Manage Books"),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnDark,
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: widget.openDrawer,
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: "Fetch/Refresh Books",
+            onPressed: _fetchBooks,
+          ),
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            tooltip: "Add New Book",
+            onPressed: () => showDialog(
+              context: context,
+              builder: (context) => CreateBook(onRefresh: _fetchBooks),
+            ),
+          ),
+        ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.accent),
+            )
           : _books.isEmpty
-              ? const Center(child: Text("No books found"))
-              : RefreshIndicator(
-                  onRefresh: _fetchBooks,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(10),
-                    itemCount: _books.length,
-                    itemBuilder: (context, index) {
-                      final book = _books[index];
-                      return Card(
-                        color: AppColors.cardBg,
-                        elevation: 2,
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: Container(
-                              width: 50,
-                              height: 70,
-                              color: Colors.grey[200],
-                              child: Image.network(
-                                _getImageUrl(book.image),
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => 
-                                    const Icon(Icons.broken_image, color: Colors.grey),
-                              ),
-                            ),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("No books found"),
+                  TextButton(
+                    onPressed: _fetchBooks,
+                    child: const Text("Try Fetching Again"),
+                  ),
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _fetchBooks,
+              color: AppColors.accent,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(10),
+                itemCount: _books.length,
+                itemBuilder: (context, index) {
+                  final book = _books[index];
+                  return Card(
+                    color: AppColors.cardBg,
+                    elevation: 2,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          width: 50,
+                          height: 70,
+                          color: Colors.grey[200],
+                          child: Image.network(
+                            _getImageUrl(book.image),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                                  Icons.broken_image,
+                                  color: Colors.grey,
+                                ),
                           ),
-                          title: Text(
-                            book.name,
+                        ),
+                      ),
+                      title: Text(
+                        book.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            book.author,
                             style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textSecondary,
                             ),
                           ),
-                          // --- UPDATED DYNAMIC PRICE SUBTITLE ---
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(book.author, style: const TextStyle(color: AppColors.textSecondary)),
-                              const SizedBox(height: 2),
-                              if (book.isOnSale) 
-                                Row(
-                                  children: [
-                                    Text(
-                                      "\$${book.price}",
-                                      style: const TextStyle(
-                                        color: Colors.red,
-                                        fontSize: 12,
-                                        decoration: TextDecoration.lineThrough,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      "\$${book.displayPrice}",
-                                      style: const TextStyle(
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              else
+                          const SizedBox(height: 2),
+                          if (book.isOnSale)
+                            Row(
+                              children: [
                                 Text(
                                   "\$${book.price}",
                                   style: const TextStyle(
-                                    color: AppColors.textSecondary,
+                                    color: Colors.red,
+                                    fontSize: 12,
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  "\$${book.displayPrice}",
+                                  style: const TextStyle(
+                                    color: Colors.green,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                            ],
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit, color: AppColors.warning),
-                                onPressed: () => showDialog(
-                                  context: context,
-                                  builder: (context) => EditBook(book: book, onRefresh: _fetchBooks),
-                                ),
+                              ],
+                            )
+                          else
+                            Text(
+                              "\$${book.price}",
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.bold,
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: AppColors.danger),
-                                onPressed: () => _confirmDelete(book),
-                              ),
-                            ],
+                            ),
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.edit,
+                              color: AppColors.warning,
+                            ),
+                            onPressed: () => showDialog(
+                              context: context,
+                              builder: (context) =>
+                                  EditBook(book: book, onRefresh: _fetchBooks),
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: AppColors.textOnDark),
-        onPressed: () => showDialog(
-          context: context,
-          builder: (context) => CreateBook(onRefresh: _fetchBooks),
-        ),
-      ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.delete,
+                              color: AppColors.danger,
+                            ),
+                            onPressed: () => _confirmDelete(book),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
     );
   }
 
@@ -198,13 +237,25 @@ class _ManageBooksViewState extends State<ManageBooksView> {
         title: const Text("Confirm Delete"),
         content: Text("Are you sure you want to delete '${book.name}'?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("No")),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              "No",
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _deleteBook(book.id);
             },
-            child: const Text("Yes", style: TextStyle(color: Colors.red)),
+            child: const Text(
+              "Yes",
+              style: TextStyle(
+                color: AppColors.danger,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
