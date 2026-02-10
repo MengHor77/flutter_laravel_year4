@@ -13,7 +13,6 @@ class SaleDetailItem extends StatelessWidget {
     final user = sale['user'];
 
     // 2. FIXED LINES: Create safe String variables using '??'
-    // This prevents "type 'Null' is not a subtype of type 'String'"
     final String bookTitle = book != null
         ? (book['name'] ?? "Unknown Book")
         : "Deleted Book";
@@ -21,11 +20,12 @@ class SaleDetailItem extends StatelessWidget {
         ? (user['name']?.toString() ?? "Guest User")
         : "Unknown User";
 
-    // 3. SAFE DATE HANDLING
+    // 3. SAFE DATE HANDLING (FIXED FOR TIMEZONE)
     String formattedDate = "Date N/A";
     if (sale['created_at'] != null) {
       try {
-        DateTime date = DateTime.parse(sale['created_at'].toString());
+        // We add .toLocal() here to convert UTC server time to your PC/Phone time
+        DateTime date = DateTime.parse(sale['created_at'].toString()).toLocal();
         formattedDate = DateFormat('dd MMM yyyy, hh:mm a').format(date);
       } catch (e) {
         formattedDate = "Invalid Date";
@@ -47,16 +47,28 @@ class SaleDetailItem extends StatelessWidget {
             color: AppColors.accent.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Icon(Icons.receipt_long, color: AppColors.accent),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.receipt_long, color: AppColors.accent, size: 20),
+              Text(
+                "#${sale['id'] ?? '?'}",
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.accent,
+                ),
+              ),
+            ],
+          ),
         ),
         title: Text(
-          bookTitle, // Safe variable
+          bookTitle,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Safe String interpolation
             Text(
               "Customer: $userName",
               style: const TextStyle(
@@ -64,7 +76,6 @@ class SaleDetailItem extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-
             Text(
               formattedDate,
               style: const TextStyle(
@@ -72,8 +83,6 @@ class SaleDetailItem extends StatelessWidget {
                 color: AppColors.textSecondary,
               ),
             ),
-
-            // Safe numeric handling with fallbacks
             Text(
               "Qty: ${sale['quantity'] ?? 0} × \$${sale['price'] ?? '0.00'}",
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
@@ -81,7 +90,6 @@ class SaleDetailItem extends StatelessWidget {
           ],
         ),
         trailing: Text(
-          // Ensure total_amount is never null
           "\$${sale['total_amount']?.toString() ?? '0.00'}",
           style: const TextStyle(
             color: AppColors.success,
