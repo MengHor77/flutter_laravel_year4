@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // Add this
-import 'package:mobile_year4/services/sale_service.dart';
-import 'package:mobile_year4/providers/sale_provider.dart'; // Add this
+import 'package:provider/provider.dart'; 
+import 'package:mobile_year4/providers/sale_provider.dart'; 
 
 class SaleView extends StatefulWidget {
   final VoidCallback openDrawer;

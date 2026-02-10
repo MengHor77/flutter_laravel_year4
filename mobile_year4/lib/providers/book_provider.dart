@@ -2,12 +2,11 @@ import 'dart:convert';
 import '../api_config.dart';
 import '../models/book_model.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import '../services/book_service.dart'; 
 
 class BookProvider extends ChangeNotifier {
   final List<Book> _cart = [];
   bool _isSyncing = false;
-
   String _userName = "Guest User";
   String _userEmail = "guest@example.com";
 
@@ -17,25 +16,20 @@ class BookProvider extends ChangeNotifier {
   int get itemCount => _cart.length;
   bool get isSyncing => _isSyncing;
 
+  // 1. Set User
   void setUser(String name, String email, [String? token]) {
     _userName = name;
     _userEmail = email;
-    if (token != null) {
-      ApiConfig.userToken = token;
-    }
+    if (token != null) ApiConfig.userToken = token;
     notifyListeners();
   }
 
+  // 2. Fetch Saved Orders (Sync Cart)
   Future<void> fetchSavedOrders() async {
     _isSyncing = true;
     notifyListeners();
-
     try {
-      final response = await http.get(
-        Uri.parse(ApiConfig.orders),
-        headers: ApiConfig.getHeaders(),
-      );
-
+      final response = await BookService.fetchCart();
       if (response.statusCode == 200) {
         final List rawData = jsonDecode(response.body);
         _cart.clear();
@@ -58,8 +52,8 @@ class BookProvider extends ChangeNotifier {
     }
   }
 
+  // 3. Add to Cart
   Future<void> addToCart(Book book) async {
-    // 1. Local UI update
     final existingIndex = _cart.indexWhere((item) => item.id == book.id);
     if (existingIndex != -1) {
       _cart[existingIndex].quantity++;
@@ -69,22 +63,13 @@ class BookProvider extends ChangeNotifier {
     notifyListeners();
 
     if (ApiConfig.userToken == null) return;
-
     try {
       final String cleanPrice = book.displayPrice.toString().replaceAll(
         RegExp(r'[^0-9.]'),
         '',
       );
-
-      final response = await http.post(
-        Uri.parse(ApiConfig.orders),
-        headers: ApiConfig.getHeaders(),
-        body: jsonEncode({"book_id": int.parse(book.id), "price": cleanPrice}),
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        debugPrint("✅ SUCCESS: Inserted into order_list table!");
-      } else {
+      final response = await BookService.addToCart(book.id, cleanPrice);
+      if (response.statusCode != 201 && response.statusCode != 200) {
         debugPrint("❌ DB ERROR: ${response.body}");
       }
     } catch (e) {
@@ -92,9 +77,9 @@ class BookProvider extends ChangeNotifier {
     }
   }
 
+  // 4. Decrement Quantity
   Future<void> decrementQuantity(int index) async {
     if (index < 0 || index >= _cart.length) return;
-
     final bookId = _cart[index].id;
     if (_cart[index].quantity > 1) {
       _cart[index].quantity--;
@@ -102,34 +87,28 @@ class BookProvider extends ChangeNotifier {
       _cart.removeAt(index);
     }
     notifyListeners();
-
     try {
-      await http.post(
-        Uri.parse("${ApiConfig.orders}/decrement/$bookId"),
-        headers: ApiConfig.getHeaders(),
-      );
+      await BookService.decrement(bookId);
     } catch (e) {
       debugPrint("Network Error: $e");
     }
   }
 
+  // 5. Remove From Cart
   Future<void> removeFromCart(int index) async {
     if (index >= 0 && index < _cart.length) {
       final bookId = _cart[index].id;
       _cart.removeAt(index);
       notifyListeners();
-
       try {
-        await http.delete(
-          Uri.parse("${ApiConfig.orders}/$bookId"),
-          headers: ApiConfig.getHeaders(),
-        );
+        await BookService.delete(bookId);
       } catch (e) {
         debugPrint("Network Error: $e");
       }
     }
   }
 
+  // 6. Total Price Calculation
   double get totalCartPrice {
     return _cart.fold(0.0, (sum, item) {
       final String priceString = item.displayPrice.toString().replaceAll(
@@ -140,6 +119,7 @@ class BookProvider extends ChangeNotifier {
     });
   }
 
+  // 7. Logout
   void logout() {
     _userName = "Guest User";
     _userEmail = "guest@example.com";
@@ -148,44 +128,36 @@ class BookProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // 8. Process Checkout
   Future<bool> processCheckout() async {
     if (ApiConfig.userToken == null || _cart.isEmpty) return false;
-
     _isSyncing = true;
     notifyListeners();
-
     try {
-      final response = await http.post(
-        Uri.parse("${ApiConfig.baseUrl}/api/checkout"),
-        headers: ApiConfig.getHeaders(),
-        body: jsonEncode({
-          "total_amount": totalCartPrice,
-          "items": _cart.map((item) {
-            final String cleanPrice = item.displayPrice.toString().replaceAll(
-              RegExp(r'[^0-9.]'),
-              '',
-            );
-            double priceValue = double.tryParse(cleanPrice) ?? 0.0;
+      final Map<String, dynamic> checkoutData = {
+        "total_amount": totalCartPrice,
+        "items": _cart.map((item) {
+          final String cleanPrice = item.displayPrice.toString().replaceAll(
+            RegExp(r'[^0-9.]'),
+            '',
+          );
+          double priceValue = double.tryParse(cleanPrice) ?? 0.0;
+          return {
+            "book_id": int.parse(item.id),
+            "quantity": item.quantity,
+            "price": priceValue,
+            "total_amount": priceValue * item.quantity,
+          };
+        }).toList(),
+      };
 
-            return {
-              "book_id": int.parse(item.id), // Fixed: Convert string ID to int
-              "quantity": item.quantity,
-              "price": priceValue,
-              "total_amount":
-                  priceValue * item.quantity, // Added: For your sales table
-            };
-          }).toList(),
-        }),
-      );
-
+      final response = await BookService.checkout(checkoutData);
       if (response.statusCode == 200 || response.statusCode == 201) {
         _cart.clear();
         notifyListeners();
         return true;
-      } else {
-        debugPrint("Checkout Failed: ${response.body}");
-        return false;
       }
+      return false;
     } catch (e) {
       debugPrint("Checkout Error: $e");
       return false;
