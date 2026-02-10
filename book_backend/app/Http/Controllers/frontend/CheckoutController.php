@@ -20,8 +20,7 @@ class CheckoutController extends Controller
             return DB::transaction(function () use ($request) {
                 $user = $request->user();
 
-                //  Create the main Order record
-                // This assumes you have an 'orders' table for history
+                // 1. Create the main Order record
                 $orderId = DB::table('orders')->insertGetId([
                     'user_id' => $user->id,
                     'total_amount' => $request->total_amount,
@@ -30,21 +29,24 @@ class CheckoutController extends Controller
                     'updated_at' => now(),
                 ]);
 
-                        foreach ($request->items as $item) {
-                $itemTotal = $item['price'] * $item['quantity'];
+                // 2. Loop through items and insert into 'sales' table
+                foreach ($request->items as $item) {
+                    // Fix: Use price and quantity from the request item
+                    $itemTotal = $item['price'] * $item['quantity'];
 
-                DB::table('order_items')->insert([
-                    'order_id'     => $orderId,
-                    'user_id'      => $user->id,
-                    'book_id'      => $item['book_id'],
-                    'quantity'     => $item['quantity'],
-                    'price'        => $item['price'],
-                    'total_amount' => $itemTotal, // Now this works
-                    'created_at'   => now(),
-                    'updated_at'   => now(), 
-                ]);
-            }
+                    DB::table('sales')->insert([ // Fixed missing quote here
+                        'order_id'     => $orderId,
+                        'user_id'      => $user->id,
+                        'book_id'      => $item['book_id'],
+                        'quantity'     => $item['quantity'],
+                        'price'        => $item['price'],
+                        'total_amount' => $itemTotal, 
+                        'created_at'   => now(),
+                        'updated_at'   => now(), 
+                    ]);
+                }
 
+                // 3. Clear the user's cart (order_list) after successful checkout
                 DB::table('order_list')->where('user_id', $user->id)->delete();
 
                 return response()->json([

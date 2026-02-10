@@ -161,15 +161,18 @@ class BookProvider extends ChangeNotifier {
         body: jsonEncode({
           "total_amount": totalCartPrice,
           "items": _cart.map((item) {
-            // Ensure price is sent as a clean number string
             final String cleanPrice = item.displayPrice.toString().replaceAll(
               RegExp(r'[^0-9.]'),
               '',
             );
+            double priceValue = double.tryParse(cleanPrice) ?? 0.0;
+
             return {
-              "book_id": item.id,
+              "book_id": int.parse(item.id), // Fixed: Convert string ID to int
               "quantity": item.quantity,
-              "price": cleanPrice,
+              "price": priceValue,
+              "total_amount":
+                  priceValue * item.quantity, // Added: For your sales table
             };
           }).toList(),
         }),
