@@ -5,7 +5,9 @@ import '../../../colors.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import '../../../models/book_model.dart';
+import '../../../providers/sale_provider.dart';
 
 class ManageBooksView extends StatefulWidget {
   final VoidCallback openDrawer;
@@ -57,6 +59,8 @@ class _ManageBooksViewState extends State<ManageBooksView> {
       final response = await http.delete(Uri.parse("${ApiConfig.books}/$id"));
       if (response.statusCode == 200) {
         if (mounted) {
+          Provider.of<SaleProvider>(context, listen: false).refreshAll();
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Book deleted successfully!"),

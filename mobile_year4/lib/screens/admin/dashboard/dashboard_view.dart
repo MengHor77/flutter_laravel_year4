@@ -4,8 +4,8 @@ import 'total_book_card.dart';
 import 'total_user_card.dart';
 import 'total_monthly_order_card.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; 
-import '../../../providers/sale_provider.dart'; 
+import 'package:provider/provider.dart';
+import '../../../providers/sale_provider.dart';
 
 class DashboardView extends StatefulWidget {
   final VoidCallback openDrawer;
@@ -20,7 +20,7 @@ class _DashboardViewState extends State<DashboardView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<SaleProvider>(context, listen: false).fetchSales();
+      Provider.of<SaleProvider>(context, listen: false).refreshAll();
     });
   }
 
@@ -41,7 +41,7 @@ class _DashboardViewState extends State<DashboardView> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await Provider.of<SaleProvider>(context, listen: false).fetchSales();
+          await Provider.of<SaleProvider>(context, listen: false).refreshAll();
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -54,7 +54,7 @@ class _DashboardViewState extends State<DashboardView> {
               TotalBookCard(),
               TotalUserCard(),
               TotalMonthlyOrderCard(),
-              RevenueCard(), 
+              RevenueCard(),
             ],
           ),
         ),

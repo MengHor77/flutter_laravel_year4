@@ -8,25 +8,21 @@ class TotalMonthlyOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Using Consumer to listen to SaleProvider
     return Consumer<SaleProvider>(
       builder: (context, saleProvider, child) {
-        // 1. GET CURRENT DATE
         final now = DateTime.now();
 
-        // 2. FILTER TRANSACTIONS FOR CURRENT MONTH ONLY
+        // Keep old code: Filter transactions for current month
         final monthlyTransactions = saleProvider.saleDetails.where((sale) {
           if (sale['created_at'] == null) return false;
           try {
             DateTime saleDate = DateTime.parse(sale['created_at'].toString());
-            // Check if year and month match today's date
             return saleDate.year == now.year && saleDate.month == now.month;
           } catch (e) {
             return false;
           }
         }).toList();
 
-        // 3. SET DISPLAY VALUE
         String displayValue = saleProvider.isLoading
             ? "..."
             : monthlyTransactions.length.toString();
