@@ -23,6 +23,17 @@ class BookProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Calculate total price locally
+  double get totalCartPrice {
+    return _cart.fold(0.0, (sum, item) {
+      final String priceString = item.displayPrice.toString().replaceAll(
+        RegExp(r'[^0-9.]'),
+        '',
+      );
+      return sum + ((double.tryParse(priceString) ?? 0.0) * item.quantity);
+    });
+  }
+
   Future<void> fetchSavedOrders() async {
     _isSyncing = true;
     notifyListeners();
@@ -35,17 +46,22 @@ class BookProvider extends ChangeNotifier {
         if (decodedData is List) {
           rawData = decodedData;
         } else if (decodedData is Map) {
-          rawData = decodedData['data'] ?? [decodedData];
+          rawData = decodedData['data'] ?? (decodedData['orders'] ?? []);
         }
 
         _cart.clear();
         for (var item in rawData) {
-          if (item is Map && item['book'] != null) {
+          var bookObj = item['book'] ?? item;
+
+          if (bookObj != null && bookObj['id'] != null) {
             final Map<String, dynamic> bookData = Map<String, dynamic>.from(
-              item['book'],
+              bookObj,
             );
-            bookData['display_price'] = item['price'].toString();
+
+            bookData['display_price'] = (item['price'] ?? bookObj['price'])
+                .toString();
             bookData['quantity'] = item['quantity'] ?? 1;
+
             _cart.add(Book.fromJson(bookData));
           }
         }
@@ -59,6 +75,7 @@ class BookProvider extends ChangeNotifier {
   }
 
   Future<void> addToCart(Book book) async {
+    // 1. Update local UI first (Prevents item "disappearing" while waiting for server)
     final existingIndex = _cart.indexWhere((item) => item.id == book.id);
     if (existingIndex != -1) {
       _cart[existingIndex].quantity++;
@@ -66,20 +83,23 @@ class BookProvider extends ChangeNotifier {
       _cart.add(book);
     }
     notifyListeners();
-    debugPrint("🛒 [LOCAL CART] Added Success: ${book.name}");
 
     if (ApiConfig.userToken == null) return;
+
     try {
       final String cleanPrice = book.displayPrice.toString().replaceAll(
         RegExp(r'[^0-9.]'),
         '',
       );
+      // 2. Sync with server in background
       final response = await BookService.addToCart(book.id, cleanPrice);
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         debugPrint("✅ [SERVER CART] Sync Success");
+        // We do NOT call fetchSavedOrders() here to avoid race conditions
       }
     } catch (e) {
-      debugPrint("❌ Connection Error: $e");
+      debugPrint("❌ Sync Error: $e");
     }
   }
 
@@ -99,29 +119,6 @@ class BookProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> removeFromCart(int index) async {
-    if (index >= 0 && index < _cart.length) {
-      final bookId = _cart[index].id;
-      _cart.removeAt(index);
-      notifyListeners();
-      try {
-        await BookService.delete(bookId);
-      } catch (e) {
-        debugPrint("Network Error: $e");
-      }
-    }
-  }
-
-  double get totalCartPrice {
-    return _cart.fold(0.0, (sum, item) {
-      final String priceString = item.displayPrice.toString().replaceAll(
-        RegExp(r'[^0-9.]'),
-        '',
-      );
-      return sum + ((double.tryParse(priceString) ?? 0.0) * item.quantity);
-    });
-  }
-
   void logout() {
     _userName = "Guest User";
     _userEmail = "guest@example.com";
@@ -131,10 +128,7 @@ class BookProvider extends ChangeNotifier {
   }
 
   Future<bool> processCheckout() async {
-    if (ApiConfig.userToken == null || _cart.isEmpty) {
-      debugPrint("⚠️ Checkout aborted: Token null or Cart empty");
-      return false;
-    }
+    if (ApiConfig.userToken == null || _cart.isEmpty) return false;
     _isSyncing = true;
     notifyListeners();
     try {
@@ -156,21 +150,11 @@ class BookProvider extends ChangeNotifier {
       };
       final response = await BookService.checkout(checkoutData);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Debug Log for Payment Success
-        debugPrint(
-          "✅[PAYMENT SUCCESS] Total Paid: \$${totalCartPrice.toStringAsFixed(2)}",
-        );
-        debugPrint("Response: ${response.body}");
-
         _cart.clear();
         notifyListeners();
         return true;
-      } else {
-        debugPrint(
-          "❌ [PAYMENT FAILED] Status: ${response.statusCode} Body: ${response.body}",
-        );
-        return false;
       }
+      return false;
     } catch (e) {
       debugPrint("❌ Checkout Exception: $e");
       return false;

@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import '../../../../colors.dart';
 import '../../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'dart:async'; // Required for Timer
 import '../../../../models/book_model.dart';
 import '../../../../providers/book_provider.dart';
 import '../../../../widgets/frontent/book_card.dart';
@@ -81,70 +81,48 @@ class _BookViewState extends State<BookView> {
 
   Widget _buildCard(int index) {
     final book = _books[index];
-
     return BookCard(
       book: book,
       buttonText: "Add to Cart",
       buttonColor: AppColors.success,
       onAction: () async {
-        // 1. Check if logged in before calling provider
         if (ApiConfig.userToken == null) {
-          final snack = ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text("Please Login first to add items!"),
+              content: Text("Please Login first!"),
               backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
             ),
           );
-
-          // Example of using Timer to close the message manually
-          Timer(const Duration(seconds: 3), () {
-            snack.close();
-          });
           return;
         }
 
-        // 2. Call provider to sync with MySQL
+        // ✅ 1. Call logic
         await context.read<BookProvider>().addToCart(book);
 
-        // 3. UI Feedback
+        // ✅ 2. Check mounted
+        if (!mounted) return;
+
+        // ✅ 3. Remove current to prevent Dispatcher overlap
         final messenger = ScaffoldMessenger.of(context);
-        messenger.clearSnackBars();
+        messenger.removeCurrentSnackBar();
 
         messenger.showSnackBar(
           SnackBar(
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2), // Auto-close after 2 seconds
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    "${book.name} have added to order list!",
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
+            duration: const Duration(seconds: 1),
+            content: Text("${book.name} added to cart!"),
             action: SnackBarAction(
               label: "VIEW",
               textColor: Colors.white,
               onPressed: () {
+                // Manually hide before navigating
                 messenger.hideCurrentSnackBar();
                 Navigator.pushNamed(context, '/order-list');
               },
             ),
           ),
         );
-
-        // Optional: Using Timer to ensure the SnackBar is hidden after a set period
-        Timer(const Duration(seconds: 2), () {
-          if (mounted) {
-            messenger.hideCurrentSnackBar();
-          }
-        });
       },
     );
   }

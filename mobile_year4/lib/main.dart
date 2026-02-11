@@ -34,6 +34,17 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
+      // --- ADDED BUILDER HERE ---
+      builder: (context, child) {
+        return MediaQuery(
+          // This ensures system font size settings don't break your UI layout
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.noScaling),
+          child: child!,
+        );
+      },
+      // --------------------------
       home: const LoginView(),
     );
   }

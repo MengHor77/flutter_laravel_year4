@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import '../../../../colors.dart';
 import '../../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'dart:async'; // Required for Timer
 import '../../../../models/book_model.dart';
 import '../../../../providers/book_provider.dart';
 import '../../../../widgets/frontent/book_card.dart';
@@ -18,7 +18,6 @@ class BestSellingView extends StatefulWidget {
 }
 
 class _BestSellingViewState extends State<BestSellingView> {
-  // Fetching data from Laravel API
   Future<List<dynamic>> _fetchBestSellers() async {
     try {
       final response = await http.get(
@@ -72,41 +71,29 @@ class _BestSellingViewState extends State<BestSellingView> {
                 book: book,
                 buttonText: "Add to Cart",
                 buttonColor: AppColors.success,
-                onAction: () {
-                  // 1. ADD TO CART LOGIC
-                  context.read<BookProvider>().addToCart(book);
+                onAction: () async {
+                  // ✅ Store in central Provider
+                  await context.read<BookProvider>().addToCart(book);
 
-                  // 2. SHOW SUCCESS MESSAGE
                   final messenger = ScaffoldMessenger.of(context);
-                  messenger
-                      .clearSnackBars(); // Clear queue before showing new one
+                  messenger.clearSnackBars();
 
                   messenger.showSnackBar(
                     SnackBar(
                       backgroundColor: AppColors.success,
                       behavior: SnackBarBehavior.floating,
-                      duration: const Duration(seconds: 1), // Standard duration
-                      content: Row(
-                        children: [
-                          const Icon(Icons.check_circle, color: Colors.white),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              "${book.name} added successfully!",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
+                      content: Text("${book.name} added successfully!"),
+                      action: SnackBarAction(
+                        label: "VIEW",
+                        textColor: Colors.white,
+                        onPressed: () =>
+                            Navigator.pushNamed(context, '/order-list'),
                       ),
                     ),
                   );
 
-                  // 3. THE 1-SECOND AUTO-CLOSE TIMER
-                  // This forces the message to disappear exactly after 1 second
-                  Timer(const Duration(seconds: 1), () {
-                    messenger.hideCurrentSnackBar();
+                  Timer(const Duration(seconds: 2), () {
+                    if (mounted) messenger.hideCurrentSnackBar();
                   });
                 },
               );

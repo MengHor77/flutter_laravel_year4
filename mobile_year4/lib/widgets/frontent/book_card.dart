@@ -54,18 +54,21 @@ class BookCard extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  _getImageUrl(
-                    book.image,
-                  ), // FIXED: Uses the dynamic URL helper
+                child: // Update the Image.network inside BookCard.dart
+                Image.network(
+                  _getImageUrl(book.image),
                   fit: BoxFit.cover,
-                  // Shows a broken image icon if the URL fails to load
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.broken_image,
-                    size: 40,
-                    color: Colors.grey,
-                  ),
-                  // Optional: Shows a loading spinner while the image downloads
+                  // ✅ FIX: Handles the "HttpException: Connection closed" error
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[200],
+                      child: const Icon(
+                        Icons.book,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
+                    );
+                  },
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
                     return const Center(

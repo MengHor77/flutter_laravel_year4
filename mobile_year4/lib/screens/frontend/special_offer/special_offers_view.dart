@@ -26,6 +26,7 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
   Future<void> _handleAddToCart(Map offerData) async {
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
 
+    // ✅ Converts the offer data into your standard Book model
     Book bookToOrder = Book(
       id: offerData['book_id'].toString(),
       name: offerData['book']['name'],
@@ -37,6 +38,7 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
       isOnSale: true,
     );
 
+    // ✅ Sends to central provider (MySQL sync happens here)
     await bookProvider.addToCart(bookToOrder);
 
     if (mounted) {
@@ -45,6 +47,11 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
           content: Text("${bookToOrder.name} added to cart!"),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: "VIEW",
+            textColor: Colors.white,
+            onPressed: () => Navigator.pushNamed(context, '/order-list'),
+          ),
         ),
       );
     }
