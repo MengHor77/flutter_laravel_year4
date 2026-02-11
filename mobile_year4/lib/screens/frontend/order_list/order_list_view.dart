@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/book_provider.dart';
 import '../../../widgets/frontent/menu_sidebar.dart';
+import '../checkout_view/checkout_view.dart'; // ✅ Import CheckoutView
 
 class OrderListView extends StatefulWidget {
   const OrderListView({super.key});
@@ -19,7 +20,6 @@ class _OrderListViewState extends State<OrderListView> {
     Future.microtask(() => context.read<BookProvider>().fetchSavedOrders());
   }
 
-  // ✅ FIX: Prevents 403 error by cleaning the URL
   String _getImageUrl(String? path) {
     if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
     if (path.startsWith('http')) return path;
@@ -72,7 +72,6 @@ class _OrderListViewState extends State<OrderListView> {
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     child: ListTile(
                       leading: Container(
-                        // Using Container for more stable layout
                         width: 50,
                         height: 70,
                         decoration: BoxDecoration(
@@ -84,13 +83,6 @@ class _OrderListViewState extends State<OrderListView> {
                           child: Image.network(
                             _getImageUrl(item.image),
                             fit: BoxFit.cover,
-                            // Reserve space while loading to prevent "flickering"
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return const Center(
-                                child: Icon(Icons.image, size: 20),
-                              );
-                            },
                             errorBuilder: (context, error, stackTrace) =>
                                 const Icon(Icons.book, color: Colors.grey),
                           ),
@@ -113,21 +105,10 @@ class _OrderListViewState extends State<OrderListView> {
                               color: Colors.red,
                             ),
                             onPressed: () async {
-                              // ✅ Apply the same fix here to prevent the error
                               ScaffoldMessenger.of(
                                 context,
                               ).removeCurrentSnackBar();
-
                               await provider.decrementQuantity(index);
-
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Item removed"),
-                                  duration: Duration(milliseconds: 500),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
                             },
                           ),
                           Text(
@@ -144,15 +125,6 @@ class _OrderListViewState extends State<OrderListView> {
                                 context,
                               ).removeCurrentSnackBar();
                               await provider.addToCart(item);
-
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Updated ${item.name}"),
-                                  duration: const Duration(milliseconds: 800),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
                             },
                           ),
                         ],
@@ -185,16 +157,15 @@ class _OrderListViewState extends State<OrderListView> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
               ),
-              onPressed: () async {
-                bool success = await provider.processCheckout();
-                if (mounted && success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Order Processed!")),
-                  );
-                }
+              onPressed: () {
+                // ✅ NAVIGATION FIX: Navigate to CheckoutView
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CheckoutView()),
+                );
               },
               child: const Text(
-                "PROCEED",
+                "check out",
                 style: TextStyle(color: Colors.white),
               ),
             ),

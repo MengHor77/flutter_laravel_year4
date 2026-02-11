@@ -14,9 +14,9 @@ class CheckoutView extends StatefulWidget {
 class _CheckoutViewState extends State<CheckoutView> {
   bool _isProcessing = false;
 
-  // Helper function to handle potential symbol issues in price strings
-  double _parseSafePrice(String price) {
-    final cleanPrice = price.replaceAll(RegExp(r'[^0-9.]'), '');
+  double _parseSafePrice(dynamic price) {
+    if (price == null) return 0.0;
+    final cleanPrice = price.toString().replaceAll(RegExp(r'[^0-9.]'), '');
     return double.tryParse(cleanPrice) ?? 0.0;
   }
 
@@ -35,7 +35,8 @@ class _CheckoutViewState extends State<CheckoutView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Checkout Failed. Please check your connection."),
-          backgroundColor: AppColors.danger, // Use AppColors.danger (red)
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
@@ -46,28 +47,33 @@ class _CheckoutViewState extends State<CheckoutView> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Icon(
-          Icons.check_circle,
-          color: AppColors.success,
-          size: 60,
-        ), // Use AppColors.success
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Column(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 60),
+            SizedBox(height: 10),
+            Text("Success!"),
+          ],
+        ),
         content: const Text(
-          "Order Placed Successfully!",
+          "Your order has been placed successfully.",
           textAlign: TextAlign.center,
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-
-              // FIX: Using MaterialPageRoute to go to HomeView safely
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const HomeView()),
-                (route) => false, // Clears the navigation stack
-              );
-            },
-            child: const Text("OK", style: TextStyle(color: AppColors.accent)),
+          Center(
+            child: TextButton(
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeView()),
+                  (route) => false,
+                );
+              },
+              child: const Text(
+                "BACK TO HOME",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
           ),
         ],
       ),
@@ -79,115 +85,94 @@ class _CheckoutViewState extends State<CheckoutView> {
     final provider = context.watch<BookProvider>();
 
     return Scaffold(
-      backgroundColor: AppColors.background, 
       appBar: AppBar(
-        title: const Text("Checkout"),
+        title: const Text("Checkout Summary"),
         backgroundColor: AppColors.accent,
-        foregroundColor: AppColors.textOnDark, 
+        foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Order Summary",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const Divider(),
-            Expanded(
-              child: provider.cart.isEmpty
-                  ? const Center(
-                      child: Text(
-                        "No items in cart",
-                        style: TextStyle(color: AppColors.textSecondary),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: provider.cart.length,
-                      itemBuilder: (context, index) {
-                        final item = provider.cart[index];
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(15),
+              itemCount: provider.cart.length,
+              itemBuilder: (context, index) {
+                final item = provider.cart[index];
+                double unitPrice = _parseSafePrice(item.displayPrice);
+                double subtotal = unitPrice * item.quantity;
 
-                        double unitPrice = _parseSafePrice(
-                          item.displayPrice.toString(),
-                        );
-                        double subtotal = unitPrice * item.quantity;
-
-                        return ListTile(
-                          title: Text(
-                            item.name,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          subtitle: Text(
-                            "Qty: ${item.quantity}",
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          trailing: Text(
-                            "\$${subtotal.toStringAsFixed(2)}",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        );
-                      },
+                return Card(
+                  child: ListTile(
+                    title: Text(
+                      item.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-            ),
-            const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Total",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    subtitle: Text("Quantity: ${item.quantity}"),
+                    trailing: Text("\$${subtotal.toStringAsFixed(2)}"),
                   ),
+                );
+              },
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
                 ),
-                Text(
-                  "\$${provider.totalCartPrice.toStringAsFixed(2)}",
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.success, 
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Total Payable:",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      "\$${provider.totalCartPrice.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                        fontSize: 22,
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: _isProcessing
+                        ? null
+                        : () => _handlePayment(context),
+                    child: _isProcessing
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            "CONFIRM AND PAY",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: AppColors.textOnDark,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: _isProcessing ? null : () => _handlePayment(context),
-                child: _isProcessing
-                    ? const CircularProgressIndicator(
-                        color: AppColors.textOnDark,
-                      )
-                    : const Text(
-                        "CONFIRM AND PAY",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
