@@ -2,6 +2,9 @@ import 'dart:convert';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import '../../../models/book_model.dart';
+import '../../../providers/book_provider.dart';
 import 'package:mobile_year4/widgets/frontent/menu_sidebar.dart';
 
 class SpecialOffersView extends StatefulWidget {
@@ -25,52 +28,48 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
     try {
       final response = await http.get(Uri.parse(ApiConfig.specialOffers));
       if (response.statusCode == 200) {
-        setState(() {
-          _offers = json.decode(response.body);
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint("Error fetching offers: $e");
-      setState(() => _isLoading = false);
-    }
-  }
-
-  // --- Logic to Add to Order List ---
-  Future<void> _addToCart(Map offer) async {
-    try {
-      final response = await http.post(
-        Uri.parse(ApiConfig.orders), // api/orders
-        headers: {
-          "Accept": "application/json",
-          // Adding Content-Type ensures Laravel parses the body correctly
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: {
-          'book_id': offer['book_id'].toString(),
-          'price': offer['offer_price'].toString(),
-        },
-      );
-
-      if (response.statusCode == 201) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("${offer['book']['name']} added to cart!"),
-              backgroundColor: Colors.green,
-              action: SnackBarAction(
-                label: 'VIEW CART',
-                textColor: Colors.white,
-                onPressed: () {
-                  // Navigate to your Order List page here if you want
-                },
-              ),
-            ),
-          );
+          setState(() {
+            _offers = json.decode(response.body);
+            _isLoading = false;
+          });
         }
       }
     } catch (e) {
-      debugPrint("Add to cart error: $e");
+      debugPrint("Error fetching offers: $e");
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleAddToCart(Map offerData) async {
+    final bookProvider = Provider.of<BookProvider>(context, listen: false);
+
+    Book bookToOrder = Book(
+      id: offerData['book_id'].toString(),
+      name: offerData['book']['name'],
+      author: offerData['book']['author'] ?? 'Unknown',
+      price: offerData['book']['price'].toString(),
+      displayPrice: offerData['offer_price'].toString(),
+      image: offerData['book']['image'],
+      categoryName: 'Special Offer',
+      isOnSale: true,
+    );
+
+    await bookProvider.addToCart(bookToOrder);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("${bookToOrder.name} added to cart!"),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: "OK",
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
+        ),
+      );
     }
   }
 
@@ -109,7 +108,7 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
                                   size: 40,
                                 ),
                                 title: Text(
-                                  offer['title'],
+                                  offer['title'] ?? 'Special Offer',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
@@ -136,7 +135,7 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
                                 child: SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton.icon(
-                                    onPressed: () => _addToCart(offer),
+                                    onPressed: () => _handleAddToCart(offer),
                                     icon: const Icon(Icons.add_shopping_cart),
                                     label: const Text("Add to Cart"),
                                     style: ElevatedButton.styleFrom(
