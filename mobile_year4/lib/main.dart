@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:mobile_year4/providers/book_provider.dart';
 import 'package:mobile_year4/providers/sale_provider.dart';
 import 'package:mobile_year4/screens/auth/login_view.dart';
+import 'package:mobile_year4/providers/special_offers_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +15,7 @@ void main() {
           create: (_) => BookProvider()..fetchSavedOrders(),
         ),
         ChangeNotifierProvider(create: (_) => SaleProvider()),
+        ChangeNotifierProvider(create: (_) => SpecialOffersProvider()),
       ],
       child: const MyApp(),
     ),
@@ -32,7 +34,6 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
-      // Ensure LoginView is the starting point
       home: const LoginView(),
     );
   }

@@ -16,7 +16,6 @@ class BookProvider extends ChangeNotifier {
   int get itemCount => _cart.length;
   bool get isSyncing => _isSyncing;
 
-  // 1. Set User
   void setUser(String name, String email, [String? token]) {
     _userName = name;
     _userEmail = email;
@@ -24,22 +23,29 @@ class BookProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 2. Fetch Saved Orders (Sync Cart)
   Future<void> fetchSavedOrders() async {
     _isSyncing = true;
     notifyListeners();
     try {
       final response = await BookService.fetchCart();
       if (response.statusCode == 200) {
-        final List rawData = jsonDecode(response.body);
+        final dynamic decodedData = jsonDecode(response.body);
+
+        List<dynamic> rawData = [];
+        if (decodedData is List) {
+          rawData = decodedData;
+        } else if (decodedData is Map) {
+          rawData = decodedData['data'] ?? [decodedData];
+        }
+
         _cart.clear();
         for (var item in rawData) {
-          if (item['book'] != null) {
+          if (item is Map && item['book'] != null) {
             final Map<String, dynamic> bookData = Map<String, dynamic>.from(
               item['book'],
             );
             bookData['display_price'] = item['price'].toString();
-            bookData['quantity'] = item['quantity'];
+            bookData['quantity'] = item['quantity'] ?? 1;
             _cart.add(Book.fromJson(bookData));
           }
         }
@@ -52,7 +58,6 @@ class BookProvider extends ChangeNotifier {
     }
   }
 
-  // 3. Add to Cart (LOGS ADDED)
   Future<void> addToCart(Book book) async {
     final existingIndex = _cart.indexWhere((item) => item.id == book.id);
     if (existingIndex != -1) {
@@ -61,11 +66,7 @@ class BookProvider extends ChangeNotifier {
       _cart.add(book);
     }
     notifyListeners();
-
-    // Debug Log for Local Cart Success
-    debugPrint(
-      "🛒 [LOCAL CART] Added Success: ${book.name} (Qty: ${book.quantity})",
-    );
+    debugPrint("🛒 [LOCAL CART] Added Success: ${book.name}");
 
     if (ApiConfig.userToken == null) return;
     try {
@@ -74,19 +75,14 @@ class BookProvider extends ChangeNotifier {
         '',
       );
       final response = await BookService.addToCart(book.id, cleanPrice);
-
       if (response.statusCode == 201 || response.statusCode == 200) {
-        // Debug Log for Server Sync Success
-        debugPrint("✅ [SERVER CART] Sync Success for: ${book.name}");
-      } else {
-        debugPrint("❌ DB ERROR: ${response.body}");
+        debugPrint("✅ [SERVER CART] Sync Success");
       }
     } catch (e) {
       debugPrint("❌ Connection Error: $e");
     }
   }
 
-  // 4. Decrement Quantity
   Future<void> decrementQuantity(int index) async {
     if (index < 0 || index >= _cart.length) return;
     final bookId = _cart[index].id;
@@ -103,7 +99,6 @@ class BookProvider extends ChangeNotifier {
     }
   }
 
-  // 5. Remove From Cart
   Future<void> removeFromCart(int index) async {
     if (index >= 0 && index < _cart.length) {
       final bookId = _cart[index].id;
@@ -117,7 +112,6 @@ class BookProvider extends ChangeNotifier {
     }
   }
 
-  // 6. Total Price Calculation
   double get totalCartPrice {
     return _cart.fold(0.0, (sum, item) {
       final String priceString = item.displayPrice.toString().replaceAll(
@@ -128,7 +122,6 @@ class BookProvider extends ChangeNotifier {
     });
   }
 
-  // 7. Logout
   void logout() {
     _userName = "Guest User";
     _userEmail = "guest@example.com";
@@ -137,7 +130,6 @@ class BookProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 8. Process Checkout (LOGS ADDED)
   Future<bool> processCheckout() async {
     if (ApiConfig.userToken == null || _cart.isEmpty) {
       debugPrint("⚠️ Checkout aborted: Token null or Cart empty");
@@ -162,7 +154,6 @@ class BookProvider extends ChangeNotifier {
           };
         }).toList(),
       };
-
       final response = await BookService.checkout(checkoutData);
       if (response.statusCode == 200 || response.statusCode == 201) {
         // Debug Log for Payment Success
