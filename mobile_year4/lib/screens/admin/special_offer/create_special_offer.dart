@@ -43,7 +43,7 @@ class _CreateSpecialOfferState extends State<CreateSpecialOffer> {
     if (!_formKey.currentState!.validate() || _selectedBookId == null) {
       return;
     }
-    
+
     setState(() => _isSaving = true);
 
     try {
@@ -56,15 +56,38 @@ class _CreateSpecialOfferState extends State<CreateSpecialOffer> {
         },
       );
 
-      // Guarding the async gap: Check if the widget is still in the tree
       if (!mounted) return;
 
-      if (response.statusCode == 201) {
-        widget.onRefresh();
-        Navigator.pop(context);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        widget.onRefresh(); 
+        Navigator.pop(context); 
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Create offer successfully"),
+            backgroundColor:
+                AppColors.success, 
+          ),
+        );
+      } else {
+        debugPrint("Server Error: ${response.body}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to create: ${response.statusCode}"),
+            backgroundColor: AppColors.danger, 
+          ),
+        );
       }
     } catch (e) {
       debugPrint("Save error: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("An unexpected error occurred"),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -90,15 +113,19 @@ class _CreateSpecialOfferState extends State<CreateSpecialOffer> {
                 dropdownColor: AppColors.cardBg,
                 decoration: const InputDecoration(labelText: "Select Book"),
                 hint: const Text("Select Book"),
-                items: _books.map((b) => DropdownMenuItem<String>(
-                  value: b['id'].toString(),
-                  child: Text(b['name']),
-                )).toList(),
+                items: _books
+                    .map(
+                      (b) => DropdownMenuItem<String>(
+                        value: b['id'].toString(),
+                        child: Text(b['name']),
+                      ),
+                    )
+                    .toList(),
                 onChanged: (val) => setState(() => _selectedBookId = val),
               ),
               const SizedBox(height: 10),
               TextFormField(
-                controller: _titleController, 
+                controller: _titleController,
                 decoration: const InputDecoration(labelText: "Offer Title"),
               ),
               const SizedBox(height: 10),
@@ -116,7 +143,7 @@ class _CreateSpecialOfferState extends State<CreateSpecialOffer> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context), 
+          onPressed: () => Navigator.pop(context),
           child: const Text(
             "Cancel",
             style: TextStyle(color: AppColors.textSecondary),
@@ -127,14 +154,17 @@ class _CreateSpecialOfferState extends State<CreateSpecialOffer> {
             backgroundColor: AppColors.accent,
             foregroundColor: AppColors.textOnDark,
           ),
-          onPressed: _isSaving ? null : _save, 
-          child: _isSaving 
-            ? const SizedBox(
-                width: 20, 
-                height: 20, 
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-              ) 
-            : const Text("Save"),
+          onPressed: _isSaving ? null : _save,
+          child: _isSaving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text("Save"),
         ),
       ],
     );
