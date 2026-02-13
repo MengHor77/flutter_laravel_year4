@@ -1,3 +1,4 @@
+import '../../colors.dart';
 import 'package:flutter/material.dart';
 import '../../screens/auth/login_view.dart';
 import '../../screens/admin/user/user_view.dart';
@@ -7,7 +8,6 @@ import '../../screens/admin/order_list/orders_view.dart';
 import '../../screens/admin/category/category_view.dart';
 import '../../screens/admin/dashboard/dashboard_view.dart';
 import '../../screens/admin/special_offer/special_offer_view.dart';
-import '../../colors.dart'; // Ensure this points to your colors.dart
 import '../../screens/admin/best_selling_book/best_selling_view.dart';
 
 class AdminMenuSidebar extends StatefulWidget {
@@ -71,7 +71,6 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
                 ),
               ),
             ),
-            // We use Expanded to ensure the ListView takes the rest of the height
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
@@ -85,7 +84,11 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
                   _buildMenuItem(Icons.monetization_on, "Sales", 6),
                   _buildMenuItem(Icons.star_rate_rounded, "Best Selling", 7),
 
-                  // MOVED: Logout is now part of the list, right after Sales
+                  Divider(
+                    thickness: 1,
+                    height: 1,
+                    color: AppColors.textSecondary.withValues(alpha: 0.3),
+                  ),
                   ListTile(
                     leading: const Icon(Icons.logout, color: AppColors.danger),
                     title: const Text(
