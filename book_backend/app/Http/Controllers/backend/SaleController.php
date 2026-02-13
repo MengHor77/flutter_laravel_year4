@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 
 class SaleController extends Controller
 {
-    // Keep your old code
     public function getSummary()
     {
         try {
@@ -34,11 +33,9 @@ class SaleController extends Controller
         }
     }
 
-    // NEW: Get every transaction detail
     public function getDetailedSales()
     {
         try {
-            // Fetch all sales with related book and user info
             $details = Sale::with(['book', 'user'])
                 ->orderBy('created_at', 'desc')
                 ->get();

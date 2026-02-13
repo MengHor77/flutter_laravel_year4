@@ -9,13 +9,11 @@ use Illuminate\Support\Facades\Log;
 
 class CategoryController extends Controller
 {
-    // 1. GET ALL
     public function index()
     {
         return response()->json(Category::all(), 200);
     }
 
-    // 2. CREATE
     public function store(Request $request)
     {
         try {
@@ -31,7 +29,6 @@ class CategoryController extends Controller
         }
     }
 
-    // 3. UPDATE
     public function update(Request $request, $id)
     {
         $category = Category::find($id);
@@ -52,7 +49,6 @@ class CategoryController extends Controller
         }
     }
 
-    // 4. DELETE
     public function destroy($id)
     {
         $category = Category::find($id);

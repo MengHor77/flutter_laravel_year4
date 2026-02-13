@@ -13,12 +13,9 @@ class Category extends Model
 
     protected $fillable = ['name', 'description'];
 
-    /**
-     * Get the books for the category.
-     */
+    
     public function books()
     {
-        // A category has many books
         return $this->hasMany(Book::class, 'category_id');
     }
 }

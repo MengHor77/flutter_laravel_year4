@@ -9,11 +9,9 @@ class Sale extends Model
 {
     use HasFactory;
 
-    // Define the table name (since it's 'sales', Laravel usually finds it, 
-    // but being explicit is safer)
+     
     protected $table = 'sales';
 
-    // Allow these fields to be filled during mass assignment
     protected $fillable = [
         'user_id',
         'order_id',
@@ -23,9 +21,7 @@ class Sale extends Model
         'total_amount',
     ];
 
-    /**
-     * Relationships
-     */
+  
 
     // A sale belongs to a user
     public function user()
@@ -42,8 +38,7 @@ class Sale extends Model
     // A sale belongs to a book
     public function book()
     {
-        // Note: Change 'book' to 'Book' class name and ensure 
-        // the table name in migration matches (you used 'book' singular)
+       
         return $this->belongsTo(Book::class, 'book_id');
     }  
 }

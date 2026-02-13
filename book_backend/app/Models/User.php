@@ -21,7 +21,6 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
-    // app/Models/User.php
 
 public function orders()
 {

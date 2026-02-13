@@ -1,6 +1,5 @@
 class ApiConfig {
-  // Removed underscore to make it public and accessible to BookProvider
-  static const String baseUrl = "http://192.168.1.100:8000";
+  static const String baseUrl = "http://192.168.1.100:8000"; // change  actual ip here 
   static const String _domain = "$baseUrl/api";
 
   static String? userToken;
@@ -17,7 +16,6 @@ class ApiConfig {
   static const String orders = "$_domain/orders";
   
   // NEW: Admin specific order list (Backend)
-  // This route returns user names and details along with the books
   static const String adminOrders = "$_domain/admin-orders";
 
   static const String sales = "$_domain/sales";

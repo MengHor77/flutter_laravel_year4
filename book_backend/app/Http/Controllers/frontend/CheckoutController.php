@@ -20,7 +20,6 @@ class CheckoutController extends Controller
             return DB::transaction(function () use ($request) {
                 $user = $request->user();
 
-                // 1. Create the main Order record
                 $orderId = DB::table('orders')->insertGetId([
                     'user_id' => $user->id,
                     'total_amount' => $request->total_amount,
@@ -29,12 +28,10 @@ class CheckoutController extends Controller
                     'updated_at' => now(),
                 ]);
 
-                // 2. Loop through items and insert into 'sales' table
                 foreach ($request->items as $item) {
-                    // Fix: Use price and quantity from the request item
                     $itemTotal = $item['price'] * $item['quantity'];
 
-                    DB::table('sales')->insert([ // Fixed missing quote here
+                    DB::table('sales')->insert([  
                         'order_id'     => $orderId,
                         'user_id'      => $user->id,
                         'book_id'      => $item['book_id'],
@@ -46,7 +43,6 @@ class CheckoutController extends Controller
                     ]);
                 }
 
-                // 3. Clear the user's cart (order_list) after successful checkout
                 DB::table('order_list')->where('user_id', $user->id)->delete();
 
                 return response()->json([

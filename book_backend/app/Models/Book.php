@@ -9,12 +9,10 @@ class Book extends Model
 {
     use HasFactory;
 
-    protected $table = 'book'; // Explicitly naming the table
+    protected $table = 'book'; 
 
     protected $fillable = ['name', 'author', 'category_id', 'price','image'];
-    /**
-     * Get the category that owns the book.
-     */
+  
     public function category()
     {
         // A book belongs to one category
@@ -34,7 +32,6 @@ class Book extends Model
    
 
     public function specialOffers() {
-        // Defines the link to the special_offers table
         return $this->hasMany(SpecialOffer::class, 'book_id');
     }
     

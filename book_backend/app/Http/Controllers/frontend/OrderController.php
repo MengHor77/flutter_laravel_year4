@@ -9,14 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
-    /**
-     * Get all orders for the current user (History)
-     */
+    
     public function getUserOrders()
     {
         $user = Auth::user();
 
-        // Fetches orders with their items (sales) and book info
         $orders = Order::with(['sales.book'])
             ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
@@ -28,9 +25,7 @@ class OrderController extends Controller
         ]);
     }
 
-    /**
-     * Get a single order by ID
-     */
+   
     public function show($id)
     {
         $order = Order::with(['sales.book'])

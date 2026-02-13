@@ -10,14 +10,12 @@ use Illuminate\Support\Facades\Validator;
 
 class SpecialOfferController extends Controller
 {
-    // Get all active special offers with book details
     public function index()
     {
         $offers = SpecialOffer::with('book')->where('is_active', true)->get();
         return response()->json($offers, 200);
     }
 
-    // Create a new special offer
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -30,7 +28,6 @@ class SpecialOfferController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Fetch the book to get original price
         $book = Book::find($request->book_id);
         
         // Logic: offer_price = price - (price * (discount / 100))
@@ -48,7 +45,6 @@ class SpecialOfferController extends Controller
         return response()->json($offer->load('book'), 201);
     }
     
-    // Add this inside your SpecialOfferController class
 
     public function update(Request $request, $id)
     {
@@ -78,14 +74,12 @@ class SpecialOfferController extends Controller
             'title' => $request->title,
             'discount_percentage' => $request->discount_percentage,
             'offer_price' => $offerPrice,
-            // Keep existing is_active status or update if needed
         ]);
 
         return response()->json($offer->load('book'), 200);
     }
 
 
-    // Remove a special offer
     public function destroy($id)
     {
         $offer = SpecialOffer::find($id);

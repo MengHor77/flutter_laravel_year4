@@ -7,7 +7,7 @@ class Book {
   final String? image;
   final String categoryName;
   final bool isOnSale;
-  int quantity; // Added quantity field
+  int quantity;  
 
   Book({
     required this.id,
@@ -18,7 +18,7 @@ class Book {
     this.image,
     required this.categoryName,
     required this.isOnSale,
-    this.quantity = 1, // Default to 1
+    this.quantity = 1,  
   });
 
   factory Book.fromJson(Map<String, dynamic> json) {
@@ -33,7 +33,6 @@ class Book {
           ? json['category']['name'].toString() 
           : 'General',
       isOnSale: json['is_on_sale'] ?? false,
-      // If the API returns quantity (from orders table), use it; else 1
       quantity: json['quantity'] ?? 1, 
     );
   }

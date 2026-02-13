@@ -75,7 +75,6 @@ class BookProvider extends ChangeNotifier {
   }
 
   Future<void> addToCart(Book book) async {
-    // 1. Update local UI first (Prevents item "disappearing" while waiting for server)
     final existingIndex = _cart.indexWhere((item) => item.id == book.id);
     if (existingIndex != -1) {
       _cart[existingIndex].quantity++;
@@ -91,12 +90,10 @@ class BookProvider extends ChangeNotifier {
         RegExp(r'[^0-9.]'),
         '',
       );
-      // 2. Sync with server in background
       final response = await BookService.addToCart(book.id, cleanPrice);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         debugPrint("✅ [SERVER CART] Sync Success");
-        // We do NOT call fetchSavedOrders() here to avoid race conditions
       }
     } catch (e) {
       debugPrint("❌ Sync Error: $e");

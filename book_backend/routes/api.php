@@ -47,7 +47,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/decrement/{book_id}', [FrontendOrder::class, 'decrementQuantity']);
     Route::post('/checkout', [CheckoutController::class, 'processCheckout']);
     Route::get('/sales', [SaleController::class, 'getSummary']);
-   // Route::get('/orders', [OrderController::class, 'getUserOrders']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::get('/sale-details', [SaleController::class, 'getDetailedSales']);
     

@@ -9,12 +9,11 @@ class Order extends Model
 {
     use HasFactory;
 
-    // This ensures the model looks at the correct table from your migrations
     protected $table = 'orders';
 
     protected $fillable = [
         'user_id',
-        'total_amount', // Matches your decimal(10,2) migration column
+        'total_amount',  
         'status',
     ];
 

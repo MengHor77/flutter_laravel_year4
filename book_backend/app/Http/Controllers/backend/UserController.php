@@ -10,18 +10,14 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    /**
-     * Get list of all regular users
-     */
+    
     public function index()
     {
         $users = User::all();
         return response()->json($users, 200);
     }
     
-    /**
-     * Unified Login for User and Admin
-     */
+   
     public function login(Request $request)
     {
         $request->validate([
@@ -30,7 +26,6 @@ class UserController extends Controller
             'device_name' => 'required', 
         ]);
 
-        // 1. Check User Table
         $user = User::where('email', $request->email)->first();
         if ($user && Hash::check($request->password, $user->password)) {
             $token = $user->createToken($request->device_name)->plainTextToken;
@@ -42,7 +37,6 @@ class UserController extends Controller
             ], 200);
         }
 
-        // 2. Check Admin Table
         $admin = Admin::where('email', $request->email)->first();
         if ($admin && Hash::check($request->password, $admin->password)) {
             $token = $admin->createToken($request->device_name)->plainTextToken;
@@ -60,10 +54,7 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Invalid credentials'], 401);
     }
-
-    /**
-     * Regular User Registration
-     */
+ 
     public function register(Request $request)
     {
         $validateData = $request->validate([

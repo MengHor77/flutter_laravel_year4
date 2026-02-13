@@ -9,14 +9,11 @@ use Illuminate\Support\Facades\Validator;
 
 class BookController extends Controller
 {
-    // 1. GET ALL BOOKS
    public function index() {
-    // Load category and active offers in one query
     $books = Book::with(['category', 'specialOffers' => function($query) {
         $query->where('is_active', true);
     }])->get();
 
-    // Attach dynamic price fields to the JSON response
     $books->map(function ($book) {
         $activeOffer = $book->specialOffers->first();
         $book->is_on_sale = $activeOffer ? true : false;
@@ -34,7 +31,7 @@ class BookController extends Controller
             'author' => 'required|string|max:255',
             'price' => 'required|numeric',
             'category_id' => 'required|exists:category,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validation for image
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 
         ]);
 
         if ($validator->fails()) {
