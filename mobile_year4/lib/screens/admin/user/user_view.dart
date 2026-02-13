@@ -35,11 +35,11 @@ class _UserViewState extends State<UserView> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Manage Users"), // Added const
+        title: const Text("Manage Users"),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnDark,
         leading: IconButton(
-          icon: const Icon(Icons.menu), // Added const
+          icon: const Icon(Icons.menu),
           onPressed: widget.openDrawer,
         ),
       ),
@@ -47,11 +47,11 @@ class _UserViewState extends State<UserView> {
         future: fetchUsers(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator()); // Added const
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text("Error: ${snapshot.error}"));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("No users found.")); // Added const
+            return const Center(child: Text("No users found."));
           }
 
           final users = snapshot.data!;
@@ -66,20 +66,18 @@ class _UserViewState extends State<UserView> {
                 elevation: 1,
                 margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 child: ListTile(
-                  leading: const CircleAvatar( // Added const
+                  leading: const CircleAvatar(
                     backgroundColor: AppColors.accent,
-                    child: Icon(Icons.person, color: Colors.white), // Added const
+                    child: Icon(Icons.person, color: Colors.white),
                   ),
                   title: Text(
                     user['name'] ?? "No Name",
-                    style: const TextStyle(fontWeight: FontWeight.bold), // Added const
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(user['email'] ?? "No Email"),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, color: AppColors.danger), // Added const
-                    onPressed: () {
-                      // Logic for deleting user
-                    },
+                    icon: const Icon(Icons.delete, color: AppColors.danger),
+                    onPressed: () {},
                   ),
                 ),
               );

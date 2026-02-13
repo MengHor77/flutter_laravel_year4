@@ -1,10 +1,10 @@
 import 'dart:convert';
+import '../../../colors.dart';
 import 'edit_special_offer.dart';
 import '../../../api_config.dart';
 import 'create_special_offer.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../../../colors.dart'; // Now being used
 
 class SpecialOfferView extends StatefulWidget {
   final VoidCallback openDrawer;
@@ -47,7 +47,7 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
         Uri.parse("${ApiConfig.specialOffers}/$id"),
       );
       if (response.statusCode == 200) {
-        _showSnackBar("Offer removed", AppColors.danger); // Using AppColors
+        _showSnackBar("Offer removed", AppColors.danger);
         _fetchOffers();
       }
     } catch (e) {
@@ -68,11 +68,11 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background, // Using AppColors
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text("Special Offers"),
-        backgroundColor: AppColors.primary, // Using AppColors
-        foregroundColor: AppColors.textOnDark, // Using AppColors
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnDark,
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: widget.openDrawer,
@@ -100,7 +100,7 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary, // Using AppColors
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -115,7 +115,7 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
                                 final offer = _offers[index];
                                 final book = offer['book'];
                                 return Card(
-                                  color: AppColors.cardBg, // Using AppColors
+                                  color: AppColors.cardBg,
                                   elevation: 3,
                                   margin: const EdgeInsets.symmetric(
                                     vertical: 8,
@@ -124,7 +124,7 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
                                     leading: const Icon(
                                       Icons.local_offer,
                                       color: AppColors.warning,
-                                    ), // Using AppColors
+                                    ),
                                     title: Text(
                                       offer['title'],
                                       style: const TextStyle(
@@ -135,7 +135,7 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
                                       "${offer['discount_percentage']}% Off on ${book?['name'] ?? 'Book'}\nNow: \$${offer['offer_price']}",
                                       style: const TextStyle(
                                         color: AppColors.textSecondary,
-                                      ), // Using AppColors
+                                      ),
                                     ),
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -144,7 +144,7 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
                                           icon: const Icon(
                                             Icons.edit,
                                             color: AppColors.accent,
-                                          ), // Using AppColors
+                                          ),
                                           onPressed: () => showDialog(
                                             context: context,
                                             builder: (context) =>
@@ -156,9 +156,9 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
                                         ),
                                         IconButton(
                                           icon: const Icon(
-                                            Icons.delete_outline,
+                                            Icons.delete,
                                             color: AppColors.danger,
-                                          ), // Using AppColors
+                                          ),
                                           onPressed: () =>
                                               _deleteOffer(offer['id']),
                                         ),
