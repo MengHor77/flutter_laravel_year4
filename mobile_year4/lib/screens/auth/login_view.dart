@@ -1,8 +1,9 @@
+import '../../colors.dart';
 import 'register_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../frontend/home/home_view.dart';
-import '../../services/auth_service.dart'; 
+import '../../services/auth_service.dart';
 import '../../providers/book_provider.dart';
 import '../../widgets/backend/admin_menu_sidebar.dart';
 
@@ -20,7 +21,6 @@ class _LoginViewState extends State<LoginView> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // 2. Initialize the Service
   final AuthService _authService = AuthService();
 
   @override
@@ -39,7 +39,6 @@ class _LoginViewState extends State<LoginView> {
     setState(() => _isLoading = true);
 
     try {
-      // 3. Call the Login Service instead of http.post
       final result = await _authService.login(
         _emailController.text,
         _passwordController.text,
@@ -50,7 +49,6 @@ class _LoginViewState extends State<LoginView> {
       if (result['success']) {
         debugPrint("Login Success: ${result['user']['name']}");
 
-        // 4. Update BookProvider with user data
         final bookProvider = context.read<BookProvider>();
         bookProvider.setUser(
           result['user']['name'] ?? "User",
@@ -58,10 +56,8 @@ class _LoginViewState extends State<LoginView> {
           result['token'],
         );
 
-        // Sync cart/orders
         bookProvider.fetchSavedOrders();
 
-        // 5. Navigate based on role
         if (result['role'] == 'admin') {
           Navigator.pushReplacement(
             context,
@@ -74,7 +70,6 @@ class _LoginViewState extends State<LoginView> {
           );
         }
       } else {
-        // Show error message from service
         _showError(result['message']);
       }
     } catch (e) {
@@ -86,47 +81,78 @@ class _LoginViewState extends State<LoginView> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.danger, 
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(30.0),
             child: Column(
               children: [
-                const Icon(Icons.book, size: 100, color: Colors.blue),
+                const Icon(
+                  Icons.book,
+                  size: 100,
+                  color: AppColors.accent,
+                ),
                 const SizedBox(height: 20),
                 const Text(
                   "Book Store Login",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary, 
+                  ),
                 ),
                 const SizedBox(height: 40),
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(color: AppColors.textPrimary),
                   decoration: const InputDecoration(
                     labelText: 'Email',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
                     border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: AppColors.textSecondary),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: AppColors.accent),
+                    ),
+                    prefixIcon: Icon(Icons.email, color: AppColors.primary),
                   ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: _passwordController,
                   obscureText: _obscureText,
+                  style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(
                     labelText: 'Password',
+                    labelStyle: const TextStyle(color: AppColors.textSecondary),
                     border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.lock),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: AppColors.textSecondary),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: AppColors.accent),
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.lock,
+                      color: AppColors.primary,
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscureText ? Icons.visibility_off : Icons.visibility,
+                        color: AppColors.textSecondary,
                       ),
                       onPressed: () =>
                           setState(() => _obscureText = !_obscureText),
@@ -139,12 +165,16 @@ class _LoginViewState extends State<LoginView> {
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+                      backgroundColor:
+                          AppColors.accent, 
+                      foregroundColor:
+                          AppColors.textOnDark,
                     ),
                     onPressed: _isLoading ? null : _handleLogin,
                     child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
+                        ? const CircularProgressIndicator(
+                            color: AppColors.textOnDark,
+                          )
                         : const Text(
                             "LOGIN",
                             style: TextStyle(fontWeight: FontWeight.bold),
@@ -152,14 +182,37 @@ class _LoginViewState extends State<LoginView> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                TextButton(
-                  onPressed: () => Navigator.push(
+
+                GestureDetector(
+                  onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const RegisterView(),
                     ),
                   ),
-                  child: const Text("Don't have an account? Register Now"),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: RichText(
+                      text: const TextSpan(
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 16,
+                        ),
+                        children: [
+                          TextSpan(text: "Don't have an account? "),
+                          TextSpan(
+                            text: "Register now.",
+                            style: TextStyle(
+                              color: AppColors.accent,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                              decorationThickness: 2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
