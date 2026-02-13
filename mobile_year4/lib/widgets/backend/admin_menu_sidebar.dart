@@ -1,14 +1,14 @@
-import 'user/user_view.dart';
-import 'sale/sale_view.dart';
-import 'book/books_view.dart';
-import '../auth/login_view.dart';
-import 'order_list/orders_view.dart';
-import 'category/category_view.dart';
-import 'dashboard/dashboard_view.dart';
 import 'package:flutter/material.dart';
-import 'special_offer/special_offer_view.dart';
-import 'best_selling_book/best_selling_view.dart';
+import '../../screens/auth/login_view.dart';
+import '../../screens/admin/user/user_view.dart';
+import '../../screens/admin/sale/sale_view.dart';
+import '../../screens/admin/book/books_view.dart';
+import '../../screens/admin/order_list/orders_view.dart';
+import '../../screens/admin/category/category_view.dart';
+import '../../screens/admin/dashboard/dashboard_view.dart';
+import '../../screens/admin/special_offer/special_offer_view.dart';
 import '../../colors.dart'; // Ensure this points to your colors.dart
+import '../../screens/admin/best_selling_book/best_selling_view.dart';
 
 class AdminMenuSidebar extends StatefulWidget {
   const AdminMenuSidebar({super.key});
