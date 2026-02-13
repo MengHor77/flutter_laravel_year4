@@ -18,13 +18,11 @@ class AppSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // We use watch here so the sidebar updates if user info changes
     final bookProvider = context.watch<BookProvider>();
 
     return Drawer(
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       child: Column(
-        // Using Column + Expanded to keep Logout at the bottom if desired
         children: [
           UserAccountsDrawerHeader(
             accountName: Text(bookProvider.userName),
@@ -85,8 +83,11 @@ class AppSidebar extends StatelessWidget {
                   const AboutUsView(),
                 ),
 
-                const Divider(),
-
+                Divider(
+                  thickness: 1,
+                  height: 1,
+                  color: AppColors.textSecondary.withValues(alpha: 0.3),
+                ),
                 ListTile(
                   leading: const Icon(
                     Icons.logout_rounded,
@@ -127,7 +128,7 @@ class AppSidebar extends StatelessWidget {
     bool isActive = currentRoute == title;
     return ListTile(
       selected: isActive,
-      selectedTileColor: AppColors.accent.withOpacity(0.1),
+      selectedTileColor: AppColors.accent.withValues(alpha: 0.1),
       leading: Icon(
         icon,
         color: isActive ? AppColors.accent : AppColors.textSecondary,
@@ -140,7 +141,7 @@ class AppSidebar extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Navigator.pop(context); // Close drawer
+        Navigator.pop(context);
         if (!isActive) {
           ScaffoldMessenger.of(context).removeCurrentSnackBar();
           Navigator.pushReplacement(
