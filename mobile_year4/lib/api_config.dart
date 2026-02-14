@@ -1,5 +1,5 @@
 class ApiConfig {
-  static const String baseUrl = "http://192.168.1.100:8000"; // change  actual ip here 
+  static const String baseUrl = "http://192.168.1.105:8000"; // change  actual ip here 
   static const String _domain = "$baseUrl/api";
 
   static String? userToken;
