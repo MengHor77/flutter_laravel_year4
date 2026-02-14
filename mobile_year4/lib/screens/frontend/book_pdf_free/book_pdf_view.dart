@@ -1,5 +1,6 @@
 import 'search_book.dart';
 import '../../../colors.dart';
+import 'save_book_to_file.dart'; 
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -72,7 +73,15 @@ class _BookPdfViewState extends State<BookPdfView> {
               itemCount: provider.freeBooks.length,
               itemBuilder: (context, index) {
                 final book = provider.freeBooks[index];
-                final imageUrl = "${ApiConfig.baseUrl}/storage/${book.image}";
+                
+                // Keep your logic: check if URL is already full or needs prefix
+                final imageUrl = book.image.startsWith('http') 
+                    ? book.image 
+                    : "${ApiConfig.baseUrl}/storage/${book.image}";
+                
+                final pdfUrl = book.pdfFile.startsWith('http') 
+                    ? book.pdfFile 
+                    : "${ApiConfig.baseUrl}/storage/${book.pdfFile}";
 
                 return Card(
                   elevation: 3,
@@ -129,7 +138,6 @@ class _BookPdfViewState extends State<BookPdfView> {
                                     color: Colors.blue,
                                   ),
                                   onPressed: () {
-                                    // Navigation to PDF Reader goes here
                                     _showSnackBar("Opening PDF: ${book.name}");
                                   },
                                 ),
@@ -140,9 +148,11 @@ class _BookPdfViewState extends State<BookPdfView> {
                                     color: Colors.green,
                                   ),
                                   onPressed: () {
-                                    // Download logic goes here
-                                    _showSnackBar(
-                                      "Downloading ${book.name}...",
+                                    // FIXED: Now calls your BookSaver logic
+                                    BookSaver.saveAndNotify(
+                                      pdfUrl, 
+                                      "${book.name}.pdf", 
+                                      context
                                     );
                                   },
                                 ),

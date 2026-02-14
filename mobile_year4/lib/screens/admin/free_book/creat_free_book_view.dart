@@ -20,10 +20,10 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
   File? selectedPdf;
   String? selectedCategoryId;
 
-  // NEW: Ensure categories are loaded when the dialog opens
   @override
   void initState() {
     super.initState();
+    // Fetch categories/books when the dialog opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FreeBookPdfProvider>(context, listen: false).fetchFreeBooks();
     });
@@ -62,19 +62,13 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
   Widget build(BuildContext context) {
     final provider = Provider.of<FreeBookPdfProvider>(context);
 
+    // Map categories for dropdown
     final categoryItems = provider.categories.map((cat) {
       return DropdownMenuItem<String>(
         value: cat['id'].toString(),
         child: Text(cat['name']),
       );
     }).toList();
-
-    bool isValidSelection = provider.categories.any(
-      (c) => c['id'].toString() == selectedCategoryId,
-    );
-    if (selectedCategoryId != null && !isValidSelection) {
-      selectedCategoryId = null;
-    }
 
     return AlertDialog(
       title: const Text("Add New Free Book"),
@@ -91,7 +85,6 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
               decoration: const InputDecoration(labelText: "Author"),
             ),
             const SizedBox(height: 10),
-
             DropdownButtonFormField<String>(
               value: selectedCategoryId,
               decoration: const InputDecoration(labelText: "Select Category"),
@@ -103,7 +96,6 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
                 });
               },
             ),
-
             const SizedBox(height: 20),
             _fileTile(
               icon: Icons.image,
@@ -141,20 +133,11 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
                   backgroundColor: AppColors.primary,
                 ),
                 onPressed: () async {
-                  if (nameController.text.isEmpty) {
-                    _showError("Please enter a book name");
-                    return;
-                  }
-                  if (selectedCategoryId == null) {
-                    _showError("Please select a category");
-                    return;
-                  }
-                  if (selectedImage == null) {
-                    _showError("Please select an image");
-                    return;
-                  }
-                  if (selectedPdf == null) {
-                    _showError("Please select a PDF file");
+                  if (nameController.text.isEmpty ||
+                      selectedCategoryId == null ||
+                      selectedImage == null ||
+                      selectedPdf == null) {
+                    _showError("All fields and files are required");
                     return;
                   }
 
