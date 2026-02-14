@@ -7,8 +7,10 @@ import '../../screens/admin/book/books_view.dart';
 import '../../screens/admin/order_list/orders_view.dart';
 import '../../screens/admin/category/category_view.dart';
 import '../../screens/admin/dashboard/dashboard_view.dart';
+import '../../screens/admin/free_book/free_book_view.dart';
 import '../../screens/admin/special_offer/special_offer_view.dart';
 import '../../screens/admin/best_selling_book/best_selling_view.dart';
+// ADDED THIS IMPORT
 
 class AdminMenuSidebar extends StatefulWidget {
   const AdminMenuSidebar({super.key});
@@ -23,6 +25,7 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
 
   @override
   Widget build(BuildContext context) {
+    // UPDATED: Added FreeBookView to match index 8
     final List<Widget> pages = [
       DashboardView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       CategoryView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
@@ -38,6 +41,7 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
       BestSellingView(
         openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
       ),
+      FreeBookView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
     ];
 
     return Scaffold(
@@ -83,6 +87,7 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
                   _buildMenuItem(Icons.people, "Users", 5),
                   _buildMenuItem(Icons.monetization_on, "Sales", 6),
                   _buildMenuItem(Icons.star_rate_rounded, "Best Selling", 7),
+                  _buildMenuItem(Icons.picture_as_pdf, "Free Book PDF", 8),
 
                   Divider(
                     thickness: 1,

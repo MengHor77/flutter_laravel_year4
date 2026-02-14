@@ -47,4 +47,37 @@ class BookService {
       body: jsonEncode(data),
     );
   }
+
+  static Future<http.Response> fetchFreeBooks() async {
+    return await http.get(
+      Uri.parse(ApiConfig.freeBooks),
+      headers: ApiConfig.getHeaders(),
+    );
+  }
+
+  static Future<http.Response> storeFreeBook(Map<String, dynamic> data) async {
+    return await http.post(
+      Uri.parse(ApiConfig.freeBooks),
+      headers: ApiConfig.getHeaders(),
+      body: jsonEncode(data),
+    );
+  }
+
+  static Future<http.Response> updateFreeBook(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    return await http.put(
+      Uri.parse("${ApiConfig.freeBooks}/$id"),
+      headers: ApiConfig.getHeaders(),
+      body: jsonEncode(data),
+    );
+  }
+
+  static Future<http.Response> deleteFreeBook(String id) async {
+    return await http.delete(
+      Uri.parse("${ApiConfig.freeBooks}/$id"),
+      headers: ApiConfig.getHeaders(),
+    );
+  }
 }

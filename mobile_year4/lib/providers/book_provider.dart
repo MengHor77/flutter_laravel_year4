@@ -9,10 +9,13 @@ class BookProvider extends ChangeNotifier {
   bool _isSyncing = false;
   String _userName = "Guest User";
   String _userEmail = "guest@example.com";
+  List<Book> _freeBooks = []; // State for Free Books
 
   String get userName => _userName;
   String get userEmail => _userEmail;
   List<Book> get cart => List.unmodifiable(_cart);
+  List<Book> get freeBooks => List.unmodifiable(_freeBooks); // Getter
+
   int get itemCount => _cart.length;
   bool get isSyncing => _isSyncing;
 
@@ -158,6 +161,82 @@ class BookProvider extends ChangeNotifier {
     } finally {
       _isSyncing = false;
       notifyListeners();
+    }
+  }
+
+  // 1. Fetch
+  Future<void> fetchFreeBooks() async {
+    _isSyncing = true;
+    notifyListeners();
+    try {
+      final response = await BookService.fetchFreeBooks();
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        _freeBooks = data.map((json) => Book.fromJson(json)).toList();
+      }
+    } catch (e) {
+      debugPrint("Error fetching free books: $e");
+    } finally {
+      _isSyncing = false;
+      notifyListeners();
+    }
+  }
+
+  // 2. Add (Create)
+  Future<bool> addFreeBook(Map<String, dynamic> data) async {
+    _isSyncing = true;
+    notifyListeners();
+    try {
+      final response = await BookService.storeFreeBook(data);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        await fetchFreeBooks(); // Refresh list
+        return true;
+      }
+    } catch (e) {
+      debugPrint("Add Error: $e");
+    } finally {
+      _isSyncing = false;
+      notifyListeners();
+    }
+    return false;
+  }
+
+  // 3. Update
+  Future<bool> updateFreeBook(String id, Map<String, dynamic> data) async {
+    _isSyncing = true;
+    notifyListeners();
+    try {
+      final response = await BookService.updateFreeBook(id, data);
+      if (response.statusCode == 200) {
+        await fetchFreeBooks(); // Refresh list
+        return true;
+      }
+    } catch (e) {
+      debugPrint("Update Error: $e");
+    } finally {
+      _isSyncing = false;
+      notifyListeners();
+    }
+    return false;
+  }
+
+ // 4. Delete Free Book Logic
+  Future<bool> deleteFreeBook(String id) async {
+    try {
+      final response = await BookService.deleteFreeBook(id);
+      
+      if (response.statusCode == 200) {
+        // Find and remove locally so the UI rebuilds with the correct length
+        _freeBooks.removeWhere((book) => book.id == id);
+        
+        // This notifies the Consumer/ListView.builder to redraw
+        notifyListeners(); 
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint("Delete Error: $e");
+      return false;
     }
   }
 }

@@ -10,6 +10,8 @@ use App\Http\Controllers\backend\SpecialOfferController;
 use App\Http\Controllers\frontend\CheckoutController;
 use App\Http\Controllers\backend\SaleController;
 use App\Http\Controllers\frontend\OrderController;
+use App\Http\Controllers\backend\FreeBookPDFController;
+
 
 // FIX: Import both controllers with different names
 use App\Http\Controllers\frontend\OrderListController as FrontendOrder;
@@ -31,6 +33,14 @@ Route::get('/books', [BookController::class, 'index']);
 Route::post('/books', [BookController::class, 'store']);         
 Route::put('/books/{id}', [BookController::class, 'update']);    
 Route::delete('/books/{id}', [BookController::class, 'destroy']);
+
+
+// Free Book PDFs CRUD
+Route::get('/free-books', [FreeBookPDFController::class, 'index']);      // List
+Route::post('/free-books', [FreeBookPDFController::class, 'store']);     // Create (Standard POST)
+Route::get('/free-books/{id}', [FreeBookPDFController::class, 'show']);  // Single View
+Route::put('free-books/{id}', [FreeBookPdfController::class, 'update']);
+Route::delete('/free-books/{id}', [FreeBookPDFController::class, 'destroy']); // Delete
 
 // --- ORDERS SECTION ---
 

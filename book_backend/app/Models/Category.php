@@ -18,4 +18,10 @@ class Category extends Model
     {
         return $this->hasMany(Book::class, 'category_id');
     }
+    
+    public function freeBooks()
+{
+    return $this->hasMany(FreeBookPDF::class, 'category_id');
+}
+
 }
