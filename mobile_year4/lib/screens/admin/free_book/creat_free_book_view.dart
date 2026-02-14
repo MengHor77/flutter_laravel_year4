@@ -15,16 +15,26 @@ class CreateFreeBookView extends StatefulWidget {
 class _CreateFreeBookViewState extends State<CreateFreeBookView> {
   final nameController = TextEditingController();
   final authorController = TextEditingController();
+
   File? selectedImage;
   File? selectedPdf;
+  String? selectedCategoryId;
+
+  // NEW: Ensure categories are loaded when the dialog opens
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<FreeBookPdfProvider>(context, listen: false).fetchFreeBooks();
+    });
+  }
 
   Future<void> _pickFile({required bool isPdf}) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: isPdf ? FileType.custom : FileType.image,
         allowedExtensions: isPdf ? ['pdf'] : null,
-        // Adding this to ensure the picker handles app-backgrounding better
-        allowMultiple: false, 
+        allowMultiple: false,
       );
 
       if (result != null && result.files.single.path != null) {
@@ -50,8 +60,21 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
 
   @override
   Widget build(BuildContext context) {
-    // listen: true is required here to react to provider.isSyncing
     final provider = Provider.of<FreeBookPdfProvider>(context);
+
+    final categoryItems = provider.categories.map((cat) {
+      return DropdownMenuItem<String>(
+        value: cat['id'].toString(),
+        child: Text(cat['name']),
+      );
+    }).toList();
+
+    bool isValidSelection = provider.categories.any(
+      (c) => c['id'].toString() == selectedCategoryId,
+    );
+    if (selectedCategoryId != null && !isValidSelection) {
+      selectedCategoryId = null;
+    }
 
     return AlertDialog(
       title: const Text("Add New Free Book"),
@@ -67,20 +90,34 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
               controller: authorController,
               decoration: const InputDecoration(labelText: "Author"),
             ),
+            const SizedBox(height: 10),
+
+            DropdownButtonFormField<String>(
+              value: selectedCategoryId,
+              decoration: const InputDecoration(labelText: "Select Category"),
+              hint: const Text("Choose a category"),
+              items: categoryItems,
+              onChanged: (value) {
+                setState(() {
+                  selectedCategoryId = value;
+                });
+              },
+            ),
+
             const SizedBox(height: 20),
             _fileTile(
               icon: Icons.image,
               title: selectedImage == null ? "Select Image" : "Image Selected",
               onTap: () => _pickFile(isPdf: false),
               color: selectedImage == null ? Colors.grey : Colors.blue,
-              subtitle: selectedImage != null ? selectedImage!.path.split('/').last : null,
+              subtitle: selectedImage?.path.split('/').last,
             ),
             _fileTile(
               icon: Icons.picture_as_pdf,
               title: selectedPdf == null ? "Select PDF" : "PDF Selected",
               onTap: () => _pickFile(isPdf: true),
               color: selectedPdf == null ? Colors.grey : Colors.red,
-              subtitle: selectedPdf != null ? selectedPdf!.path.split('/').last : null,
+              subtitle: selectedPdf?.path.split('/').last,
             ),
           ],
         ),
@@ -102,12 +139,14 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
             : ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  disabledBackgroundColor: Colors.grey,
                 ),
                 onPressed: () async {
-                  // Debugging log to see why it might fail validation
                   if (nameController.text.isEmpty) {
                     _showError("Please enter a book name");
+                    return;
+                  }
+                  if (selectedCategoryId == null) {
+                    _showError("Please select a category");
                     return;
                   }
                   if (selectedImage == null) {
@@ -119,11 +158,10 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
                     return;
                   }
 
-                  // If validation passes
                   final fields = {
                     "name": nameController.text.trim(),
                     "author": authorController.text.trim(),
-                    "category_id": "1", // Ensure this category ID exists in your DB
+                    "category_id": selectedCategoryId!,
                     "price": "0.00",
                   };
 
@@ -133,19 +171,21 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
                     selectedPdf!,
                   );
 
-                  if (success && mounted) {
+                  if (mounted && success) {
                     Navigator.pop(context);
-                  } else if (mounted) {
-                    _showError("Failed to upload. Check server logs.");
                   }
                 },
-                child: const Text("Save", style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  "Save",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
       ],
     );
   }
 
   void _showError(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
@@ -160,9 +200,17 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
   }) {
     return ListTile(
       leading: Icon(icon, color: color),
-      title: Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-      subtitle: subtitle != null 
-          ? Text(subtitle, style: const TextStyle(fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis) 
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+      ),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: const TextStyle(fontSize: 10),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            )
           : null,
       trailing: const Icon(Icons.attach_file, size: 18),
       onTap: onTap,

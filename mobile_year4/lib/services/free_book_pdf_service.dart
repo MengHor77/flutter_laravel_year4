@@ -26,6 +26,15 @@ class FreeBookPdfService {
     return await request.send();
   }
 
+  // Add this inside your FreeBookPdfService class
+static Future<http.Response> fetchCategories() async {
+  return await http.get(
+    Uri.parse("${ApiConfig.baseUrl}/categories"), // Ensure this route exists in Laravel
+    headers: ApiConfig.getHeaders(),
+  );
+}
+
+
   static Future<http.Response> update(
     String id, 
     Map<String, String> fields, {
