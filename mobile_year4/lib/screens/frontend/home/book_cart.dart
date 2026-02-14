@@ -103,6 +103,7 @@ class BookCard extends StatelessWidget {
                             content: Text("${book.name} added to cart"),
                             duration: const Duration(seconds: 1),
                             behavior: SnackBarBehavior.floating,
+                            backgroundColor: AppColors.success,
                           ),
                         );
                       },
