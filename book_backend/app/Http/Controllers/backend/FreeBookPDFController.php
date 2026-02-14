@@ -11,7 +11,6 @@ class FreeBookPDFController extends Controller
 {
     public function index()
     {
-        // Keeps your eager loading of the category
         $book_pdfs = FreeBookPDF::with('category')->get();
         return response()->json($book_pdfs);
     }
@@ -61,13 +60,11 @@ class FreeBookPDFController extends Controller
 
         $data = $request->all();
 
-        // Handle Image Update
         if ($request->hasFile('image')) {
             if($book->image) Storage::disk('public')->delete($book->image);
             $data['image'] = $request->file('image')->store('uploads/covers', 'public');
         }
 
-        // Handle PDF Update
         if ($request->hasFile('pdf_file')) {
             if($book->pdf_file) Storage::disk('public')->delete($book->pdf_file);
             $data['pdf_file'] = $request->file('pdf_file')->store('uploads/pdfs', 'public');
@@ -82,7 +79,6 @@ class FreeBookPDFController extends Controller
         $book = FreeBookPDF::find($id);
         if (!$book) return response()->json(['message' => 'Book not found'], 404);
 
-        // Clean up files from storage before deleting database record
         if ($book->image) Storage::disk('public')->delete($book->image);
         if ($book->pdf_file) Storage::disk('public')->delete($book->pdf_file);
         

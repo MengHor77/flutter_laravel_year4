@@ -53,11 +53,21 @@ class FreeBookPdfProvider extends ChangeNotifier {
     return false;
   }
 
-  Future<bool> updateFreeBook(String id, Map<String, String> fields) async {
+  Future<bool> updateFreeBook(
+    String id, 
+    Map<String, String> fields, {
+    File? imageFile,
+    File? pdfFile,
+  }) async {
     _isSyncing = true;
     notifyListeners();
     try {
-      final response = await FreeBookPdfService.update(id, fields);
+      final response = await FreeBookPdfService.update(
+        id, 
+        fields, 
+        imageFile: imageFile, 
+        pdfFile: pdfFile,
+      );
       
       if (response.statusCode == 200) {
         await fetchFreeBooks(); 

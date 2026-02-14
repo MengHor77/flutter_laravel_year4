@@ -24,11 +24,9 @@ class FreeBookPdf {
       author: json['author'] ?? '',
       image: json['image'] ?? '',
       pdfFile: json['pdf_file'] ?? '',
-      // Display name from the joined category table
       categoryName: json['category'] != null
           ? json['category']['name']
           : 'Free',
-      // The actual ID needed for database updates
       categoryId: (json['category_id'] ?? '1').toString(),
     );
   }
