@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import '../../../../models/book_model.dart';
 import '../../../../providers/book_provider.dart';
 import '../../../../widgets/frontent/book_card.dart';
-import '../../../../widgets/frontent/menu_sidebar.dart';
 
 class BestSellingView extends StatefulWidget {
   const BestSellingView({super.key});
@@ -37,70 +36,60 @@ class _BestSellingViewState extends State<BestSellingView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Best Selling'),
-        backgroundColor: AppColors.accent,
-        foregroundColor: Colors.white,
-      ),
-      drawer: const AppSidebar(currentRoute: 'Best Selling'),
-      body: FutureBuilder<List<dynamic>>(
-        future: _fetchBestSellers(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.accent),
-            );
-          } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("No best sellers found."));
-          }
-
-          final items = snapshot.data!;
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(12),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final bookData = items[index]['book'];
-              final book = Book.fromJson(bookData);
-
-              return BookCard(
-                book: book,
-                buttonText: "Add to Cart",
-                buttonColor: AppColors.success,
-                onAction: () async {
-                  // ✅ Store in central Provider
-                  await context.read<BookProvider>().addToCart(book);
-
-                  final messenger = ScaffoldMessenger.of(context);
-                  messenger.clearSnackBars();
-
-                  messenger.showSnackBar(
-                    SnackBar(
-                      backgroundColor: AppColors.success,
-                      behavior: SnackBarBehavior.floating,
-                      content: Text("${book.name} added successfully!"),
-                      action: SnackBarAction(
-                        label: "VIEW",
-                        textColor: Colors.white,
-                        onPressed: () =>
-                            Navigator.pushNamed(context, '/order-list'),
-                      ),
-                    ),
-                  );
-
-                  Timer(const Duration(seconds: 2), () {
-                    if (mounted) messenger.hideCurrentSnackBar();
-                  });
-                },
-              );
-            },
+    // បោះចេញតែ content មិនប្រើ Scaffold ទេ
+    return FutureBuilder<List<dynamic>>(
+      future: _fetchBestSellers(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.accent),
           );
-        },
-      ),
+        } else if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error}"));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text("No best sellers found."));
+        }
+
+        final items = snapshot.data!;
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final bookData = items[index]['book'];
+            final book = Book.fromJson(bookData);
+
+            return BookCard(
+              book: book,
+              buttonText: "Add to Cart",
+              buttonColor: AppColors.success,
+              onAction: () async {
+                await context.read<BookProvider>().addToCart(book);
+
+                final messenger = ScaffoldMessenger.of(context);
+                messenger.clearSnackBars();
+
+                messenger.showSnackBar(
+                  SnackBar(
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                    content: Text("${book.name} added successfully!"),
+                    action: SnackBarAction(
+                      label: "VIEW",
+                      textColor: Colors.white,
+                      onPressed: () => Navigator.pushNamed(context, '/order-list'),
+                    ),
+                  ),
+                );
+
+                Timer(const Duration(seconds: 2), () {
+                  if (mounted) messenger.hideCurrentSnackBar();
+                });
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

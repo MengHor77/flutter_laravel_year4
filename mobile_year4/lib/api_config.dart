@@ -1,6 +1,6 @@
 class ApiConfig {
-  static const String baseUrl ="http://192.168.1.105:8000"; // change  actual ip here
-  static const String _domain = "$baseUrl/api";
+// Change this line temporarily to test
+static const String baseUrl = "http://172.20.10.2:8000";  static const String _domain = "$baseUrl/api";
 
   static String? userToken;
 
@@ -26,7 +26,7 @@ class ApiConfig {
   static const String freeBooks = "$_domain/free-books";
 
   // Storage / Image Path
-  static const String storage = "$baseUrl/storage/";
+  static const String storage = "$baseUrl/";
 
   // Helper for Headers (Consistency across all files)
   static Map<String, String> getHeaders() {

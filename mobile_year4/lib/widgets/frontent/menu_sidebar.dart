@@ -14,7 +14,12 @@ import 'package:mobile_year4/screens/frontend/best_selling_view/best_selling_vie
 
 class AppSidebar extends StatelessWidget {
   final String currentRoute;
-  const AppSidebar({super.key, this.currentRoute = 'Home'});
+  final Function(int)? onIndexChanged;
+  const AppSidebar({
+    super.key,
+    this.currentRoute = 'Home',
+    this.onIndexChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -83,11 +88,7 @@ class AppSidebar extends StatelessWidget {
                   const AboutUsView(),
                 ),
 
-                Divider(
-                  thickness: 1,
-                  height: 1,
-                  color: AppColors.textSecondary.withValues(alpha: 0.3),
-                ),
+                const Divider(),
                 ListTile(
                   leading: const Icon(
                     Icons.logout_rounded,
@@ -126,9 +127,19 @@ class AppSidebar extends StatelessWidget {
     Widget destination,
   ) {
     bool isActive = currentRoute == title;
+
+    // ✅ កែសម្រួល Index ឱ្យត្រូវនឹង MainWrapper
+    final Map<String, int> routeToIndex = {
+      'Home': 0,
+      'Books': 1,
+      'Order List': 2,
+      'Best Selling': 3, // Best Selling ស្ថិតនៅ Index 3
+      'Profile': 4,
+    };
+
     return ListTile(
       selected: isActive,
-      selectedTileColor: AppColors.accent.withValues(alpha: 0.1),
+      selectedTileColor: AppColors.accent.withOpacity(0.1),
       leading: Icon(
         icon,
         color: isActive ? AppColors.accent : AppColors.textSecondary,
@@ -141,10 +152,14 @@ class AppSidebar extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Navigator.pop(context);
-        if (!isActive) {
-          ScaffoldMessenger.of(context).removeCurrentSnackBar();
-          Navigator.pushReplacement(
+        Navigator.pop(context); // បិទ Drawer
+
+        if (routeToIndex.containsKey(title)) {
+          if (onIndexChanged != null) {
+            onIndexChanged!(routeToIndex[title]!);
+          }
+        } else {
+          Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => destination),
           );

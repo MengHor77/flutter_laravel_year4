@@ -2,11 +2,10 @@ import '../../colors.dart';
 import 'register_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../frontend/home/home_view.dart';
 import '../../services/auth_service.dart';
 import '../../providers/book_provider.dart';
 import '../../widgets/backend/admin_menu_sidebar.dart';
-
+import 'package:mobile_year4/widgets/frontent/main_wrapper.dart';  
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
@@ -66,7 +65,7 @@ class _LoginViewState extends State<LoginView> {
         } else {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomeView()),
+            MaterialPageRoute(builder: (context) => const MainWrapper()),
           );
         }
       } else {

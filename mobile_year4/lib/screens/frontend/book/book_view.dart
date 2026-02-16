@@ -50,33 +50,18 @@ class _BookViewState extends State<BookView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text("Book Store"),
-        backgroundColor: AppColors.accent,
-        foregroundColor: AppColors.textOnDark,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-      ),
-      drawer: const AppSidebar(currentRoute: 'Books'),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.accent),
-            )
-          : RefreshIndicator(
-              onRefresh: _fetchBooks,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: _books.length,
-                itemBuilder: (ctx, index) => _buildCard(index),
-              ),
+    return _isLoading
+        ? const Center(
+            child: CircularProgressIndicator(color: AppColors.accent),
+          )
+        : RefreshIndicator(
+            onRefresh: _fetchBooks,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _books.length,
+              itemBuilder: (ctx, index) => _buildCard(index),
             ),
-    );
+          );
   }
 
   Widget _buildCard(int index) {
@@ -96,13 +81,13 @@ class _BookViewState extends State<BookView> {
           return;
         }
 
-        // ✅ 1. Call logic
+        //  1. Call logic
         await context.read<BookProvider>().addToCart(book);
 
-        // ✅ 2. Check mounted
+        //  2. Check mounted
         if (!mounted) return;
 
-        // ✅ 3. Remove current to prevent Dispatcher overlap
+        //  3. Remove current to prevent Dispatcher overlap
         final messenger = ScaffoldMessenger.of(context);
         messenger.removeCurrentSnackBar();
 
