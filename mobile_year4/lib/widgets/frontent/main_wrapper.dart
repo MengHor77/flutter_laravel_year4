@@ -23,28 +23,28 @@ class MainWrapper extends StatefulWidget {
 class _MainWrapperState extends State<MainWrapper> {
   int _selectedIndex = 0;
 
-  // 1. All possible pages accessible via Drawer OR BottomBar
+  // 1. Pages List: Profile (6) is after Special Offers (5)
   final List<Widget> _pages = [
     const HomeView(), // 0
     const BookView(), // 1
     const OrderListView(), // 2
     const BestSellingView(), // 3
-    const ProfileView(), // 4
-    const BookPdfView(), // 5 (Drawer only)
-    const SpecialOffersView(), // 6 (Drawer only)
-    const ContactUsView(), // 7 (Drawer only)
-    const AboutUsView(), // 8 (Drawer only)
+    const BookPdfView(), // 4
+    const SpecialOffersView(), // 5
+    const ProfileView(), // 6 (Moved)
+    const ContactUsView(), // 7
+    const AboutUsView(), // 8
   ];
 
-  // 2. Titles corresponding to the indices above
+  // 2. Titles List
   final List<String> _titles = [
     'Home',
     'Books',
     'Order List',
     'Best Selling',
-    'Profile',
     'Book PDF Free',
     'Special Offers',
+    'Profile', // 6
     'Contact Us',
     'About Us',
   ];
@@ -52,7 +52,6 @@ class _MainWrapperState extends State<MainWrapper> {
   @override
   void initState() {
     super.initState();
-    // Bridge the provider to the MainWrapper UI state
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<BookProvider>().onOrderSuccess = (index) {
         setState(() {
@@ -62,12 +61,23 @@ class _MainWrapperState extends State<MainWrapper> {
     });
   }
 
+  // Maps the 9 pages to the 5 BottomBar icons
+  int _getBottomBarIndex(int index) {
+    if (index == 6) return 4; // Map Profile Page to 5th Icon
+    if (index > 3) return 0; // Map PDF/Offers/Contact/About to 1st Icon (Home)
+    return index; // 0=Home, 1=Books, 2=Order, 3=BestSeller
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Determine if the selected item is one of the 5 items in the BottomBar
+    final bool isBottomBarPage = [0, 1, 2, 3, 6].contains(_selectedIndex);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]),
         backgroundColor: AppColors.accent,
+        foregroundColor: Colors.white,
       ),
       drawer: AppSidebar(
         currentRoute: _titles[_selectedIndex],
@@ -77,15 +87,21 @@ class _MainWrapperState extends State<MainWrapper> {
       ),
       body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
-        // Only show selection if index is 0-4 (the main menu items)
-        currentIndex: _selectedIndex > 4 ? 0 : _selectedIndex,
+        currentIndex: _getBottomBarIndex(_selectedIndex),
         onTap: (index) {
-          setState(() => _selectedIndex = index);
+          setState(() {
+            // Map the 5th icon click (index 4) back to Profile Page (index 6)
+            if (index == 4) {
+              _selectedIndex = 6;
+            } else {
+              _selectedIndex = index;
+            }
+          });
         },
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: _selectedIndex > 4
-            ? AppColors.textSecondary
-            : AppColors.accent,
+        selectedItemColor: isBottomBarPage
+            ? AppColors.accent
+            : AppColors.textSecondary,
         unselectedItemColor: AppColors.textSecondary,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),

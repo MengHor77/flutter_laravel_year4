@@ -45,7 +45,7 @@ class AppSidebar extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // Bottom Menu Items (Indices 0-4)
+                // Shared Menu Items (Indices 0-3)
                 _buildMenuItem(context, Icons.home, 'Home', 0),
                 _buildMenuItem(context, Icons.menu_book_rounded, 'Books', 1),
                 _buildMenuItem(
@@ -60,22 +60,25 @@ class AppSidebar extends StatelessWidget {
                   'Best Selling',
                   3,
                 ),
-                _buildMenuItem(context, Icons.person, 'Profile', 4),
 
-
-                // Sidebar-Only Items (Indices 5+)
+                // Drawer-Only Items (Indices 4-5)
                 _buildMenuItem(
                   context,
                   Icons.picture_as_pdf_rounded,
                   'Book PDF Free',
-                  5,
+                  4,
                 ),
                 _buildMenuItem(
                   context,
                   Icons.local_offer_rounded,
                   'Special Offers',
-                  6,
+                  5,
                 ),
+
+                // Profile - Now at Index 6 to match MainWrapper
+                _buildMenuItem(context, Icons.person, 'Profile', 6),
+
+                // Remaining Items (Indices 7-8)
                 _buildMenuItem(
                   context,
                   Icons.support_agent_rounded,
@@ -91,7 +94,6 @@ class AppSidebar extends StatelessWidget {
 
                 const Divider(),
 
-                // Logout also uses a ListTile
                 ListTile(
                   leading: const Icon(
                     Icons.logout_rounded,
@@ -123,7 +125,6 @@ class AppSidebar extends StatelessWidget {
     );
   }
 
-  // This helper function RETURNS a ListTile
   Widget _buildMenuItem(
     BuildContext context,
     IconData icon,
