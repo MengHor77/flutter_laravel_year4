@@ -19,6 +19,9 @@ class BookProvider extends ChangeNotifier {
   int get itemCount => _cart.length;
   bool get isSyncing => _isSyncing;
 
+
+  Function(int)? onOrderSuccess;
+  
   void setUser(String name, String email, [String? token]) {
     _userName = name;
     _userEmail = email;

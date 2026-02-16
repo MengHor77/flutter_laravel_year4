@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:mobile_year4/colors.dart';
+import 'package:mobile_year4/providers/book_provider.dart'; 
 import 'package:mobile_year4/widgets/frontent/menu_sidebar.dart';
 import 'package:mobile_year4/screens/frontend/home/home_view.dart';
 import 'package:mobile_year4/screens/frontend/book/book_view.dart';
@@ -10,6 +12,8 @@ import 'package:mobile_year4/screens/frontend/order_list/order_list_view.dart';
 import 'package:mobile_year4/screens/frontend/book_pdf_free/book_pdf_view.dart';
 import 'package:mobile_year4/screens/frontend/special_offer/special_offers_view.dart';
 import 'package:mobile_year4/screens/frontend/best_selling_view/best_selling_view.dart';
+
+
 
 class MainWrapper extends StatefulWidget {
   const MainWrapper({super.key});
@@ -39,6 +43,19 @@ class _MainWrapperState extends State<MainWrapper> {
     'Home', 'Books', 'Order List', 'Best Selling', 'Profile', 
     'Book PDF Free', 'Special Offers', 'Contact Us', 'About Us'
   ];
+  
+  @override
+  void initState() {
+    super.initState();
+    // Bridge the provider to the MainWrapper UI state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BookProvider>().onOrderSuccess = (index) {
+        setState(() {
+          _selectedIndex = index;
+        });
+      };
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
