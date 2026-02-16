@@ -3,7 +3,12 @@ import 'package:mobile_year4/colors.dart';
 import 'package:mobile_year4/widgets/frontent/menu_sidebar.dart';
 import 'package:mobile_year4/screens/frontend/home/home_view.dart';
 import 'package:mobile_year4/screens/frontend/book/book_view.dart';
+import 'package:mobile_year4/screens/frontend/profile/profile.dart';
+import 'package:mobile_year4/screens/frontend/about/about_us_view.dart';
+import 'package:mobile_year4/screens/frontend/contact_us/contact_us_view.dart';
 import 'package:mobile_year4/screens/frontend/order_list/order_list_view.dart';
+import 'package:mobile_year4/screens/frontend/book_pdf_free/book_pdf_view.dart';
+import 'package:mobile_year4/screens/frontend/special_offer/special_offers_view.dart';
 import 'package:mobile_year4/screens/frontend/best_selling_view/best_selling_view.dart';
 
 class MainWrapper extends StatefulWidget {
@@ -16,69 +21,56 @@ class MainWrapper extends StatefulWidget {
 class _MainWrapperState extends State<MainWrapper> {
   int _selectedIndex = 0;
 
-  // បញ្ជីទំព័រដែលបង្ហាញក្នុង IndexedStack
+  // 1. All possible pages accessible via Drawer OR BottomBar
   final List<Widget> _pages = [
-    const HomeView(), // Index 0
-    const BookView(), // Index 1
-    const OrderListView(), // Index 2
-    const BestSellingView(), // Index 3
-    const Center(child: Text("Profile Page")), // Index 4
+    const HomeView(),           // 0
+    const BookView(),           // 1
+    const OrderListView(),      // 2
+    const BestSellingView(),    // 3
+    const ProfileView(),        // 4
+    const BookPdfView(),        // 5 (Drawer only)
+    const SpecialOffersView(),  // 6 (Drawer only)
+    const ContactUsView(),      // 7 (Drawer only)
+    const AboutUsView(),        // 8 (Drawer only)
   ];
 
-  // បញ្ជីចំណងជើង AppBar ទៅតាម Index
+  // 2. Titles corresponding to the indices above
   final List<String> _titles = [
-    'Home',
-    'Books',
-    'Order List',
-    'Best Selling',
-    'Profile',
+    'Home', 'Books', 'Order List', 'Best Selling', 'Profile', 
+    'Book PDF Free', 'Special Offers', 'Contact Us', 'About Us'
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      // AppBar តែមួយសម្រាប់គ្រប់ទំព័រ (នឹងបង្ហាញប៊ូតុង Menu ជានិច្ច)
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]),
         backgroundColor: AppColors.accent,
-        foregroundColor: Colors.white,
       ),
-
-      // Sidebar ដែលទទួល callback ដើម្បីប្តូរ Index
       drawer: AppSidebar(
         currentRoute: _titles[_selectedIndex],
         onIndexChanged: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+          setState(() => _selectedIndex = index);
         },
       ),
-
-      // ប្រើ IndexedStack ដើម្បីកុំឱ្យបាត់ Bottom Bar និង AppBar
-      body: IndexedStack(index: _selectedIndex, children: _pages),
-
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: (_selectedIndex > 3) ? 3 : _selectedIndex,
+        // Only show selection if index is 0-4 (the main menu items)
+        currentIndex: _selectedIndex > 4 ? 0 : _selectedIndex,
         onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+          setState(() => _selectedIndex = index);
         },
         type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.accent,
         unselectedItemColor: AppColors.textSecondary,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Book'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long),
-            label: 'Order',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.star),
-            label: 'Best Seller',
-          ), // Added this
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Books'),
+          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Order'),
+          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Best Seller'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),

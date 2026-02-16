@@ -14,6 +14,7 @@ class CheckoutView extends StatefulWidget {
 class _CheckoutViewState extends State<CheckoutView> {
   bool _isProcessing = false;
 
+  // Safely parses price strings like "$10.00" or "10" into doubles
   double _parseSafePrice(dynamic price) {
     if (price == null) return 0.0;
     final cleanPrice = price.toString().replaceAll(RegExp(r'[^0-9.]'), '');
@@ -63,15 +64,12 @@ class _CheckoutViewState extends State<CheckoutView> {
           Center(
             child: TextButton(
               onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomeView()),
-                  (route) => false,
-                );
+                // Returns to the very start of the app (MainWrapper)
+                Navigator.of(context).popUntil((route) => route.isFirst);
               },
               child: const Text(
                 "BACK TO HOME",
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.accent),
               ),
             ),
           ),
@@ -85,13 +83,16 @@ class _CheckoutViewState extends State<CheckoutView> {
     final provider = context.watch<BookProvider>();
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text("Checkout Summary"),
         backgroundColor: AppColors.accent,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Column(
         children: [
+          // --- Items List ---
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(15),
@@ -102,74 +103,96 @@ class _CheckoutViewState extends State<CheckoutView> {
                 double subtotal = unitPrice * item.quantity;
 
                 return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.accent.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.book, color: AppColors.accent),
+                    ),
                     title: Text(
                       item.name,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text("Quantity: ${item.quantity}"),
-                    trailing: Text("\$${subtotal.toStringAsFixed(2)}"),
+                    subtitle: Text("Qty: ${item.quantity} × \$${unitPrice.toStringAsFixed(2)}"),
+                    trailing: Text(
+                      "\$${subtotal.toStringAsFixed(2)}",
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
                   ),
                 );
               },
             ),
           ),
+
+          // --- Bottom Summary Section ---
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
                   blurRadius: 10,
+                  offset: const Offset(0, -5),
                 ),
               ],
             ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Total Payable:",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Total Payable:",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                    ),
-                    Text(
-                      "\$${provider.totalCartPrice.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                        fontSize: 22,
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
+                      Text(
+                        "\$${provider.totalCartPrice.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                          fontSize: 24,
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onPressed: _isProcessing
-                        ? null
-                        : () => _handlePayment(context),
-                    child: _isProcessing
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            "CONFIRM AND PAY",
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _isProcessing
+                          ? null
+                          : () => _handlePayment(context),
+                      child: _isProcessing
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              "CONFIRM AND PAY",
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

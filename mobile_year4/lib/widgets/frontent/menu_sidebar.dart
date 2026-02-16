@@ -15,6 +15,7 @@ import 'package:mobile_year4/screens/frontend/best_selling_view/best_selling_vie
 class AppSidebar extends StatelessWidget {
   final String currentRoute;
   final Function(int)? onIndexChanged;
+
   const AppSidebar({
     super.key,
     this.currentRoute = 'Home',
@@ -44,51 +45,53 @@ class AppSidebar extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                _buildMenuItem(context, Icons.home, 'Home', const HomeView()),
-                _buildMenuItem(
-                  context,
-                  Icons.menu_book_rounded,
-                  'Books',
-                  const BookView(),
-                ),
+                // Bottom Menu Items (Indices 0-4)
+                _buildMenuItem(context, Icons.home, 'Home', 0),
+                _buildMenuItem(context, Icons.menu_book_rounded, 'Books', 1),
                 _buildMenuItem(
                   context,
                   Icons.receipt_long_rounded,
                   'Order List',
-                  const OrderListView(),
+                  2,
                 ),
                 _buildMenuItem(
                   context,
                   Icons.workspace_premium,
                   'Best Selling',
-                  const BestSellingView(),
+                  3,
                 ),
+                _buildMenuItem(context, Icons.person, 'Profile', 4),
+
+
+                // Sidebar-Only Items (Indices 5+)
                 _buildMenuItem(
                   context,
                   Icons.picture_as_pdf_rounded,
                   'Book PDF Free',
-                  const BookPdfView(),
+                  5,
                 ),
                 _buildMenuItem(
                   context,
                   Icons.local_offer_rounded,
                   'Special Offers',
-                  const SpecialOffersView(),
+                  6,
                 ),
                 _buildMenuItem(
                   context,
                   Icons.support_agent_rounded,
                   'Contact Us',
-                  const ContactUsView(),
+                  7,
                 ),
                 _buildMenuItem(
                   context,
                   Icons.info_outline_rounded,
                   'About Us',
-                  const AboutUsView(),
+                  8,
                 ),
 
                 const Divider(),
+
+                // Logout also uses a ListTile
                 ListTile(
                   leading: const Icon(
                     Icons.logout_rounded,
@@ -120,22 +123,14 @@ class AppSidebar extends StatelessWidget {
     );
   }
 
+  // This helper function RETURNS a ListTile
   Widget _buildMenuItem(
     BuildContext context,
     IconData icon,
     String title,
-    Widget destination,
+    int index,
   ) {
     bool isActive = currentRoute == title;
-
-    // ✅ កែសម្រួល Index ឱ្យត្រូវនឹង MainWrapper
-    final Map<String, int> routeToIndex = {
-      'Home': 0,
-      'Books': 1,
-      'Order List': 2,
-      'Best Selling': 3, // Best Selling ស្ថិតនៅ Index 3
-      'Profile': 4,
-    };
 
     return ListTile(
       selected: isActive,
@@ -152,17 +147,9 @@ class AppSidebar extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Navigator.pop(context); // បិទ Drawer
-
-        if (routeToIndex.containsKey(title)) {
-          if (onIndexChanged != null) {
-            onIndexChanged!(routeToIndex[title]!);
-          }
-        } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => destination),
-          );
+        Navigator.pop(context); // Close the drawer
+        if (onIndexChanged != null) {
+          onIndexChanged!(index); // Pass the index back to MainWrapper
         }
       },
     );
