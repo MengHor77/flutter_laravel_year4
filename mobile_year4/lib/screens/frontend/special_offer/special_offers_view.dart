@@ -1,8 +1,11 @@
+import '../../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/book_model.dart';
+import 'dart:async'; // Required for Timer
 import '../../../providers/book_provider.dart';
 import '../../../providers/special_offers_provider.dart';
+import '../../../../colors.dart'; // Ensure this is imported for AppColors
 
 class SpecialOffersView extends StatefulWidget {
   const SpecialOffersView({super.key});
@@ -22,8 +25,22 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
     });
   }
 
-  // ✅ KEEPING YOUR OLD LOGIC EXACTLY
+  // ✅ FORCED TO MATCH BESTSELLING LOGIC FOR SNACKBAR
   Future<void> _handleAddToCart(Map offerData) async {
+    // 1. Check Login
+    if (ApiConfig.userToken == null) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please Login first!"),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
 
     Book bookToOrder = Book(
@@ -37,34 +54,51 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
       isOnSale: true,
     );
 
-    await bookProvider.addToCart(bookToOrder);
+    try {
+      // 2. Perform logic
+      await bookProvider.addToCart(bookToOrder);
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (!mounted) return;
+
+      // 3. SNACKBAR LOGIC - EXACT MATCH TO BESTSELLING
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.clearSnackBars();
+
+      messenger.showSnackBar(
         SnackBar(
-          content: Text("${bookToOrder.name} added to cart!"),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating, // Better for BottomNav
-          duration: const Duration(seconds: 2),
+          backgroundColor: Colors.green, // Or AppColors.success
+          behavior: SnackBarBehavior.floating,
+          content: Text("${bookToOrder.name} added successfully!"),
           action: SnackBarAction(
             label: "VIEW",
             textColor: Colors.white,
             onPressed: () {
-                // Navigate to Order List index (2) via MainWrapper
-                if (bookProvider.onOrderSuccess != null) {
-                   bookProvider.onOrderSuccess!(2);
-                }
+              // Close snackbar immediately
+              messenger.hideCurrentSnackBar();
+
+              // Use the MainLayout index switcher logic
+              if (bookProvider.onOrderSuccess != null) {
+                bookProvider.onOrderSuccess!(2); // Switch to Order List index
+              }
             },
           ),
         ),
+      );
+
+      // 4. Force closure after 2 seconds (Matches your BestSellingView logic)
+      Timer(const Duration(seconds: 2), () {
+        if (mounted) messenger.hideCurrentSnackBar();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.orange),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // ❌ REMOVED Scaffold, AppBar, and Drawer here
-    // This allows MainWrapper to control the header
     return Consumer<SpecialOffersProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
