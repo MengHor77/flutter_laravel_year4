@@ -66,6 +66,7 @@ class _CheckoutViewState extends State<CheckoutView> {
               onPressed: () {
                 // Returns to the very start of the app (MainWrapper)
                 Navigator.of(context).popUntil((route) => route.isFirst);
+                context.read<BookProvider>().onOrderSuccess?.call(0);
               },
               child: const Text(
                 "ok go to home",
