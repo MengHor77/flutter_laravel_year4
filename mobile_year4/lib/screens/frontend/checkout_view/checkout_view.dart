@@ -68,7 +68,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },
               child: const Text(
-                "ok",
+                "ok go to home",
                 style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.accent),
               ),
             ),

@@ -71,43 +71,63 @@ class _BookViewState extends State<BookView> {
       buttonText: "Add to Cart",
       buttonColor: AppColors.success,
       onAction: () async {
+        // 1. Check if user is logged in
         if (ApiConfig.userToken == null) {
+          // Clear any existing snackbars immediately so this one shows up and starts its 2s timer
+          ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Please Login first!"),
               backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 2),
             ),
           );
           return;
         }
 
-        //  1. Call logic
-        await context.read<BookProvider>().addToCart(book);
-
-        //  2. Check mounted
-        if (!mounted) return;
-
-        //  3. Remove current to prevent Dispatcher overlap
+        // 2. Clear snackbars before starting the "Add to Cart" process
+        // This prevents the user from seeing a "ghost" snackbar while waiting for the API
         final messenger = ScaffoldMessenger.of(context);
-        messenger.removeCurrentSnackBar();
+        messenger.clearSnackBars();
 
-        messenger.showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 1),
-            content: Text("${book.name} added to cart!"),
-            action: SnackBarAction(
-              label: "VIEW",
-              textColor: Colors.white,
-              onPressed: () {
-                // Manually hide before navigating
-                messenger.hideCurrentSnackBar();
-                Navigator.pushNamed(context, '/order-list');
-              },
+        try {
+          // 3. Perform the logic
+          await context.read<BookProvider>().addToCart(book);
+
+          // 4. Check if the widget is still in the tree
+          if (!mounted) return;
+
+          // 5. Show Success SnackBar
+          messenger.showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2), // Fixed 2-second timeout
+              persist: false,
+              content: Text("${book.name} added to cart!"),
+              action: SnackBarAction(
+                label: "VIEW",
+                textColor: Colors.white,
+                onPressed: () {
+                  // Hide immediately when clicking the action button
+                  messenger.hideCurrentSnackBar();
+                  // Update MainWrapper index to 2 (Order List)
+                  context.read<BookProvider>().onOrderSuccess?.call(2);
+                },
+              ),
             ),
-          ),
-        );
+          );
+        } catch (e) {
+           if (!mounted) return;
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text("Failed to add to cart: $e"),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
       },
     );
   }
