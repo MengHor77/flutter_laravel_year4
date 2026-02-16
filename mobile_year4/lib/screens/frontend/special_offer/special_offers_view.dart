@@ -1,11 +1,11 @@
+import 'dart:async';  
+import '../../../../colors.dart';  
 import '../../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/book_model.dart';
-import 'dart:async'; // Required for Timer
 import '../../../providers/book_provider.dart';
 import '../../../providers/special_offers_provider.dart';
-import '../../../../colors.dart'; // Ensure this is imported for AppColors
 
 class SpecialOffersView extends StatefulWidget {
   const SpecialOffersView({super.key});
@@ -25,15 +25,14 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
     });
   }
 
-  // ✅ FORCED TO MATCH BESTSELLING LOGIC FOR SNACKBAR
-  Future<void> _handleAddToCart(Map offerData) async {
+   Future<void> _handleAddToCart(Map offerData) async {
     // 1. Check Login
     if (ApiConfig.userToken == null) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Please Login first!"),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.danger,  
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 2),
         ),
@@ -54,19 +53,19 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
       isOnSale: true,
     );
 
+     final messenger = ScaffoldMessenger.of(context);
+    messenger.clearSnackBars();
+
     try {
       // 2. Perform logic
       await bookProvider.addToCart(bookToOrder);
 
       if (!mounted) return;
 
-      // 3. SNACKBAR LOGIC - EXACT MATCH TO BESTSELLING
-      final messenger = ScaffoldMessenger.of(context);
-      messenger.clearSnackBars();
-
+      
       messenger.showSnackBar(
         SnackBar(
-          backgroundColor: Colors.green, // Or AppColors.success
+          backgroundColor: AppColors.success,  
           behavior: SnackBarBehavior.floating,
           content: Text("${bookToOrder.name} added successfully!"),
           action: SnackBarAction(
@@ -76,23 +75,25 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
               // Close snackbar immediately
               messenger.hideCurrentSnackBar();
 
-              // Use the MainLayout index switcher logic
-              if (bookProvider.onOrderSuccess != null) {
-                bookProvider.onOrderSuccess!(2); // Switch to Order List index
+               if (bookProvider.onOrderSuccess != null) {
+                bookProvider.onOrderSuccess!(2);  
               }
             },
           ),
         ),
       );
 
-      // 4. Force closure after 2 seconds (Matches your BestSellingView logic)
+      // 4.  
       Timer(const Duration(seconds: 2), () {
         if (mounted) messenger.hideCurrentSnackBar();
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.orange),
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text("Error: $e"),
+          backgroundColor: AppColors.warning,  
+        ),
       );
     }
   }
@@ -102,7 +103,9 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
     return Consumer<SpecialOffersProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.accent),
+          );
         }
 
         if (provider.offers.isEmpty) {
@@ -111,6 +114,7 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
 
         return RefreshIndicator(
           onRefresh: () => provider.fetchOffers(),
+          color: AppColors.accent,
           child: ListView.builder(
             padding: const EdgeInsets.all(10),
             itemCount: provider.offers.length,
@@ -124,7 +128,7 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
                     ListTile(
                       leading: const Icon(
                         Icons.local_offer,
-                        color: Colors.red,
+                        color: AppColors.danger,  
                         size: 40,
                       ),
                       title: Text(
@@ -137,7 +141,8 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
                       trailing: Text(
                         "\$${offer['offer_price']}",
                         style: const TextStyle(
-                          color: Colors.green,
+                          color:
+                              AppColors.success,  
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
                         ),
@@ -152,7 +157,8 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
                           icon: const Icon(Icons.add_shopping_cart),
                           label: const Text("Add to Cart"),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
+                            backgroundColor:
+                                AppColors.accent,  
                             foregroundColor: Colors.white,
                           ),
                         ),
