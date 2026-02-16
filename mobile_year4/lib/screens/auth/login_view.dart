@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../providers/book_provider.dart';
 import '../../widgets/backend/admin_menu_sidebar.dart';
-import 'package:mobile_year4/widgets/frontent/main_wrapper.dart';  
+import 'package:mobile_year4/widgets/frontent/main_layout.dart';  
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
@@ -65,7 +65,7 @@ class _LoginViewState extends State<LoginView> {
         } else {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const MainWrapper()),
+            MaterialPageRoute(builder: (context) => const MainLayout()),
           );
         }
       } else {

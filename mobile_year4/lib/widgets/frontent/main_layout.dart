@@ -13,14 +13,14 @@ import 'package:mobile_year4/screens/frontend/book_pdf_free/book_pdf_view.dart';
 import 'package:mobile_year4/screens/frontend/special_offer/special_offers_view.dart';
 import 'package:mobile_year4/screens/frontend/best_selling_view/best_selling_view.dart';
 
-class MainWrapper extends StatefulWidget {
-  const MainWrapper({super.key});
+class MainLayout extends StatefulWidget {
+  const MainLayout({super.key});
 
   @override
-  State<MainWrapper> createState() => _MainWrapperState();
+  State<MainLayout> createState() => _MainLayoutState();
 }
 
-class _MainWrapperState extends State<MainWrapper> {
+class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 0;
 
   // 1. Pages List: Profile (6) is after Special Offers (5)
