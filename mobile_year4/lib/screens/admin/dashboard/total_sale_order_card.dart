@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/sale_provider.dart';
 
-class TotalMonthlyOrderCard extends StatelessWidget {
-  const TotalMonthlyOrderCard({super.key});
+class TotalSaleOrderCard extends StatelessWidget {
+  const TotalSaleOrderCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +57,8 @@ class TotalMonthlyOrderCard extends StatelessWidget {
                 ),
               ),
               const Text(
-                "Monthly Orders",
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                "total sale transection",
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
               ),
             ],
           ),

@@ -77,7 +77,7 @@ class _DashboardItem extends StatelessWidget {
           ),
           Text(
             title,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
           ),
         ],
       ),

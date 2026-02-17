@@ -2,7 +2,7 @@ import 'revenue_card.dart';
 import '../../../colors.dart';
 import 'total_book_card.dart';
 import 'total_user_card.dart';
-import 'total_monthly_order_card.dart';
+import 'total_sale_order_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/sale_provider.dart';
@@ -53,7 +53,7 @@ class _DashboardViewState extends State<DashboardView> {
             children: const [
               TotalBookCard(),
               TotalUserCard(),
-              TotalMonthlyOrderCard(),
+              TotalSaleOrderCard(),
               RevenueCard(),
             ],
           ),
