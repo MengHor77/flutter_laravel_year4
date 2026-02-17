@@ -57,7 +57,7 @@ class TotalSaleOrderCard extends StatelessWidget {
                 ),
               ),
               const Text(
-                "total sale transection",
+                "Total sale transection",
                 style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
               ),
             ],

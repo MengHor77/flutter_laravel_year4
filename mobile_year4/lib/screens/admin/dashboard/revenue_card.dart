@@ -22,7 +22,7 @@ class RevenueCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const Text("Monthly Revenue"),
+              const Text("Total Revenue"),
             ],
           ),
         );
