@@ -131,7 +131,7 @@ class AppSidebar extends StatelessWidget {
       selectedTileColor: AppColors.accent.withValues(alpha: 0.1),
       leading: Icon(
         icon,
-        color: isActive ? AppColors.accent : AppColors.textSecondary,
+        color: isActive ? AppColors.accent : AppColors.textPrimary,
       ),
       title: Text(
         title,
