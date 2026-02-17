@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'dart:convert';
+import '../../../colors.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import '../../../colors.dart'; // Import now used below
 
 class CreateBook extends StatefulWidget {
   final VoidCallback onRefresh;
@@ -33,6 +33,15 @@ class _CreateBookState extends State<CreateBook> {
     _fetchCategories();
   }
 
+  // ✅ បញ្ឈប់ការប្រើ Controller ដើម្បីការពារ Memory Leak
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _authorController.dispose();
+    _priceController.dispose();
+    super.dispose();
+  }
+
   Future<void> _pickImage() async {
     try {
       final XFile? pickedFile = await _picker.pickImage(
@@ -47,17 +56,19 @@ class _CreateBookState extends State<CreateBook> {
       }
     } catch (e) {
       debugPrint("Error picking image: $e");
-      _showSnackBar(
-        "Error: Please restart your app to activate the gallery.",
-        AppColors.danger, // Use AppColors
-      );
+      if (mounted) {
+        _showSnackBar(
+          "Error: Please restart your app to activate the gallery.",
+          AppColors.danger,
+        );
+      }
     }
   }
 
   Future<void> _fetchCategories() async {
     try {
       final response = await http.get(Uri.parse(ApiConfig.categories));
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && mounted) {
         setState(() => _categories = jsonDecode(response.body));
       }
     } catch (e) {
@@ -68,10 +79,7 @@ class _CreateBookState extends State<CreateBook> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
-      _showSnackBar(
-        "Please select a category",
-        AppColors.warning,
-      ); // Use AppColors
+      _showSnackBar("Please select a category", AppColors.warning);
       return;
     }
 
@@ -83,40 +91,35 @@ class _CreateBookState extends State<CreateBook> {
 
       request.fields['name'] = _nameController.text.trim();
       request.fields['author'] = _authorController.text.trim();
-      request.fields['price'] = _priceController.text.trim().replaceAll(
-        RegExp(r'[^0-9.]'),
-        '',
-      );
+      request.fields['price'] = _priceController.text.trim().replaceAll(RegExp(r'[^0-9.]'), '');
       request.fields['category_id'] = _selectedCategoryId!;
 
       if (_imageFile != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath('image', _imageFile!.path),
-        );
+        request.files.add(await http.MultipartFile.fromPath('image', _imageFile!.path));
       }
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
+      // ✅ ឆែក mounted មុនពេលប្រើ BuildContext (Navigator ឬ SnackBar)
+      if (!mounted) return;
+
       if (response.statusCode == 201 || response.statusCode == 200) {
-        _showSnackBar(
-          "Book added successfully!",
-          AppColors.success,
-        ); // Use AppColors
+        _showSnackBar("Book added successfully!", AppColors.success);
         widget.onRefresh();
-        if (mounted) Navigator.pop(context);
+        Navigator.pop(context);
       } else {
-        debugPrint("Server Error Body: ${response.body}");
         _showSnackBar("Error: ${response.statusCode}", AppColors.danger);
       }
     } catch (e) {
-      _showSnackBar("Connection error.", AppColors.danger);
+      if (mounted) _showSnackBar("Connection error.", AppColors.danger);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
 
   void _showSnackBar(String message, Color color) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -129,11 +132,7 @@ class _CreateBookState extends State<CreateBook> {
   InputDecoration _inputStyle(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(
-        icon,
-        color: AppColors.accent,
-        size: 20,
-      ), // Use AppColors
+      prefixIcon: Icon(icon, color: AppColors.accent, size: 20),
       contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
     );
@@ -144,13 +143,10 @@ class _CreateBookState extends State<CreateBook> {
     double maxDialogHeight = MediaQuery.of(context).size.height * 0.7;
 
     return AlertDialog(
-      backgroundColor: AppColors.cardBg, // Use AppColors
+      backgroundColor: AppColors.cardBg,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text(
-        "Add New Book",
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-      ),
+      title: const Text("Add New Book", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
       content: SizedBox(
         width: MediaQuery.of(context).size.width,
         child: ConstrainedBox(
@@ -167,41 +163,22 @@ class _CreateBookState extends State<CreateBook> {
                       height: 160,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        // FIX: Changed .withOpacity() to .withValues()
                         color: AppColors.accent.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(15),
-                        border: Border.all(
-                          color: AppColors.accent.withValues(alpha: 0.2),
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: AppColors.accent.withValues(alpha: 0.2), width: 1.5),
                       ),
                       child: _imageFile == null
                           ? const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.add_a_photo,
-                                  size: 40,
-                                  color: AppColors.accent,
-                                ),
+                                Icon(Icons.add_a_photo, size: 40, color: AppColors.accent),
                                 SizedBox(height: 8),
-                                Text(
-                                  "Upload Cover",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.accent,
-                                  ),
-                                ),
+                                Text("Upload Cover", style: TextStyle(fontSize: 14, color: AppColors.accent)),
                               ],
                             )
                           : ClipRRect(
                               borderRadius: BorderRadius.circular(13),
-                              child: Image.file(
-                                _imageFile!,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                              ),
+                              child: Image.file(_imageFile!, fit: BoxFit.cover, width: double.infinity, height: double.infinity),
                             ),
                     ),
                   ),
@@ -220,29 +197,21 @@ class _CreateBookState extends State<CreateBook> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _priceController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: _inputStyle("Price", Icons.attach_money),
                     validator: (v) => v!.isEmpty ? "Required" : null,
                   ),
                   const SizedBox(height: 12),
+                  // ✅ ដំណោះស្រាយ Deprecated: ប្តូរពី 'value' ទៅ 'initialValue'
                   DropdownButtonFormField<String>(
                     isExpanded: true,
+                    initialValue: _selectedCategoryId, 
                     decoration: _inputStyle("Category", Icons.category),
-                    items: _categories
-                        .map(
-                          (c) => DropdownMenuItem<String>(
-                            value: c['id'].toString(),
-                            child: Text(
-                              c['name'],
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (val) =>
-                        setState(() => _selectedCategoryId = val),
+                    items: _categories.map((c) => DropdownMenuItem<String>(
+                      value: c['id'].toString(),
+                      child: Text(c['name'], overflow: TextOverflow.ellipsis),
+                    )).toList(),
+                    onChanged: (val) => setState(() => _selectedCategoryId = val),
                     validator: (v) => v == null ? "Required" : null,
                   ),
                 ],
@@ -251,30 +220,17 @@ class _CreateBookState extends State<CreateBook> {
           ),
         ),
       ),
-      actionsPadding: const EdgeInsets.only(right: 15, bottom: 15),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Cancel"),
-        ),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accent, // Use AppColors
+            backgroundColor: AppColors.accent,
             foregroundColor: AppColors.textOnDark,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
           onPressed: _isSaving ? null : _save,
           child: _isSaving
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: AppColors.textOnDark,
-                    strokeWidth: 2,
-                  ),
-                )
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: AppColors.textOnDark, strokeWidth: 2))
               : const Text("Save"),
         ),
       ],

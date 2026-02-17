@@ -18,6 +18,7 @@ class _EditFreeBookViewState extends State<EditFreeBookView> {
   late TextEditingController nameController;
   late TextEditingController authorController;
   File? newPdfFile;
+  File? newImageFile;
 
   @override
   void initState() {
@@ -33,14 +34,18 @@ class _EditFreeBookViewState extends State<EditFreeBookView> {
     super.dispose();
   }
 
-  Future<void> _pickPdf() async {
+  Future<void> _pickFile({required bool isPdf}) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
+      type: isPdf ? FileType.custom : FileType.image,
+      allowedExtensions: isPdf ? ['pdf'] : null,
     );
     if (result != null) {
       setState(() {
-        newPdfFile = File(result.files.single.path!);
+        if (isPdf) {
+          newPdfFile = File(result.files.single.path!);
+        } else {
+          newImageFile = File(result.files.single.path!);
+        }
       });
     }
   }
@@ -50,7 +55,7 @@ class _EditFreeBookViewState extends State<EditFreeBookView> {
     final provider = Provider.of<FreeBookPdfProvider>(context);
 
     return AlertDialog(
-      title: const Text("Edit Book"),
+      title: const Text("Edit Free Book"),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -63,21 +68,34 @@ class _EditFreeBookViewState extends State<EditFreeBookView> {
               controller: authorController,
               decoration: const InputDecoration(labelText: "Author"),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 15),
+
             ListTile(
               contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.image, color: Colors.blue),
+              title: Text(
+                newImageFile == null
+                    ? "Change Image (Optional)"
+                    : "New Image Selected",
+              ),
+              subtitle: Text(
+                newImageFile?.path.split('/').last ?? "Using current image",
+              ),
+              onTap: () => _pickFile(isPdf: false),
+            ),
+
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
               title: Text(
                 newPdfFile == null
                     ? "Update PDF (Optional)"
                     : "New PDF Selected",
               ),
               subtitle: Text(
-                newPdfFile?.path.split('/').last ?? "No new file chosen",
+                newPdfFile?.path.split('/').last ?? "Using current file",
               ),
-              trailing: IconButton(
-                icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                onPressed: _pickPdf,
-              ),
+              onTap: () => _pickFile(isPdf: true),
             ),
           ],
         ),
@@ -91,13 +109,9 @@ class _EditFreeBookViewState extends State<EditFreeBookView> {
           ),
         ),
         provider.isSyncing
-            ? const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+            ? const SizedBox(
+                width: 40,
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
               )
             : ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -105,17 +119,24 @@ class _EditFreeBookViewState extends State<EditFreeBookView> {
                 ),
                 onPressed: () async {
                   if (nameController.text.isNotEmpty) {
-                    final success = await provider
-                        .updateFreeBook(widget.book.id, {
-                          "name": nameController.text.trim(),
-                          "author": authorController.text.trim(),
-                          "category_id": widget.book.categoryId,
-                        }, pdfFile: newPdfFile);
+                    final Map<String, String> data = {
+                      "name": nameController.text.trim(),
+                      "author": authorController.text.trim(),
+                      "category_id": widget.book.categoryId.toString(),
+                    };
+
+                    // ✅ Fix: បញ្ជូន Arguments ទៅតាមអ្វីដែល Provider ត្រូវការ
+                    final success = await provider.updateFreeBook(
+                      widget.book.id,
+                      data,
+                      pdfFile:
+                          newPdfFile, // ត្រូវប្រាកដថាឈ្មោះ parameter ក្នុង provider ដូចគ្នា
+                      imageFile: newImageFile,
+                    );
 
                     if (!mounted) return;
-
                     if (success) {
-                      Navigator.pop(context);
+                      Navigator.of(context).pop();
                     }
                   }
                 },

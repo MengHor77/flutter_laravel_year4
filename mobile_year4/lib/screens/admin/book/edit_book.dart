@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
-import '../../../colors.dart'; 
+import '../../../colors.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -51,6 +51,7 @@ class _EditBookState extends State<EditBook> {
         setState(() {
           _categories = jsonDecode(response.body);
           try {
+            // កំណត់ ID របស់ Category ដែលមានស្រាប់
             _selectedCategoryId = _categories
                 .firstWhere((c) => c['name'] == widget.book.categoryName)['id']
                 .toString();
@@ -65,11 +66,10 @@ class _EditBookState extends State<EditBook> {
   }
 
   Future<void> _update() async {
-    // FIX: Wrapped the return statement in curly braces to resolve the diagnostic
     if (!_formKey.currentState!.validate() || _selectedCategoryId == null) {
       return;
     }
-    
+
     setState(() => _isSaving = true);
 
     try {
@@ -78,11 +78,11 @@ class _EditBookState extends State<EditBook> {
         Uri.parse("${ApiConfig.books}/${widget.book.id}"),
       );
       request.headers.addAll({"Accept": "application/json"});
-      request.fields['_method'] = 'PUT'; 
+      request.fields['_method'] = 'PUT';
 
-      request.fields['name'] = _nameController.text;
-      request.fields['author'] = _authorController.text;
-      request.fields['price'] = _priceController.text;
+      request.fields['name'] = _nameController.text.trim();
+      request.fields['author'] = _authorController.text.trim();
+      request.fields['price'] = _priceController.text.trim();
       request.fields['category_id'] = _selectedCategoryId!;
 
       if (_imageFile != null) {
@@ -91,7 +91,8 @@ class _EditBookState extends State<EditBook> {
         );
       }
 
-      var response = await http.Response.fromStream(await request.send());
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
         widget.onRefresh();
@@ -104,10 +105,17 @@ class _EditBookState extends State<EditBook> {
     }
   }
 
+  // ✅ ជំនួយការបង្កើត URL រូបភាពឱ្យបានត្រឹមត្រូវ
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    if (path.startsWith('http')) return path;
+    return "${ApiConfig.storage}$path";
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppColors.cardBg, 
+      backgroundColor: AppColors.cardBg,
       title: const Text(
         "Edit Book",
         style: TextStyle(color: AppColors.textPrimary),
@@ -125,9 +133,7 @@ class _EditBookState extends State<EditBook> {
                   width: 120,
                   decoration: BoxDecoration(
                     color: AppColors.background,
-                    border: Border.all(
-                      color: AppColors.accent,
-                    ), 
+                    border: Border.all(color: AppColors.accent),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: ClipRRect(
@@ -135,7 +141,7 @@ class _EditBookState extends State<EditBook> {
                     child: _imageFile != null
                         ? Image.file(_imageFile!, fit: BoxFit.cover)
                         : Image.network(
-                            widget.book.image ?? '',
+                            _getImageUrl(widget.book.image),
                             fit: BoxFit.cover,
                             errorBuilder: (ctx, err, stack) => const Icon(
                               Icons.add_a_photo,
@@ -149,16 +155,22 @@ class _EditBookState extends State<EditBook> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: "Name"),
+                validator: (v) => v!.isEmpty ? "Required" : null,
               ),
               TextFormField(
                 controller: _authorController,
                 decoration: const InputDecoration(labelText: "Author"),
+                validator: (v) => v!.isEmpty ? "Required" : null,
               ),
               TextFormField(
                 controller: _priceController,
                 decoration: const InputDecoration(labelText: "Price"),
+                keyboardType: TextInputType.number,
+                validator: (v) => v!.isEmpty ? "Required" : null,
               ),
               const SizedBox(height: 12),
+
+              // ✅ ដំណោះស្រាយសម្រាប់ Warning: ប្តូរពី value ទៅ initialValue
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategoryId,
                 decoration: const InputDecoration(labelText: "Category"),
@@ -171,6 +183,7 @@ class _EditBookState extends State<EditBook> {
                     )
                     .toList(),
                 onChanged: (val) => setState(() => _selectedCategoryId = val),
+                validator: (v) => v == null ? "Required" : null,
               ),
             ],
           ),
@@ -186,7 +199,7 @@ class _EditBookState extends State<EditBook> {
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary, 
+            backgroundColor: AppColors.primary,
             foregroundColor: AppColors.textOnDark,
           ),
           onPressed: _isSaving ? null : _update,

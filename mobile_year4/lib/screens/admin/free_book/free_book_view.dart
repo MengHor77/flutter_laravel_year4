@@ -1,6 +1,7 @@
 import '../../../colors.dart';
 import 'edit_free_book_view.dart';
 import 'creat_free_book_view.dart';
+import '../../../api_config.dart'; 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/free_book_pdf_provider.dart';
@@ -24,6 +25,15 @@ class _FreeBookViewState extends State<FreeBookView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FreeBookPdfProvider>(context, listen: false).fetchFreeBooks();
     });
+  }
+
+   String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
+    if (path.startsWith('http')) {
+      // ប្តូរ IP ប្រសិនបើប្រើ Emulator ហើយ Backend នៅ 127.0.0.1
+      return path.replaceAll('127.0.0.1', '10.0.2.2');
+    }
+    return "${ApiConfig.storage}${path.startsWith('/') ? path.substring(1) : path}";
   }
 
   void _handleDelete(String id) async {
@@ -103,21 +113,52 @@ class _FreeBookViewState extends State<FreeBookView> {
               itemCount: provider.freeBooks.length,
               itemBuilder: (context, index) {
                 final book = provider.freeBooks[index];
+
+                 final String imageUrl = _getImageUrl(book.image);
+
                 return Card(
                   margin: const EdgeInsets.only(bottom: 10),
                   elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(10),
-                    leading: const Icon(
-                      Icons.picture_as_pdf,
-                      color: Colors.red,
-                      size: 40,
+                     leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(5),
+                      child: Image.network(
+                        imageUrl,
+                        width: 50,
+                        height: 70,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: 50,
+                          height: 70,
+                          color: Colors.grey[200],
+                          child: const Icon(
+                            Icons.picture_as_pdf,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ),
                     ),
                     title: Text(
                       book.name,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(book.author),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Author: ${book.author}"),
+                        Text(
+                          "Category: ${book.categoryName}",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -131,12 +172,13 @@ class _FreeBookViewState extends State<FreeBookView> {
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () {
-                            // Simple Confirmation
                             showDialog(
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 title: const Text("Delete Book"),
-                                content: const Text("Are you sure?"),
+                                content: Text(
+                                  "Are you sure you want to delete '${book.name}'?",
+                                ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx),

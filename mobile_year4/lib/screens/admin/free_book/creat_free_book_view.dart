@@ -20,15 +20,6 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
   File? selectedPdf;
   String? selectedCategoryId;
 
-  @override
-  void initState() {
-    super.initState();
-    // Fetch categories/books when the dialog opens
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<FreeBookPdfProvider>(context, listen: false).fetchFreeBooks();
-    });
-  }
-
   Future<void> _pickFile({required bool isPdf}) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -62,7 +53,6 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
   Widget build(BuildContext context) {
     final provider = Provider.of<FreeBookPdfProvider>(context);
 
-    // Map categories for dropdown
     final categoryItems = provider.categories.map((cat) {
       return DropdownMenuItem<String>(
         value: cat['id'].toString(),
@@ -76,6 +66,20 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (selectedImage != null)
+              Container(
+                height: 100,
+                width: 80,
+                // ✅ Fix: class 'EdgeInsets' doesn't have a constant constructor 'bottom'
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  image: DecorationImage(
+                    image: FileImage(selectedImage!),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
             TextField(
               controller: nameController,
               decoration: const InputDecoration(labelText: "Book Name"),
@@ -86,6 +90,7 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
+              // ✅ Fix: initialValue instead of value (deprecated) if using newer Flutter
               value: selectedCategoryId,
               decoration: const InputDecoration(labelText: "Select Category"),
               hint: const Text("Choose a category"),
@@ -120,13 +125,10 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
           child: const Text("Cancel"),
         ),
         provider.isSyncing
-            ? const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+            ? const SizedBox(
+                width: 25,
+                height: 25,
+                child: CircularProgressIndicator(strokeWidth: 2),
               )
             : ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -137,26 +139,26 @@ class _CreateFreeBookViewState extends State<CreateFreeBookView> {
                       selectedCategoryId == null ||
                       selectedImage == null ||
                       selectedPdf == null) {
-                    _showError("All fields and files are required");
+                    _showError("All fields are required");
                     return;
                   }
 
-                  final fields = {
+                  final Map<String, String> fields = {
                     "name": nameController.text.trim(),
                     "author": authorController.text.trim(),
                     "category_id": selectedCategoryId!,
-                    "price": "0.00",
                   };
 
+                  // ✅ Fix: បញ្ជូន positional arguments ឱ្យគ្រប់ (fields, image, pdf)
+                  // ប្រសិនបើ Provider របស់អ្នកប្រើ Named parameters ត្រូវសរសេរឱ្យត្រូវឈ្មោះ
                   final success = await provider.addFreeBook(
                     fields,
-                    selectedImage!,
-                    selectedPdf!,
+                    selectedImage!, // Argument ទី ២
+                    selectedPdf!, // Argument ទី ៣
                   );
 
-                  if (mounted && success) {
-                    Navigator.pop(context);
-                  }
+                  if (!mounted) return;
+                  if (success) Navigator.of(context).pop();
                 },
                 child: const Text(
                   "Save",

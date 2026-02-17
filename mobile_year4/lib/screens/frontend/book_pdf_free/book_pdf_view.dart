@@ -23,9 +23,22 @@ class _BookPdfViewState extends State<BookPdfView> {
     });
   }
 
+  // ✅ បន្ថែម Helper function ដើម្បីចាត់ចែង URL ឱ្យបានត្រឹមត្រូវ
+  String _formatUrl(String urlPath) {
+    if (urlPath.isEmpty) return '';
+
+    // ប្រសិនបើ Laravel បោះមកជា Full URL (http://...) រួចហើយ
+    if (urlPath.startsWith('http')) {
+      // ប្តូរ IP ទៅជា 10.0.2.2 ក្នុងករណីប្រើ Android Emulator ប៉ុន្តែបើប្រើទូរស័ព្ទផ្ទាល់គឺទុកដដែល
+      return urlPath.replaceAll('127.0.0.1', '10.0.2.2');
+    }
+
+    // ប្រសិនបើបោះមកតែ Path (uploads/...)
+    return "${ApiConfig.baseUrl}/storage/$urlPath";
+  }
+
   @override
   Widget build(BuildContext context) {
-    // ❌ REMOVED Scaffold, AppBar, and Sidebar because MainWrapper provides them
     return Consumer<FreeBookPdfProvider>(
       builder: (context, provider, child) {
         if (provider.isSyncing) {
@@ -48,7 +61,7 @@ class _BookPdfViewState extends State<BookPdfView> {
             padding: const EdgeInsets.all(15),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.65, // Adjusted for better card fit
+              childAspectRatio: 0.65,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
@@ -56,14 +69,9 @@ class _BookPdfViewState extends State<BookPdfView> {
             itemBuilder: (context, index) {
               final book = provider.freeBooks[index];
 
-              // Handle Image and PDF URLs
-              final imageUrl = book.image.startsWith('http')
-                  ? book.image
-                  : "${ApiConfig.baseUrl}/storage/${book.image}";
-
-              final pdfUrl = book.pdfFile.startsWith('http')
-                  ? book.pdfFile
-                  : "${ApiConfig.baseUrl}/storage/${book.pdfFile}";
+              // ✅ កែសម្រួលការទាញយក URL រូបភាព និង PDF តាមរយៈ Helper Function
+              final imageUrl = _formatUrl(book.image);
+              final pdfUrl = _formatUrl(book.pdfFile);
 
               return Card(
                 elevation: 4,
@@ -87,17 +95,19 @@ class _BookPdfViewState extends State<BookPdfView> {
                               width: double.infinity,
                               height: double.infinity,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                    color: Colors.grey[200],
-                                    child: const Icon(
-                                      Icons.book,
-                                      size: 50,
-                                      color: Colors.grey,
-                                    ),
+                              errorBuilder: (context, error, stackTrace) {
+                                debugPrint("❌ Image Load Error: $imageUrl");
+                                return Container(
+                                  color: Colors.grey[200],
+                                  child: const Icon(
+                                    Icons.book,
+                                    size: 50,
+                                    color: Colors.grey,
                                   ),
+                                );
+                              },
                             ),
-                            // Optional "FREE" badge
+                            // "FREE" badge
                             Positioned(
                               top: 8,
                               left: 8,
