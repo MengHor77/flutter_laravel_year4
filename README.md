@@ -39,7 +39,7 @@
     -change ip 
     example static const String baseUrl = "http://10.1.42.124:8000";  (actual ip  connet the wifi) 
 
-+ go to folder then run commend in flutter 
+ + go to folder then run commend in flutter 
     D:\flutter\mobile_year4>
 
     - click No Device at right botton 
@@ -53,6 +53,6 @@
     + for admin email name : admin@gmail.com
       password : admin123
 
-      + for user need to register then login with email and password 
+    + for user need to register then login with email and password 
 
 
