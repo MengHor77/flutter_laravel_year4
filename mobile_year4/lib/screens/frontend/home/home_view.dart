@@ -15,7 +15,7 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  // រក្សាកូដ Logic ដើមសម្រាប់ទាញទិន្នន័យពី API
+  // ✅ រក្សាកូដ Logic ដើមសម្រាប់ទាញទិន្នន័យពី API
   Future<List<Book>> _fetchBestSellers() async {
     try {
       final response = await http.get(
@@ -24,6 +24,7 @@ class _HomeViewState extends State<HomeView> {
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
+        // ✅ ប្តូរការ Map ទិន្នន័យឱ្យត្រូវជាមួយ Response របស់ Laravel
         return data.map((item) => Book.fromJson(item['book'])).toList();
       }
       throw Exception('Failed to load books');
@@ -36,9 +37,12 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     // ✅ លុប Scaffold, AppBar និង Drawer ចេញ ដើម្បីឱ្យវាបង្ហាញ Bottom Nav របស់ MainWrapper
     return SingleChildScrollView(
+      // ✅ បន្ថែម RefreshIndicator ដើម្បីឱ្យ User អាចអូសចុះក្រោមដើម្បី Update ទិន្នន័យ
+      physics: const AlwaysScrollableScrollPhysics(),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, // ឱ្យអក្សរនៅកៀនឆ្វេង
           children: [
             const Text(
               'Best Selling Books',
@@ -53,17 +57,28 @@ class _HomeViewState extends State<HomeView> {
               future: _fetchBestSellers(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.accent),
+                  return const SizedBox(
+                    height: 300,
+                    child: Center(
+                      child: CircularProgressIndicator(color: AppColors.accent),
+                    ),
                   );
                 } else if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Text("Connection Error: សូមពិនិត្យមើល Server Laravel របស់អ្នក"),
+                    ),
+                  );
                 }
 
                 final books = snapshot.data ?? [];
 
                 if (books.isEmpty) {
-                  return const Center(child: Text("No books found."));
+                  return const SizedBox(
+                    height: 200,
+                    child: Center(child: Text("No books found.")),
+                  );
                 }
 
                 return GridView.builder(
@@ -77,6 +92,7 @@ class _HomeViewState extends State<HomeView> {
                   ),
                   itemCount: books.length,
                   itemBuilder: (context, index) {
+                    // ✅ បញ្ជូនទិន្នន័យទៅ BookCard
                     return BookCard(book: books[index]);
                   },
                 );

@@ -29,7 +29,11 @@ class _ManageBooksViewState extends State<ManageBooksView> {
 
   String _getImageUrl(String? path) {
     if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
-    if (path.startsWith('http')) return path;
+
+    if (path.startsWith('http')) {
+      return path;
+    }
+
     return "${ApiConfig.storage}${path.startsWith('/') ? path.substring(1) : path}";
   }
 
@@ -147,11 +151,16 @@ class _ManageBooksViewState extends State<ManageBooksView> {
                           child: Image.network(
                             _getImageUrl(book.image),
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(
-                                  Icons.broken_image,
-                                  color: Colors.grey,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return const Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
                                 ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.broken_image),
                           ),
                         ),
                       ),

@@ -1,8 +1,9 @@
+import 'package:mobile_year4/api_config.dart';
 class Book {
   final String id;
   final String name;
   final String author;
-  final String price;        
+  final String price;         
   final String displayPrice; 
   final String? image;
   final String categoryName;
@@ -22,13 +23,24 @@ class Book {
   });
 
   factory Book.fromJson(Map<String, dynamic> json) {
+     String? rawImage = json['image'];
+    String? finalImageUrl;
+
+    if (rawImage != null && rawImage.isNotEmpty) {
+       if (rawImage.startsWith('http')) {
+        finalImageUrl = rawImage;
+      } else {
+          finalImageUrl = "${ApiConfig.storage}${rawImage.startsWith('/') ? rawImage.substring(1) : rawImage}";
+      }
+    }
+
     return Book(
       id: json['id']?.toString() ?? '',
       name: json['name'] ?? 'Untitled',
       author: json['author'] ?? 'Unknown',
       price: json['price']?.toString() ?? '0.00',
       displayPrice: (json['display_price'] ?? json['price']).toString(),
-      image: json['image'],
+      image: finalImageUrl,  
       categoryName: (json['category'] != null && json['category']['name'] != null) 
           ? json['category']['name'].toString() 
           : 'General',

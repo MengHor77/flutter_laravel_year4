@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Validator;
 
 class BestSellingController extends Controller
 {
-   
+    
     public function index()
     {
         $bestSellers = BestSelling::with(['book.category', 'book.specialOffers' => function($query) {
@@ -22,6 +22,11 @@ class BestSellingController extends Controller
                 $activeOffer = $item->book->specialOffers->first();
                 $item->book->is_on_sale = $activeOffer ? true : false;
                 $item->book->display_price = $activeOffer ? $activeOffer->offer_price : $item->book->price;
+
+                // ✅ បន្ថែមការត្រួតពិនិត្យ និងបំប្លែង Path រូបភាពទៅជា Full URL
+                if ($item->book->image && !filter_var($item->book->image, FILTER_VALIDATE_URL)) {
+                    $item->book->image = asset($item->book->image);
+                }
             }
             return $item;
         });
@@ -44,9 +49,15 @@ class BestSellingController extends Controller
             'book_id' => $request->book_id
         ]);
 
+        // ✅ បំប្លែងរូបភាពសម្រាប់ទិន្នន័យដែលទើបបង្កើតថ្មី
+        $data = $bestSelling->load('book');
+        if ($data->book && $data->book->image && !filter_var($data->book->image, FILTER_VALIDATE_URL)) {
+            $data->book->image = asset($data->book->image);
+        }
+
         return response()->json([
             'message' => 'Book added to Best Sellers',
-            'data' => $bestSelling->load('book')
+            'data' => $data
         ], 201);
     }
 
@@ -57,6 +68,11 @@ class BestSellingController extends Controller
 
         if (!$bestSelling) {
             return response()->json(['message' => 'Record not found'], 404);
+        }
+
+        // ✅ បំប្លែងរូបភាពសម្រាប់មុខងារ Show
+        if ($bestSelling->book && $bestSelling->book->image && !filter_var($bestSelling->book->image, FILTER_VALIDATE_URL)) {
+            $bestSelling->book->image = asset($bestSelling->book->image);
         }
 
         return response()->json($bestSelling, 200);
@@ -81,13 +97,19 @@ class BestSellingController extends Controller
 
         $bestSelling->update(['book_id' => $request->book_id]);
 
+        // ✅ បំប្លែងរូបភាពសម្រាប់ទិន្នន័យដែលបាន Update
+        $data = $bestSelling->load('book');
+        if ($data->book && $data->book->image && !filter_var($data->book->image, FILTER_VALIDATE_URL)) {
+            $data->book->image = asset($data->book->image);
+        }
+
         return response()->json([
             'message' => 'Best seller updated',
-            'data' => $bestSelling->load('book')
+            'data' => $data
         ], 200);
     }
 
-   
+    
     public function destroy($id)
     {
         $bestSelling = BestSelling::find($id);

@@ -1,5 +1,5 @@
-import 'dart:async';  
-import '../../../../colors.dart';  
+import 'dart:async';
+import '../../../../colors.dart';
 import '../../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -25,14 +25,21 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
     });
   }
 
-   Future<void> _handleAddToCart(Map offerData) async {
+  // ✅ រក្សាកូដចាស់ដដែល (Helper function សម្រាប់ចាត់ចែង URL រូបភាព)
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
+    if (path.startsWith('http')) return path;
+    return "${ApiConfig.storage}${path.startsWith('/') ? path.substring(1) : path}";
+  }
+
+  Future<void> _handleAddToCart(Map offerData) async {
     // 1. Check Login
     if (ApiConfig.userToken == null) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Please Login first!"),
-          backgroundColor: AppColors.danger,  
+          backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 2),
         ),
@@ -42,6 +49,7 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
 
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
 
+    // ✅ ការបង្កើត Object Book ពី offerData
     Book bookToOrder = Book(
       id: offerData['book_id'].toString(),
       name: offerData['book']['name'],
@@ -53,37 +61,31 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
       isOnSale: true,
     );
 
-     final messenger = ScaffoldMessenger.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     messenger.clearSnackBars();
 
     try {
-      // 2. Perform logic
       await bookProvider.addToCart(bookToOrder);
-
       if (!mounted) return;
 
-      
       messenger.showSnackBar(
         SnackBar(
-          backgroundColor: AppColors.success,  
+          backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
           content: Text("${bookToOrder.name} added successfully!"),
           action: SnackBarAction(
             label: "VIEW",
             textColor: Colors.white,
             onPressed: () {
-              // Close snackbar immediately
               messenger.hideCurrentSnackBar();
-
-               if (bookProvider.onOrderSuccess != null) {
-                bookProvider.onOrderSuccess!(2);  
+              if (bookProvider.onOrderSuccess != null) {
+                bookProvider.onOrderSuccess!(2);
               }
             },
           ),
         ),
       );
 
-      // 4.  
       Timer(const Duration(seconds: 2), () {
         if (mounted) messenger.hideCurrentSnackBar();
       });
@@ -92,7 +94,7 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
       messenger.showSnackBar(
         SnackBar(
           content: Text("Error: $e"),
-          backgroundColor: AppColors.warning,  
+          backgroundColor: AppColors.warning,
         ),
       );
     }
@@ -116,55 +118,153 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
           onRefresh: () => provider.fetchOffers(),
           color: AppColors.accent,
           child: ListView.builder(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             itemCount: provider.offers.length,
             itemBuilder: (context, index) {
               final offer = provider.offers[index];
+              final String imageUrl = _getImageUrl(offer['book']['image']);
+
               return Card(
-                elevation: 4,
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: const Icon(
-                        Icons.local_offer,
-                        color: AppColors.danger,  
-                        size: 40,
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                margin: const EdgeInsets.only(bottom: 16),
+                child: IntrinsicHeight(
+                  // ✅ ជួយឱ្យ Card មានទំហំសមល្មមតាម Content
+                  child: Row(
+                    // ✅ ប្តូរមកប្រើ Row វិញដើម្បីកុំឱ្យរូបភាពធំពេញអេក្រង់ពេក
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // 1. ផ្នែកបង្ហាញរូបភាព (ទំហំល្មមនៅខាងឆ្វេង)
+                      Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.horizontal(
+                              left: Radius.circular(15),
+                            ),
+                            child: Image.network(
+                              imageUrl,
+                              width: 120, // ✅ កំណត់ទទឹងរូបភាពឱ្យថេរ
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                    width: 120,
+                                    color: Colors.grey[200],
+                                    child: const Icon(
+                                      Icons.broken_image,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                            ),
+                          ),
+                          // Discount Badge
+                          Positioned(
+                            top: 5,
+                            left: 5,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.danger,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                "-${offer['discount_percentage']}%",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      title: Text(
-                        offer['title'] ?? 'Special Offer',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        "Book: ${offer['book']['name']}\nDiscount: ${offer['discount_percentage']}%",
-                      ),
-                      trailing: Text(
-                        "\$${offer['offer_price']}",
-                        style: const TextStyle(
-                          color:
-                              AppColors.success,  
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => _handleAddToCart(offer),
-                          icon: const Icon(Icons.add_shopping_cart),
-                          label: const Text("Add to Cart"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                AppColors.accent,  
-                            foregroundColor: Colors.white,
+
+                      // 2. ផ្នែកព័ត៌មានសៀវភៅ (នៅខាងស្តាំ)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    offer['title'] ?? 'Special Offer',
+                                    style: const TextStyle(
+                                      color: AppColors.danger,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  Text(
+                                    offer['book']['name'],
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "\$${offer['offer_price']}",
+                                        style: const TextStyle(
+                                          color: AppColors.success,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        "\$${offer['book']['price']}",
+                                        style: const TextStyle(
+                                          decoration:
+                                              TextDecoration.lineThrough,
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+
+                              // ប៊ូតុង Add to Cart
+                              Align(
+                                alignment: Alignment.bottomRight,
+                                child: ElevatedButton(
+                                  onPressed: () => _handleAddToCart(offer),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.success,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    "Add to Cart",
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
