@@ -23,18 +23,26 @@ class _BookPdfViewState extends State<BookPdfView> {
     });
   }
 
-  // ✅ បន្ថែម Helper function ដើម្បីចាត់ចែង URL ឱ្យបានត្រឹមត្រូវ
+ // ✅ Improved Helper function
   String _formatUrl(String urlPath) {
-    if (urlPath.isEmpty) return '';
+    if (urlPath.isEmpty) return 'https://via.placeholder.com/150';
 
-    // ប្រសិនបើ Laravel បោះមកជា Full URL (http://...) រួចហើយ
+    // 1. Handle Full URLs (fixing IP mismatch)
     if (urlPath.startsWith('http')) {
-      // ប្តូរ IP ទៅជា 10.0.2.2 ក្នុងករណីប្រើ Android Emulator ប៉ុន្តែបើប្រើទូរស័ព្ទផ្ទាល់គឺទុកដដែល
-      return urlPath.replaceAll('127.0.0.1', '10.0.2.2');
+      String fixedUrl = urlPath.replaceAll('127.0.0.1', '10.0.2.2');
+      // Fix the IP change from .105 to .104
+      fixedUrl = fixedUrl.replaceAll('192.168.1.105', '192.168.1.104');
+      return fixedUrl;
     }
 
-    // ប្រសិនបើបោះមកតែ Path (uploads/...)
-    return "${ApiConfig.baseUrl}/storage/$urlPath";
+    // 2. Handle Relative Paths
+    // If path starts with "uploads/", add "storage/" prefix
+    String cleanPath = urlPath.startsWith('/') ? urlPath.substring(1) : urlPath;
+    if (!cleanPath.startsWith('storage/')) {
+        return "${ApiConfig.baseUrl}/storage/$cleanPath";
+    }
+    
+    return "${ApiConfig.baseUrl}/$cleanPath";
   }
 
   @override

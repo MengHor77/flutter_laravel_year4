@@ -11,7 +11,27 @@ class FreeBookPDFController extends Controller
 {
     public function index()
     {
-        $book_pdfs = FreeBookPDF::with('category')->get();
+        $book_pdfs = FreeBookPDF::with('category')->get()->map(function ($book) {
+            // FIX: Handle both relative paths and old IP addresses
+            if ($book->image) {
+                if (!filter_var($book->image, FILTER_VALIDATE_URL)) {
+                    // Convert "uploads/books/..." to "http://192.168.1.104:8000/storage/uploads/books/..."
+                    $book->image = asset('storage/' . $book->image);
+                } else {
+                    // Replace old static IP with current server IP
+                    $book->image = str_replace('192.168.1.105', '192.168.1.104', $book->image);
+                }
+            }
+            if ($book->pdf_file) {
+                if (!filter_var($book->pdf_file, FILTER_VALIDATE_URL)) {
+                    $book->pdf_file = asset('storage/' . $book->pdf_file);
+                } else {
+                    $book->pdf_file = str_replace('192.168.1.105', '192.168.1.104', $book->pdf_file);
+                }
+            }
+            return $book;
+        });
+        
         return response()->json($book_pdfs);
     }
     
@@ -19,6 +39,11 @@ class FreeBookPDFController extends Controller
     {
         $book = FreeBookPDF::with('category')->find($id);
         if (!$book) return response()->json(['message' => 'Book not found'], 404);
+        
+        // Ensure URLs are formatted correctly for single view
+        if ($book->image && !filter_var($book->image, FILTER_VALIDATE_URL)) {
+            $book->image = asset('storage/' . $book->image);
+        }
         return response()->json($book);
     }
 
@@ -27,20 +52,19 @@ class FreeBookPDFController extends Controller
         $request->validate([
             'name' => 'required|string',
             'author' => 'required|string',
-            'image' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
+            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048', 
             'pdf_file' => 'required|mimes:pdf|max:10000',           
             'category_id' => 'required|exists:category,id', 
         ]);
 
         $data = $request->all();
 
-        // រក្សាទុក Image (Relative Path)
         if ($request->hasFile('image')) {
+            // Stores in storage/app/public/uploads/books
             $path = $request->file('image')->store('uploads/books', 'public');
             $data['image'] = $path; 
         }
 
-        // រក្សាទុក PDF (Relative Path)
         if ($request->hasFile('pdf_file')) {
             $pdfPath = $request->file('pdf_file')->store('uploads/pdfs', 'public');
             $data['pdf_file'] = $pdfPath;
@@ -65,7 +89,6 @@ class FreeBookPDFController extends Controller
         $data = $request->all();
 
         if ($request->hasFile('image')) {
-            // លុបរូបចាស់
             if ($book->image) {
                 Storage::disk('public')->delete($book->image);
             }
@@ -74,7 +97,6 @@ class FreeBookPDFController extends Controller
         }
 
         if ($request->hasFile('pdf_file')) {
-            // លុប PDF ចាស់
             if ($book->pdf_file) {
                 Storage::disk('public')->delete($book->pdf_file);
             }
@@ -91,7 +113,6 @@ class FreeBookPDFController extends Controller
         $book = FreeBookPDF::find($id);
         if (!$book) return response()->json(['message' => 'Book not found'], 404);
 
-        // លុបឯកសារចេញពី Disk មុនលុបទិន្នន័យ
         if ($book->image) {
             Storage::disk('public')->delete($book->image);
         }
