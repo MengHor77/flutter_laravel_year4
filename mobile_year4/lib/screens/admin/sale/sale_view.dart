@@ -1,5 +1,5 @@
 import 'today_sale.dart';
-import 'monthly_sale.dart';
+import 'total_sale.dart';
 import 'sale_detail.dart'; 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -100,7 +100,7 @@ class _SaleViewState extends State<SaleView> {
               delegate: SliverChildListDelegate([
                 TodaySaleCard(amount: provider.todaySales),
                 const SizedBox(height: 20),
-                MonthlySaleCard(amount: provider.monthlyRevenue),
+                TotalSaleCard(amount: provider.monthlyRevenue),
                 const SizedBox(height: 30),
                 const Text(
                   "Recent Transactions",

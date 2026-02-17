@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_year4/colors.dart';
 
-class MonthlySaleCard extends StatelessWidget {
+class TotalSaleCard extends StatelessWidget {
   final double amount;
 
-  const MonthlySaleCard({super.key, required this.amount});
+  const TotalSaleCard({super.key, required this.amount});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class MonthlySaleCard extends StatelessWidget {
         child: Icon(Icons.calendar_month, color: AppColors.textOnDark),
       ),
       title: const Text(
-        "Monthly Revenue",
+        "Total Revenue",
         style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
       ),
       subtitle: Text(
