@@ -1,5 +1,7 @@
+import 'dart:async';
 import '../../../colors.dart';
 import '../home/home_view.dart';
+import '../../../../api_config.dart'; 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/book_provider.dart';
@@ -13,6 +15,12 @@ class CheckoutView extends StatefulWidget {
 
 class _CheckoutViewState extends State<CheckoutView> {
   bool _isProcessing = false;
+
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
+    if (path.startsWith('http')) return path;
+    return "${ApiConfig.storage}${path.startsWith('/') ? path.substring(1) : path}";
+  }
 
   // Safely parses price strings like "$10.00" or "10" into doubles
   double _parseSafePrice(dynamic price) {
@@ -64,13 +72,15 @@ class _CheckoutViewState extends State<CheckoutView> {
           Center(
             child: TextButton(
               onPressed: () {
-                // Returns to the very start of the app (MainWrapper)
                 Navigator.of(context).popUntil((route) => route.isFirst);
                 context.read<BookProvider>().onOrderSuccess?.call(0);
               },
               child: const Text(
                 "ok go to home",
-                style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.accent),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.accent,
+                ),
               ),
             ),
           ),
@@ -103,29 +113,76 @@ class _CheckoutViewState extends State<CheckoutView> {
                 double unitPrice = _parseSafePrice(item.displayPrice);
                 double subtotal = unitPrice * item.quantity;
 
+                final String imageUrl = _getImageUrl(item.image);
+
                 return Card(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(Icons.book, color: AppColors.accent),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10,
                     ),
-                    title: Text(
-                      item.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text("Qty: ${item.quantity} × \$${unitPrice.toStringAsFixed(2)}"),
-                    trailing: Text(
-                      "\$${subtotal.toStringAsFixed(2)}",
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            imageUrl,
+                            width: 60,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  width: 60,
+                                  height: 80,
+                                  color: Colors.grey[200],
+                                  child: const Icon(
+                                    Icons.book,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                          ),
+                        ),
+                        const SizedBox(width: 15),
+                        // Item Details
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Qty: ${item.quantity} × \$${unitPrice.toStringAsFixed(2)}",
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Subtotal
+                        Text(
+                          "\$${subtotal.toStringAsFixed(2)}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: AppColors.accent,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -138,7 +195,9 @@ class _CheckoutViewState extends State<CheckoutView> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(25),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -156,14 +215,17 @@ class _CheckoutViewState extends State<CheckoutView> {
                     children: [
                       const Text(
                         "Total Payable:",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         "\$${provider.totalCartPrice.toStringAsFixed(2)}",
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 26,
                           color: Colors.green,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
                     ],
@@ -178,7 +240,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(15),
                         ),
                       ),
                       onPressed: _isProcessing
@@ -188,7 +250,11 @@ class _CheckoutViewState extends State<CheckoutView> {
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
                               "CONFIRM AND PAY",
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
                             ),
                     ),
                   ),
