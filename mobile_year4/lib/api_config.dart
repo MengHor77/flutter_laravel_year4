@@ -18,7 +18,8 @@ static const String _domain = "$baseUrl/api";
 
   // NEW: Admin specific order list (Backend)
   static const String adminOrders = "$_domain/admin-orders";
-
+static const String profile = "$_domain/admin/profile";
+  static const String updateProfile = "$_domain/admin/update-profile";
   static const String sales = "$_domain/sales";
   static const String saleDetails = "$_domain/sale-details";
 

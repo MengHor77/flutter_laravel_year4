@@ -4,12 +4,14 @@ import '../../screens/auth/login_view.dart';
 import '../../screens/admin/user/user_view.dart';
 import '../../screens/admin/sale/sale_view.dart';
 import '../../screens/admin/book/books_view.dart';
+import '../../screens/admin/profile/profile_view.dart';
 import '../../screens/admin/order_list/orders_view.dart';
 import '../../screens/admin/category/category_view.dart';
 import '../../screens/admin/dashboard/dashboard_view.dart';
 import '../../screens/admin/free_book/free_book_view.dart';
 import '../../screens/admin/special_offer/special_offer_view.dart';
 import '../../screens/admin/best_selling_book/best_selling_view.dart';
+
 // ADDED THIS IMPORT
 
 class AdminMenuSidebar extends StatefulWidget {
@@ -29,22 +31,19 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
     final List<Widget> pages = [
       DashboardView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       CategoryView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
-      ManageBooksView(
-        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-      ),
+      ManageBooksView(openDrawer: () => _scaffoldKey.currentState?.openDrawer(),),
       OrdersView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
-      SpecialOfferView(
-        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-      ),
+      SpecialOfferView(openDrawer: () => _scaffoldKey.currentState?.openDrawer(),),
       UserView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       SaleView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
-      BestSellingView(
-        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-      ),
+      BestSellingView(openDrawer: () => _scaffoldKey.currentState?.openDrawer(),),
       FreeBookView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+      ProfileVeiew(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+
+      
     ];
 
-    return Scaffold(
+    return Scaffold( 
       key: _scaffoldKey,
       drawer: Drawer(
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
@@ -88,6 +87,8 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
                   _buildMenuItem(Icons.monetization_on, "Sales", 6),
                   _buildMenuItem(Icons.star_rate_rounded, "Best Selling", 7),
                   _buildMenuItem(Icons.picture_as_pdf, "Free Book PDF", 8),
+                  _buildMenuItem(Icons.person, "Profile", 9),
+
 
                   Divider(
                     thickness: 1,

@@ -11,7 +11,7 @@ use App\Http\Controllers\frontend\CheckoutController;
 use App\Http\Controllers\backend\SaleController;
 use App\Http\Controllers\frontend\OrderController;
 use App\Http\Controllers\backend\FreeBookPDFController;
-
+use App\Http\Controllers\backend\ProfileController;
 
 // FIX: Import both controllers with different names
 use App\Http\Controllers\frontend\OrderListController as FrontendOrder;
@@ -51,6 +51,7 @@ Route::get('/admin-orders', [BackendOrder::class, 'index']);
 // 2. FOR FRONTEND / MOBILE APP (Cart logic filtered by User ID)
 // Use Sanctum middleware to ensure request->user() is not null
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/admin/profile', [ProfileController::class, 'getProfile']);
     Route::get('/orders', [FrontendOrder::class, 'index']);
     Route::post('/orders', [FrontendOrder::class, 'store']);
     Route::delete('/orders/{id}', [FrontendOrder::class, 'destroy']);
