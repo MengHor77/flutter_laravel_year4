@@ -101,8 +101,8 @@ class _MainLayoutState extends State<MainLayout> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: isBottomBarPage
             ? AppColors.accent
-            : AppColors.textSecondary,
-        unselectedItemColor: AppColors.textSecondary,
+            : AppColors.textPrimary,
+        unselectedItemColor: AppColors.textPrimary,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Books'),
