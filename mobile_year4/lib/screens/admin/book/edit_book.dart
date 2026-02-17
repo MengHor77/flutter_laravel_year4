@@ -66,25 +66,30 @@ class _EditBookState extends State<EditBook> {
   }
 
   Future<void> _update() async {
-    if (!_formKey.currentState!.validate() || _selectedCategoryId == null) {
+    if (!_formKey.currentState!.validate() || _selectedCategoryId == null)
       return;
-    }
 
     setState(() => _isSaving = true);
 
     try {
       var request = http.MultipartRequest(
-        'POST',
+        'POST', // Keep as POST
         Uri.parse("${ApiConfig.books}/${widget.book.id}"),
       );
+
+      // 1. Add headers
       request.headers.addAll({"Accept": "application/json"});
+
+      // 2. Add the method spoofing field FIRST
       request.fields['_method'] = 'PUT';
 
+      // 3. Add other text fields
       request.fields['name'] = _nameController.text.trim();
       request.fields['author'] = _authorController.text.trim();
       request.fields['price'] = _priceController.text.trim();
       request.fields['category_id'] = _selectedCategoryId!;
 
+      // 4. Add the image file last
       if (_imageFile != null) {
         request.files.add(
           await http.MultipartFile.fromPath('image', _imageFile!.path),
@@ -97,20 +102,24 @@ class _EditBookState extends State<EditBook> {
       if (response.statusCode == 200) {
         widget.onRefresh();
         if (mounted) Navigator.pop(context);
+      } else {
+        // Print the error from Laravel to see exactly what failed (validation, etc.)
+        debugPrint("Server Error: ${response.body}");
       }
     } catch (e) {
-      debugPrint("Error: $e");
+      debugPrint("Connection Error: $e");
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
 
   // ✅ ជំនួយការបង្កើត URL រូបភាពឱ្យបានត្រឹមត្រូវ
-  String _getImageUrl(String? path) {
-    if (path == null || path.isEmpty) return '';
-    if (path.startsWith('http')) return path;
-    return "${ApiConfig.storage}$path";
-  }
+ String _getImageUrl(String? path) {
+  if (path == null || path.isEmpty) return '';
+  // If the path already starts with http (which your Laravel asset() provides), return it as is
+  if (path.startsWith('http')) return path; 
+  return "${ApiConfig.storage}$path";
+}
 
   @override
   Widget build(BuildContext context) {

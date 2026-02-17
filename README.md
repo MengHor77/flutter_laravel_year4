@@ -31,14 +31,13 @@
 
     php artisan migrate 
     php artian db:seed
-    php artisan server --host=0.0.0.0 --port=8000
-
+    php artisan serve --host=0.0.0.0 --port=8000
 
  + go to folder and config
 
     D:\flutter\mobile_year4\lib\api_config.dart 
     -change ip 
-    example static const String baseUrl = "http://10.1.42.124:8000";  (actual ip machine) 
+    example static const String baseUrl = "http://10.1.42.124:8000";  (actual ip  connet the wifi) 
 
 + go to folder then run commend in flutter 
     D:\flutter\mobile_year4>
@@ -47,5 +46,13 @@
     - click start emulator
   -run commend
     flutter run
+
+
+   # -----------------------------------------------------------
+
+    + for admin email name : admin@gmail.com
+      password : admin123
+
+      + for user need to register then login with email and password 
 
 
