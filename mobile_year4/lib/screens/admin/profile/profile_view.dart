@@ -1,8 +1,8 @@
 import 'dart:convert';
 import '../../../colors.dart';
-import 'edit_profile_view.dart'; 
+import 'edit_profile_view.dart';
 import '../../../api_config.dart';
-import '../../auth/login_view.dart';  
+import '../../auth/login_view.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 // 1. IMPORT THE NEW FILE HERE
@@ -29,7 +29,7 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
   Future<void> _fetchProfile() async {
     try {
       final response = await http.get(
-        Uri.parse(ApiConfig.profile), 
+        Uri.parse(ApiConfig.profile),
         headers: ApiConfig.getHeaders(),
       );
 
@@ -50,7 +50,9 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
           title: const Text("Logout"),
           content: const Text("Are you sure you want to sign out?"),
           actions: [
@@ -67,7 +69,13 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
                   (route) => false,
                 );
               },
-              child: const Text("LOGOUT", style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold)),
+              child: const Text(
+                "LOGOUT",
+                style: TextStyle(
+                  color: AppColors.danger,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         );
@@ -89,14 +97,13 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            onPressed: _handleLogout, 
-            icon: const Icon(Icons.logout)
-          ),
+          IconButton(onPressed: _handleLogout, icon: const Icon(Icons.logout)),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.accent),
+            )
           : SingleChildScrollView(
               child: Column(
                 children: [
@@ -105,7 +112,9 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
                     width: double.infinity,
                     decoration: const BoxDecoration(
                       color: AppColors.cardBg,
-                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+                      borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(30),
+                      ),
                     ),
                     padding: const EdgeInsets.only(bottom: 40, top: 20),
                     child: Column(
@@ -113,21 +122,29 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
                         const CircleAvatar(
                           radius: 55,
                           backgroundColor: Colors.white,
-                          child: Icon(Icons.person, size: 65, color: AppColors.primary),
+                          child: Icon(
+                            Icons.person,
+                            size: 65,
+                            color: AppColors.primary,
+                          ),
                         ),
                         const SizedBox(height: 15),
                         Text(
                           adminData?['name']?.toUpperCase() ?? "ADMIN",
                           style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.5),
+                            color: AppColors.textPrimary,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                          ),
                         ),
                         const SizedBox(height: 5),
                         Text(
                           adminData?['email'] ?? "admin@gmail.com",
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                          ),
                         ),
                       ],
                     ),
@@ -144,34 +161,67 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
                         const Text(
                           "ACCOUNT SETTINGS",
                           style: TextStyle(
-                              color: Colors.grey,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              letterSpacing: 1.1),
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            letterSpacing: 1.1,
+                          ),
                         ),
                         const SizedBox(height: 15),
-                        
+
                         // 2. NAVIGATE TO EDIT PROFILE
                         _buildMenuItem(
-                          Icons.person_outline, 
-                          "Edit Profile", 
-                          "Change your name and info",
+                          Icons.person_outline,
+                          "Edit Profile",
+                          "Change your info",
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => EditProfileView(adminData: adminData),
+                                builder: (context) =>
+                                    EditProfileView(adminData: adminData),
                               ),
-                            ).then((_) => _fetchProfile()); // Refresh when returning
+                            ).then(
+                              (_) => _fetchProfile(),
+                            ); // Refresh when returning
                           },
                         ),
-                        
-                        _buildMenuItem(Icons.lock_outline, "Security", "Update your admin password"),
-                        _buildMenuItem(Icons.notifications_none, "Notifications", "Manage order alerts"),
-                        _buildMenuItem(Icons.info_outline, "App Version", "v1.0.4 (Beta)"),
-                        
+
+                        // _buildMenuItem(Icons.lock_outline, "Security", "Update your admin password"),
+                        _buildMenuItem(
+                          Icons.notifications_none,
+                          "Notifications",
+                          "Manage order alerts",
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'need update code notication more!',
+                                ),
+                                backgroundColor: AppColors.success,
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                        ),
+                        _buildMenuItem(
+                          Icons.info_outline,
+                          "App Version",
+                          "v1.0.4 (Beta)",
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'need update code app version more!',
+                                ),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                          },
+                        ),
+
                         const SizedBox(height: 30),
-                        
+
                         // --- Logout Button ---
                         SizedBox(
                           width: double.infinity,
@@ -181,12 +231,20 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
                               backgroundColor: Colors.white,
                               foregroundColor: AppColors.danger,
                               elevation: 0,
-                              side: const BorderSide(color: AppColors.danger, width: 1.5),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                              side: const BorderSide(
+                                color: AppColors.danger,
+                                width: 1.5,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
                             ),
                             onPressed: _handleLogout,
                             icon: const Icon(Icons.logout_rounded),
-                            label: const Text("LOGOUT", style: TextStyle(fontWeight: FontWeight.bold)),
+                            label: const Text(
+                              "LOGOUT",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 40),
@@ -200,7 +258,12 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
   }
 
   // 3. UPDATED HELPER WITH ONTAP
-  Widget _buildMenuItem(IconData icon, String title, String subtitle, {VoidCallback? onTap}) {
+  Widget _buildMenuItem(
+    IconData icon,
+    String title,
+    String subtitle, {
+    VoidCallback? onTap,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -211,15 +274,25 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
             color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
         leading: Icon(icon, color: AppColors.primary),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(fontSize: 13, color: Colors.grey),
+        ),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: Colors.grey,
+        ),
         onTap: onTap, // Apply the click action
       ),
     );
