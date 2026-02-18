@@ -113,7 +113,7 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
                         const CircleAvatar(
                           radius: 55,
                           backgroundColor: Colors.white,
-                          child: Icon(Icons.admin_panel_settings, size: 65, color: AppColors.primary),
+                          child: Icon(Icons.person, size: 65, color: AppColors.primary),
                         ),
                         const SizedBox(height: 15),
                         Text(
