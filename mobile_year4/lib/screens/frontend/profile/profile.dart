@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:provider/provider.dart';
 import 'package:mobile_year4/colors.dart';
 import '../../../providers/book_provider.dart';
+import 'package:mobile_year4/providers/book_provider.dart';
 import 'package:mobile_year4/screens/frontend/profile/edit_profile.dart';
-
+import 'package:mobile_year4/screens/frontend/order_list/order_list_view.dart';
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
 
@@ -83,7 +85,11 @@ class ProfileView extends StatelessWidget {
                   icon: Icons.shopping_bag_outlined,
                   title: "My Purchases",
                   onTap: () {
-                    // Navigate to orders
+                    if (bookProvider.onOrderSuccess != null) {
+                      bookProvider.onOrderSuccess!(
+                        2,
+                      ); // 2 is the index of OrderListView in your MainLayout
+                    }
                   },
                 ),
                 _buildProfileItem(

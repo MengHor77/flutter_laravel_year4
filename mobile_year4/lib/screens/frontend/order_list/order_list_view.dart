@@ -32,8 +32,8 @@ class _OrderListViewState extends State<OrderListView> {
   Widget build(BuildContext context) {
     final provider = context.watch<BookProvider>();
 
-    //  លុប Scaffold ចេញ ហើយប្រើ Column ឬ Stack ដើម្បីបង្ហាញទិន្នន័យ
-    //  ព្រោះ AppBar ត្រូវបានគ្រប់គ្រងដោយ MainWrapper រួចជាស្រេច
+    debugPrint("Cart Length: ${provider.cart.length}");
+  debugPrint("Is Syncing: ${provider.isSyncing}");
     return Column(
       children: [
         Expanded(
