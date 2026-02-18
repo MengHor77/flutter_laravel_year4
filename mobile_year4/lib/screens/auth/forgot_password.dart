@@ -28,8 +28,8 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
         body: jsonEncode({'email': _emailController.text.trim()}),
       );
 
-      print("DEBUG: Status Code: ${response.statusCode}");
-      print("DEBUG: Response Body: ${response.body}");
+      debugPrint("Status Code: ${response.statusCode}");
+      debugPrint("Response Body: ${response.body}");
       final data = json.decode(response.body);
 
       if (response.statusCode == 200) {

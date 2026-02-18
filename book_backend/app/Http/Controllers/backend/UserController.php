@@ -147,7 +147,7 @@ public function forgotPassword(Request $request)
     return response()->json([
         'status' => 'success', 
         'message' => 'OTP sent to your email',
-        'otp_debug' => $token // Remove this line in production!
+        'code OTP' => $token // Remove this line in production!
     ], 200);
 }
 
