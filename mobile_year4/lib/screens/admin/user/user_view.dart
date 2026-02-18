@@ -77,7 +77,15 @@ class _UserViewState extends State<UserView> {
                   subtitle: Text(user['email'] ?? "No Email"),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: AppColors.danger),
-                    onPressed: () {},
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('update code more'),
+                          backgroundColor: AppColors.success,
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    },
                   ),
                 ),
               );
