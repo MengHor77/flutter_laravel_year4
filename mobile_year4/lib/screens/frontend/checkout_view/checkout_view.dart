@@ -1,7 +1,7 @@
 import 'dart:async';
 import '../../../colors.dart';
 import '../home/home_view.dart';
-import '../../../../api_config.dart'; 
+import '../../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/book_provider.dart';
@@ -16,13 +16,6 @@ class CheckoutView extends StatefulWidget {
 class _CheckoutViewState extends State<CheckoutView> {
   bool _isProcessing = false;
 
-  String _getImageUrl(String? path) {
-    if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
-    if (path.startsWith('http')) return path;
-    return "${ApiConfig.storage}${path.startsWith('/') ? path.substring(1) : path}";
-  }
-
-  // Safely parses price strings like "$10.00" or "10" into doubles
   double _parseSafePrice(dynamic price) {
     if (price == null) return 0.0;
     final cleanPrice = price.toString().replaceAll(RegExp(r'[^0-9.]'), '');
@@ -31,7 +24,6 @@ class _CheckoutViewState extends State<CheckoutView> {
 
   void _handlePayment(BuildContext context) async {
     setState(() => _isProcessing = true);
-
     final provider = context.read<BookProvider>();
     bool success = await provider.processCheckout();
 
@@ -94,175 +86,184 @@ class _CheckoutViewState extends State<CheckoutView> {
     final provider = context.watch<BookProvider>();
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text("Checkout Summary"),
+        title: const Text(
+          "Checkout Summary",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
         backgroundColor: AppColors.accent,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: Column(
         children: [
+          // Header Label like in image_adccfc.png
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Text(
+              "Order Summary",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppColors.accent, // Matches image style
+              ),
+            ),
+          ),
+
+          // --- Table-style Header ---
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Expanded(flex: 3, child: _headerText("Product Name")),
+                Expanded(child: _headerText("Qty", align: TextAlign.center)),
+                Expanded(child: _headerText("Price", align: TextAlign.center)),
+                Expanded(child: _headerText("SubTotal", align: TextAlign.end)),
+              ],
+            ),
+          ),
+          const Divider(indent: 20, endIndent: 20, thickness: 1),
+
           // --- Items List ---
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(15),
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               itemCount: provider.cart.length,
+              separatorBuilder: (context, index) =>
+                  const Divider(height: 20, color: Colors.black12),
               itemBuilder: (context, index) {
                 final item = provider.cart[index];
                 double unitPrice = _parseSafePrice(item.displayPrice);
                 double subtotal = unitPrice * item.quantity;
 
-                final String imageUrl = _getImageUrl(item.image);
-
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  elevation: 1,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 10,
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product Name & Image
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        item.name,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            imageUrl,
-                            width: 60,
-                            height: 80,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  width: 60,
-                                  height: 80,
-                                  color: Colors.grey[200],
-                                  child: const Icon(
-                                    Icons.book,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        // Item Details
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Qty: ${item.quantity} × \$${unitPrice.toStringAsFixed(2)}",
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Subtotal
-                        Text(
-                          "\$${subtotal.toStringAsFixed(2)}",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: AppColors.accent,
-                          ),
-                        ),
-                      ],
+                    // Qty
+                    Expanded(
+                      child: Text(
+                        "${item.quantity}",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
                     ),
-                  ),
+                    // Price
+                    Expanded(
+                      child: Text(
+                        unitPrice.toStringAsFixed(1),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    // Subtotal
+                    Expanded(
+                      child: Text(
+                        subtotal.toStringAsFixed(1),
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
           ),
 
-          // --- Bottom Summary Section ---
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(25),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
+          // --- Bottom Fixed Section (Total & Button) ---
+          _buildBottomSection(provider),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerText(String text, {TextAlign align = TextAlign.start}) {
+    return Text(
+      text,
+      textAlign: align,
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        color: Colors.blueGrey,
+        fontSize: 13,
+      ),
+    );
+  }
+
+  Widget _buildBottomSection(BookProvider provider) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Total Payable:",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "\$${provider.totalCartPrice.toStringAsFixed(2)}",
+                  style: const TextStyle(
+                    fontSize: 28,
+                    color: Color(0xFF4CAF50), // Matches image_adc17a.png Green
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
-            child: SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Total Payable:",
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: Colors.white,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _isProcessing ? null : () => _handlePayment(context),
+                child: _isProcessing
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        "CONFIRM AND PAY",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
                         ),
                       ),
-                      Text(
-                        "\$${provider.totalCartPrice.toStringAsFixed(2)}",
-                        style: const TextStyle(
-                          fontSize: 26,
-                          color: Colors.green,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      onPressed: _isProcessing
-                          ? null
-                          : () => _handlePayment(context),
-                      child: _isProcessing
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              "CONFIRM AND PAY",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
