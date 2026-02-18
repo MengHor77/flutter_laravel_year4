@@ -143,7 +143,7 @@ class _EditProfileViewState extends State<EditProfileView> {
         children: [
           CircleAvatar(
             radius: 60,
-            backgroundColor: AppColors.primary.withOpacity(0.1),
+            backgroundColor: AppColors.primary.withValues(alpha:0.1),
             child: const Icon(Icons.person, size: 70, color: AppColors.primary),
           ),
           Container(
