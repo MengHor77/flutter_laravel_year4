@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_year4/colors.dart';
 import '../../../providers/book_provider.dart';
+import 'package:mobile_year4/screens/frontend/profile/edit_profile.dart';
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
@@ -19,9 +20,7 @@ class ProfileView extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 30),
             decoration: BoxDecoration(
               color: AppColors.accent.withOpacity(0.05),
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade200),
-              ),
+              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
             ),
             child: Column(
               children: [
@@ -67,12 +66,17 @@ class ProfileView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                
+
                 _buildProfileItem(
                   icon: Icons.person_outline_rounded,
                   title: "Edit Profile",
                   onTap: () {
-                    // Logic to navigate to Edit Profile
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EditProfileView(),
+                      ),
+                    );
                   },
                 ),
                 _buildProfileItem(
@@ -92,7 +96,7 @@ class ProfileView extends StatelessWidget {
                   title: "Change Password",
                   onTap: () {},
                 ),
-                
+
                 const SizedBox(height: 20),
                 const Text(
                   "Preferences",
@@ -103,7 +107,7 @@ class ProfileView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                
+
                 _buildProfileItem(
                   icon: Icons.language_rounded,
                   title: "Language",

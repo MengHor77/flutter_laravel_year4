@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:mobile_year4/providers/user_provider.dart';
 import 'package:mobile_year4/providers/book_provider.dart';
 import 'package:mobile_year4/providers/sale_provider.dart';
 import 'package:mobile_year4/screens/auth/login_view.dart';
@@ -19,6 +20,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => SaleProvider()),
         ChangeNotifierProvider(create: (_) => SpecialOffersProvider()),
         ChangeNotifierProvider(create: (_) => FreeBookPdfProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),  
       ],
       child: const MyApp(),
     ),

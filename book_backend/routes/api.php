@@ -51,6 +51,10 @@ Route::get('/admin-orders', [BackendOrder::class, 'index']);
 // 2. FOR FRONTEND / MOBILE APP (Cart logic filtered by User ID)
 // Use Sanctum middleware to ensure request->user() is not null
 Route::middleware('auth:sanctum')->group(function () {
+    
+    Route::put('/users/{id}', [UserController::class, 'update']);
+
+
     Route::get('/admin/profile', [ProfileController::class, 'getProfile']);
     Route::post('/admin/update-profile', [ProfileController::class, 'updateProfile']);
     

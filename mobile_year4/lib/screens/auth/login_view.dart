@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../providers/book_provider.dart';
 import '../../widgets/backend/admin_menu_sidebar.dart';
-import 'package:mobile_year4/widgets/frontent/main_layout.dart';  
+import 'package:mobile_year4/providers/user_provider.dart';
+import 'package:mobile_year4/widgets/frontent/main_layout.dart';
+
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
@@ -48,15 +50,23 @@ class _LoginViewState extends State<LoginView> {
       if (result['success']) {
         debugPrint("Login Success: ${result['user']['name']}");
 
+        final userData = result['user'];
+        final token = result['token'];
+
+        // 1. Set UserProvider data (This stores the ID, Name, and Email)
+        context.read<UserProvider>().setUser(userData, token);
+
+        // 2. Sync with BookProvider
         final bookProvider = context.read<BookProvider>();
         bookProvider.setUser(
-          result['user']['name'] ?? "User",
-          result['user']['email'] ?? "",
-          result['token'],
+          userData['name'] ?? "User",
+          userData['email'] ?? "",
+          token,
         );
 
         bookProvider.fetchSavedOrders();
 
+        // 3. Navigate based on role
         if (result['role'] == 'admin') {
           Navigator.pushReplacement(
             context,
@@ -72,6 +82,7 @@ class _LoginViewState extends State<LoginView> {
         _showError(result['message']);
       }
     } catch (e) {
+      debugPrint("Login Error: $e");
       _showError("An unexpected error occurred.");
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -80,10 +91,7 @@ class _LoginViewState extends State<LoginView> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.danger, 
-      ),
+      SnackBar(content: Text(message), backgroundColor: AppColors.danger),
     );
   }
 
@@ -97,18 +105,14 @@ class _LoginViewState extends State<LoginView> {
             padding: const EdgeInsets.all(30.0),
             child: Column(
               children: [
-                const Icon(
-                  Icons.book,
-                  size: 100,
-                  color: AppColors.accent,
-                ),
+                const Icon(Icons.book, size: 100, color: AppColors.accent),
                 const SizedBox(height: 20),
                 const Text(
                   "Book Store Login",
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary, 
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -164,10 +168,8 @@ class _LoginViewState extends State<LoginView> {
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          AppColors.accent, 
-                      foregroundColor:
-                          AppColors.textOnDark,
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: AppColors.textOnDark,
                     ),
                     onPressed: _isLoading ? null : _handleLogin,
                     child: _isLoading
@@ -181,7 +183,6 @@ class _LoginViewState extends State<LoginView> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
                 GestureDetector(
                   onTap: () => Navigator.push(
                     context,
