@@ -20,14 +20,18 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   bool _isStepOne = true; // True = input email, False = input OTP/New Password
   bool _isLoading = false;
 
+  // New state variables for password toggles
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
   Future<void> _sendOTP() async {
     if (_emailController.text.isEmpty) return;
 
     setState(() => _isLoading = true);
     try {
       final response = await http.post(
-        Uri.parse(ApiConfig.forgotPassword), // Using ApiConfig constant
-        headers: ApiConfig.getHeaders(), // Using your shared headers
+        Uri.parse(ApiConfig.forgotPassword),
+        headers: ApiConfig.getHeaders(),
         body: jsonEncode({'email': _emailController.text.trim()}),
       );
 
@@ -38,12 +42,11 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("OTP sent to your email!")),
         );
-        // Debug: Check your console for the OTP if you kept 'otp_debug' in Laravel
         print("Response: ${response.body}");
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(data['message'] ?? "Error")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? "Error")),
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -56,17 +59,17 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
 
   Future<void> _resetPassword() async {
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match")),
+      );
       return;
     }
 
     setState(() => _isLoading = true);
     try {
       final response = await http.post(
-        Uri.parse(ApiConfig.resetPassword), // Using ApiConfig constant
-        headers: ApiConfig.getHeaders(), // Using your shared headers
+        Uri.parse(ApiConfig.resetPassword),
+        headers: ApiConfig.getHeaders(),
         body: jsonEncode({
           'email': _emailController.text.trim(),
           'token': _otpController.text.trim(),
@@ -87,9 +90,9 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Request failed.")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Request failed.")),
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -104,7 +107,6 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
-        // Added scroll for small screens
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
@@ -161,21 +163,39 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                 ),
               ),
               const SizedBox(height: 15),
+              // Updated Password field with toggle
               TextField(
                 controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
                   labelText: "New Password",
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() => _obscurePassword = !_obscurePassword);
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 15),
+              // Updated Confirm Password field with toggle
               TextField(
                 controller: _confirmPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
+                obscureText: _obscureConfirmPassword,
+                decoration: InputDecoration(
                   labelText: "Confirm New Password",
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
