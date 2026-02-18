@@ -36,7 +36,7 @@ class _CheckoutViewState extends State<CheckoutView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Checkout Failed. Please check your connection."),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.danger, 
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -51,7 +51,11 @@ class _CheckoutViewState extends State<CheckoutView> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         title: const Column(
           children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 60),
+            Icon(
+              Icons.check_circle,
+              color: AppColors.success,
+              size: 60,
+            ), 
             SizedBox(height: 10),
             Text("Success!"),
           ],
@@ -86,7 +90,7 @@ class _CheckoutViewState extends State<CheckoutView> {
     final provider = context.watch<BookProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.background, 
       appBar: AppBar(
         title: const Text(
           "Checkout Summary",
@@ -94,12 +98,11 @@ class _CheckoutViewState extends State<CheckoutView> {
         ),
         centerTitle: true,
         backgroundColor: AppColors.accent,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.textOnDark,
         elevation: 0,
       ),
       body: Column(
         children: [
-          // Header Label like in image_adccfc.png
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
             child: Text(
@@ -107,7 +110,7 @@ class _CheckoutViewState extends State<CheckoutView> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: AppColors.accent, // Matches image style
+                color: AppColors.accent,
               ),
             ),
           ),
@@ -124,7 +127,12 @@ class _CheckoutViewState extends State<CheckoutView> {
               ],
             ),
           ),
-          const Divider(indent: 20, endIndent: 20, thickness: 1),
+          const Divider(
+            indent: 20,
+            endIndent: 20,
+            thickness: 1,
+            color: AppColors.border,
+          ),
 
           // --- Items List ---
           Expanded(
@@ -132,7 +140,7 @@ class _CheckoutViewState extends State<CheckoutView> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               itemCount: provider.cart.length,
               separatorBuilder: (context, index) =>
-                  const Divider(height: 20, color: Colors.black12),
+                  const Divider(height: 20, color: AppColors.border),
               itemBuilder: (context, index) {
                 final item = provider.cart[index];
                 double unitPrice = _parseSafePrice(item.displayPrice);
@@ -141,39 +149,45 @@ class _CheckoutViewState extends State<CheckoutView> {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Product Name & Image
                     Expanded(
                       flex: 3,
                       child: Text(
                         item.name,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
-                    // Qty
                     Expanded(
                       child: Text(
                         "${item.quantity}",
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textBlack,
+                        ),
                       ),
                     ),
-                    // Price
+                    // Price Column - Updated to solid black
                     Expanded(
                       child: Text(
                         unitPrice.toStringAsFixed(1),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textBlack,  
+                        ),
                       ),
                     ),
-                    // Subtotal
                     Expanded(
                       child: Text(
                         subtotal.toStringAsFixed(1),
                         textAlign: TextAlign.end,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textBlack,
+                        ),
                       ),
                     ),
                   ],
@@ -182,7 +196,7 @@ class _CheckoutViewState extends State<CheckoutView> {
             ),
           ),
 
-          // --- Bottom Fixed Section (Total & Button) ---
+          // --- Bottom Fixed Section ---
           _buildBottomSection(provider),
         ],
       ),
@@ -195,7 +209,7 @@ class _CheckoutViewState extends State<CheckoutView> {
       textAlign: align,
       style: const TextStyle(
         fontWeight: FontWeight.bold,
-        color: Colors.blueGrey,
+        color: AppColors.textSecondary,  
         fontSize: 13,
       ),
     );
@@ -204,12 +218,12 @@ class _CheckoutViewState extends State<CheckoutView> {
   Widget _buildBottomSection(BookProvider provider) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
+      decoration: const  BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: AppColors.shadow, 
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -224,13 +238,17 @@ class _CheckoutViewState extends State<CheckoutView> {
               children: [
                 const Text(
                   "Total Payable:",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
                 Text(
                   "\$${provider.totalCartPrice.toStringAsFixed(2)}",
                   style: const TextStyle(
                     fontSize: 28,
-                    color: Color(0xFF4CAF50), // Matches image_adc17a.png Green
+                    color: AppColors.success,  
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -243,7 +261,7 @@ class _CheckoutViewState extends State<CheckoutView> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.accent,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textOnDark,
                   elevation: 2,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
