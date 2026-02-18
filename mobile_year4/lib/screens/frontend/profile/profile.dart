@@ -91,11 +91,6 @@ class ProfileView extends StatelessWidget {
                   title: "Notifications",
                   onTap: () {},
                 ),
-                _buildProfileItem(
-                  icon: Icons.lock_outline_rounded,
-                  title: "Change Password",
-                  onTap: () {},
-                ),
 
                 const SizedBox(height: 20),
                 const Text(
