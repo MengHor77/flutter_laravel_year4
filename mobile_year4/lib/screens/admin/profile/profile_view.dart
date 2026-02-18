@@ -1,9 +1,11 @@
 import 'dart:convert';
 import '../../../colors.dart';
+import 'edit_profile_view.dart'; 
 import '../../../api_config.dart';
 import '../../auth/login_view.dart';  
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+// 1. IMPORT THE NEW FILE HERE
 
 class ProfileVeiew extends StatefulWidget {
   final VoidCallback? openDrawer;
@@ -27,7 +29,7 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
   Future<void> _fetchProfile() async {
     try {
       final response = await http.get(
-        Uri.parse(ApiConfig.profile), // Better to use ApiConfig variable
+        Uri.parse(ApiConfig.profile), 
         headers: ApiConfig.getHeaders(),
       );
 
@@ -43,7 +45,7 @@ class _ProfileVeiewState extends State<ProfileVeiew> {
     }
   }
 
-void _handleLogout() {
+  void _handleLogout() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -53,14 +55,12 @@ void _handleLogout() {
           content: const Text("Are you sure you want to sign out?"),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context), // Close dialog
+              onPressed: () => Navigator.pop(context),
               child: const Text("CANCEL", style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
               onPressed: () {
-                // 1. Clear Token
                 ApiConfig.userToken = null;
-                // 2. Navigate to Login and clear stack
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginView()),
@@ -89,7 +89,6 @@ void _handleLogout() {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          // ✅ Fixed: Removed the 'onTap' that was causing the error
           IconButton(
             onPressed: _handleLogout, 
             icon: const Icon(Icons.logout)
@@ -151,7 +150,22 @@ void _handleLogout() {
                               letterSpacing: 1.1),
                         ),
                         const SizedBox(height: 15),
-                        _buildMenuItem(Icons.person_outline, "Edit Profile", "Change your name and info"),
+                        
+                        // 2. NAVIGATE TO EDIT PROFILE
+                        _buildMenuItem(
+                          Icons.person_outline, 
+                          "Edit Profile", 
+                          "Change your name and info",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EditProfileView(adminData: adminData),
+                              ),
+                            ).then((_) => _fetchProfile()); // Refresh when returning
+                          },
+                        ),
+                        
                         _buildMenuItem(Icons.lock_outline, "Security", "Update your admin password"),
                         _buildMenuItem(Icons.notifications_none, "Notifications", "Manage order alerts"),
                         _buildMenuItem(Icons.info_outline, "App Version", "v1.0.4 (Beta)"),
@@ -185,7 +199,8 @@ void _handleLogout() {
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, String subtitle) {
+  // 3. UPDATED HELPER WITH ONTAP
+  Widget _buildMenuItem(IconData icon, String title, String subtitle, {VoidCallback? onTap}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -205,9 +220,7 @@ void _handleLogout() {
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         subtitle: Text(subtitle, style: const TextStyle(fontSize: 13, color: Colors.grey)),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-        onTap: () {
-          // Handle navigation
-        },
+        onTap: onTap, // Apply the click action
       ),
     );
   }

@@ -52,6 +52,8 @@ Route::get('/admin-orders', [BackendOrder::class, 'index']);
 // Use Sanctum middleware to ensure request->user() is not null
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/profile', [ProfileController::class, 'getProfile']);
+    Route::post('/admin/update-profile', [ProfileController::class, 'updateProfile']);
+    
     Route::get('/orders', [FrontendOrder::class, 'index']);
     Route::post('/orders', [FrontendOrder::class, 'store']);
     Route::delete('/orders/{id}', [FrontendOrder::class, 'destroy']);
