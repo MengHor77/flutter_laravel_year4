@@ -22,6 +22,8 @@
     DB_USERNAME=root
     DB_PASSWORD=
 
++ open xampp
+   star apache and mysql
 
  +  go to http://localhost/phpmyadmin/ 
 
@@ -29,7 +31,7 @@
 
     - run commend
 
-    php artisan migrate 
+    php artisan migrate b
     php artian db:seed
     php artisan serve --host=0.0.0.0 --port=8000
 

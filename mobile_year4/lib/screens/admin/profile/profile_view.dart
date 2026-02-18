@@ -105,7 +105,7 @@ void _handleLogout() {
                   Container(
                     width: double.infinity,
                     decoration: const BoxDecoration(
-                      color: AppColors.lightGray,
+                      color: AppColors.cardBg,
                       borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
                     ),
                     padding: const EdgeInsets.only(bottom: 40, top: 20),
@@ -120,7 +120,7 @@ void _handleLogout() {
                         Text(
                           adminData?['name']?.toUpperCase() ?? "ADMIN",
                           style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textPrimary,
                               fontSize: 24,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 1.5),
@@ -128,7 +128,7 @@ void _handleLogout() {
                         const SizedBox(height: 5),
                         Text(
                           adminData?['email'] ?? "admin@gmail.com",
-                          style: const TextStyle(color: Colors.white70, fontSize: 14),
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
                         ),
                       ],
                     ),

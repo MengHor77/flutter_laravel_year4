@@ -12,7 +12,7 @@ class TotalSaleOrderCard extends StatelessWidget {
       builder: (context, saleProvider, child) {
         final now = DateTime.now();
 
-        // Keep old code: Filter transactions for current month
+        // --- KEEP OLD CODE: Logic remains untouched ---
         final monthlyTransactions = saleProvider.saleDetails.where((sale) {
           if (sale['created_at'] == null) return false;
           try {
@@ -28,12 +28,17 @@ class TotalSaleOrderCard extends StatelessWidget {
             : monthlyTransactions.length.toString();
 
         return Container(
+          // --- MODERNIZED DESIGN ---
           decoration: BoxDecoration(
-            color: AppColors.cardBg,
+            color: AppColors.cardBg, // Use white background
             borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+              color: AppColors.lightGray,
+              width: 1.5,
+            ), // Subtle border
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: Colors.black.withValues(alpha: 0.05), // Modern shadow
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -42,12 +47,20 @@ class TotalSaleOrderCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.shopping_cart,
-                size: 40,
-                color: AppColors.warning,
+              // Icon with a light warning-tinted circle
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.shopping_cart,
+                  size: 32,
+                  color: AppColors.warning,
+                ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
                 displayValue,
                 style: const TextStyle(
@@ -57,8 +70,13 @@ class TotalSaleOrderCard extends StatelessWidget {
                 ),
               ),
               const Text(
-                "Total sale transection",
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                "Monthly Sales", // Slightly shortened for cleaner UI
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),

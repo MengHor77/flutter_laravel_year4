@@ -7,11 +7,12 @@ import 'package:http/http.dart' as http;
 class TotalUserCard extends StatelessWidget {
   const TotalUserCard({super.key});
 
+  // --- KEEP OLD CODE: Logic remains exactly the same ---
   Future<String> _fetchTotal() async {
     try {
       final response = await http.get(
         Uri.parse(ApiConfig.users),
-        headers: ApiConfig.getHeaders(), // Ensure headers are included
+        headers: ApiConfig.getHeaders(),
       );
       if (response.statusCode == 200) {
         List data = json.decode(response.body);
@@ -56,8 +57,10 @@ class _DashboardItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
+        // MODERNIZED: White background with your lightGray border
         color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: AppColors.lightGray, width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -69,15 +72,30 @@ class _DashboardItem extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 40, color: color),
-          const SizedBox(height: 8),
+          // Icon with the tinted background circle to match your theme
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 32, color: color),
+          ),
+          const SizedBox(height: 12),
           Text(
             value,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
           Text(
             title,
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+            style: const TextStyle(
+              color: AppColors.textSecondary, // Swapped to secondary for depth
+              fontSize: 13,
+            ),
           ),
         ],
       ),

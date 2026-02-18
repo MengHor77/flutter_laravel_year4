@@ -7,8 +7,8 @@ class AppColors {
   
   // 2. Backgrounds
   static const Color background = Color(0xFFF5F5F5); // grey[100]
-  static const Color cardBg = Color.fromARGB(255, 153, 139, 139);
-  static const Color lightGray = Color.fromARGB(255, 179, 173, 173);
+  static const Color cardBg = Color.fromRGBO(233, 233, 233, 1);
+  static const Color lightGray = Color.fromARGB(211, 234, 224, 224);
 
   // 3. Status/Action Colors
   static const Color success = Colors.green;

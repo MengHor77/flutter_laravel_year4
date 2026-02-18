@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 class TotalBookCard extends StatelessWidget {
   const TotalBookCard({super.key});
 
+  // Keeping your original logic exactly as it was
   Future<String> _fetchTotal() async {
     try {
       final response = await http.get(Uri.parse(ApiConfig.books));
@@ -29,7 +30,7 @@ class TotalBookCard extends StatelessWidget {
           title: "Total Books",
           value: snapshot.data ?? "...",
           icon: Icons.library_books,
-          color: AppColors.accent,
+          color: AppColors.accent, // Using your original accent color
         );
       },
     );
@@ -53,30 +54,38 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
+        // Using your newly defined AppColors.cardBg for a clean look
         color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(15),
+        // Adding the subtle border with lightGray for that modern "High-End" feel
+        border: Border.all(color: AppColors.lightGray, width: 1.5),
         boxShadow: [
           BoxShadow(
-            // FIX: Replaced .withOpacity(0.05) with .withValues(alpha: 0.05)
+            // Using the new .withValues syntax for modern Flutter standards
             color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 5,
-            spreadRadius: 2,
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Icon with your logic
           Icon(icon, size: 40, color: color),
           const SizedBox(height: 10),
           Text(
             value,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary, // Ensuring consistent text color
+            ),
           ),
           Text(
             title,
             style: const TextStyle(
-              color: AppColors.textPrimary,
+              color: AppColors.textSecondary, // Using your secondary text color
               fontSize: 14,
             ),
           ),
