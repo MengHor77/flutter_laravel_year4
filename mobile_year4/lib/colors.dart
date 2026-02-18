@@ -33,23 +33,30 @@ class AppColors {
   static const Color textBlack = Color(0xFF000000);
 
 
-  static Color getBackground(bool isDark) => 
-      isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
+static Color getBackground(bool isDark) => 
+      isDark ? const Color(0xFF0F171E) : const Color(0xFFF8F9FA);
 
+  // Cards should be slightly lighter than the background to "pop"
   static Color getCardBg(bool isDark) => 
-      isDark ? const Color(0xFF1E1E1E) : const Color.fromRGBO(233, 233, 233, 1);
+      isDark ? const Color(0xFF1C252E) : Colors.white;
 
+  // Avoid pure white; use an off-white for better readability
   static Color getTextPrimary(bool isDark) => 
-      isDark ? Colors.white : Colors.black87;
+      isDark ? const Color(0xFFE1E1E1) : const Color(0xFF2D3436);
 
   static Color getTextSecondary(bool isDark) => 
-      isDark ? Colors.white70 : Colors.grey;
+      isDark ? Colors.white60 : Colors.grey.shade600;
 
   static Color getBorder(bool isDark) => 
-      isDark ? const Color(0xFF333333) : const Color(0xFFEEEEEE);
+      isDark ? const Color(0xFF2C3E50).withOpacity(0.3) : const Color(0xFFEEEEEE);
   
-  // 4. Soft Surfaces & Action Backgrounds
   static Color accentLight(bool isDark) => 
-      isDark ? Colors.blue.withValues(alpha: 0.2) : Colors.blue.withValues(alpha: 0.1);
+      isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.withOpacity(0.08);
 
+  // Status colors with softer tones for dark mode
+  static Color getSuccess(bool isDark) => 
+      isDark ? const Color(0xFF2ECC71) : Colors.green;
+
+  static Color getDanger(bool isDark) => 
+      isDark ? const Color(0xFFE74C3C) : Colors.red;
  }
