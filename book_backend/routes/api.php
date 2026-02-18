@@ -21,6 +21,9 @@ use App\Http\Controllers\backend\OrderListController as BackendOrder;
 Route::get('/users', [UserController::class, 'index']);
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'login']);
+Route::post('/forgot-password', [UserController::class, 'forgotPassword']);
+Route::post('/reset-password', [UserController::class, 'resetPassword']);
+
 
 // Categories
 Route::get('/categories', [CategoryController::class, 'index']);

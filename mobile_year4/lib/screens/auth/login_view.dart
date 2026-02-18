@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../providers/book_provider.dart';
+import 'forgot_password.dart'; // 1. Added Import
 import '../../widgets/backend/admin_menu_sidebar.dart';
 import 'package:mobile_year4/providers/user_provider.dart';
 import 'package:mobile_year4/widgets/frontent/main_layout.dart';
@@ -53,10 +54,8 @@ class _LoginViewState extends State<LoginView> {
         final userData = result['user'];
         final token = result['token'];
 
-        // 1. Set UserProvider data (This stores the ID, Name, and Email)
         context.read<UserProvider>().setUser(userData, token);
 
-        // 2. Sync with BookProvider
         final bookProvider = context.read<BookProvider>();
         bookProvider.setUser(
           userData['name'] ?? "User",
@@ -66,7 +65,6 @@ class _LoginViewState extends State<LoginView> {
 
         bookProvider.fetchSavedOrders();
 
-        // 3. Navigate based on role
         if (result['role'] == 'admin') {
           Navigator.pushReplacement(
             context,
@@ -162,7 +160,28 @@ class _LoginViewState extends State<LoginView> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
+
+                // 2. Added Forgot Password Link
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ForgotPasswordView(),
+                      ),
+                    ),
+                    child: const Text(
+                      "Forgot Password?",
+                      style: TextStyle(
+                        color: AppColors.accent,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   height: 50,

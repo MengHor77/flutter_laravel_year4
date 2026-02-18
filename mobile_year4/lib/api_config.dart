@@ -7,6 +7,9 @@ static const String _domain = "$baseUrl/api";
 
   static const String login = "$_domain/login";
   static const String register = "$_domain/register";
+  static const String forgotPassword = "$_domain/forgot-password";
+  static const String resetPassword = "$_domain/reset-password";
+  
 
   // Admin Endpoints
   static const String categories = "$_domain/categories";
