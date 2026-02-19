@@ -1,5 +1,6 @@
 import 'dart:convert';
 import '../../../colors.dart';
+import 'search_orderlist.dart';
 import 'package:intl/intl.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
@@ -29,9 +30,7 @@ class _OrdersViewState extends State<OrdersView> {
 
     try {
       final response = await http.get(
-        Uri.parse(
-          ApiConfig.adminOrders,
-        ), 
+        Uri.parse(ApiConfig.adminOrders),
         headers: ApiConfig.getHeaders(),
       );
 
@@ -69,6 +68,20 @@ class _OrdersViewState extends State<OrdersView> {
           onPressed: widget.openDrawer,
         ),
         actions: [
+          // ✅ ADD SEARCH ICON HERE
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: "Search Orders",
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: OrderSearchDelegate(
+                  orders: _orders,
+                  getImageUrl: _getImageUrl,
+                ),
+              );
+            },
+          ),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchOrders),
         ],
       ),
