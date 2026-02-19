@@ -5,6 +5,7 @@ import '../../../api_config.dart';
 import 'create_special_offer.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'search_special_offer.dart'; // ✅ Import the search file
 
 class SpecialOfferView extends StatefulWidget {
   final VoidCallback openDrawer;
@@ -78,6 +79,19 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
           onPressed: widget.openDrawer,
         ),
         actions: [
+          // ✅ ADDED SEARCH ICON
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: OfferSearchDelegate(
+                  offers: _offers,
+                  onRefresh: _fetchOffers,
+                ),
+              );
+            },
+          ),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchOffers),
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
