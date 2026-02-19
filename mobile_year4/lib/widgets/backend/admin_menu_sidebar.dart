@@ -12,8 +12,6 @@ import '../../screens/admin/free_book/free_book_view.dart';
 import '../../screens/admin/special_offer/special_offer_view.dart';
 import '../../screens/admin/best_selling_book/best_selling_view.dart';
 
-// ADDED THIS IMPORT
-
 class AdminMenuSidebar extends StatefulWidget {
   const AdminMenuSidebar({super.key});
 
@@ -25,25 +23,62 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
   int _selectedIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  // Function to show the Logout Confirmation Pop-up
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: const Text(
+            "Logout",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text("Are you sure you want to sign out?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), // Close dialog
+              child: const Text(
+                "CANCEL",
+                style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // Navigate to login and clear stack
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginView()),
+                  (route) => false,
+                );
+              },
+              child: const Text(
+                "LOGOUT",
+                style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // UPDATED: Added FreeBookView to match index 8
     final List<Widget> pages = [
       DashboardView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       CategoryView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
-      ManageBooksView(openDrawer: () => _scaffoldKey.currentState?.openDrawer(),),
+      ManageBooksView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       OrdersView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
-      SpecialOfferView(openDrawer: () => _scaffoldKey.currentState?.openDrawer(),),
+      SpecialOfferView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       UserView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       SaleView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
-      BestSellingView(openDrawer: () => _scaffoldKey.currentState?.openDrawer(),),
+      BestSellingView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       FreeBookView(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       ProfileVeiew(openDrawer: () => _scaffoldKey.currentState?.openDrawer()),
-
-      
     ];
 
-    return Scaffold( 
+    return Scaffold(
       key: _scaffoldKey,
       drawer: Drawer(
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
@@ -88,8 +123,6 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
                   _buildMenuItem(Icons.star_rate_rounded, "Best Selling", 7),
                   _buildMenuItem(Icons.picture_as_pdf, "Free Book PDF", 8),
                   _buildMenuItem(Icons.person, "Profile", 9),
-
-
                   Divider(
                     thickness: 1,
                     height: 1,
@@ -104,15 +137,7 @@ class _AdminMenuSidebarState extends State<AdminMenuSidebar> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    onTap: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginView(),
-                        ),
-                        (route) => false,
-                      );
-                    },
+                    onTap: () => _showLogoutDialog(context), // Triggers Pop-up
                   ),
                 ],
               ),

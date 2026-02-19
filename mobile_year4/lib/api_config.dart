@@ -1,6 +1,6 @@
 class ApiConfig {
 // Change this line temporarily to test
-static const String baseUrl = "http://192.168.1.104:8000";  
+static const String baseUrl = "http://192.168.1.106:8000";  
 static const String _domain = "$baseUrl/api";
 
   static String? userToken;
