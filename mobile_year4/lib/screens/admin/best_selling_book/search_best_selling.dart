@@ -16,17 +16,42 @@ class BestSellingSearchDelegate extends SearchDelegate {
   @override
   String get searchFieldLabel => "Search by book name...";
 
+  /// STYLING: Applies AppColors.primary to the search bar area
+  @override
+  ThemeData appBarTheme(BuildContext context) {
+    return ThemeData(
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnDark,
+        elevation: 0,
+      ),
+      inputDecorationTheme: const InputDecorationTheme(
+        hintStyle: TextStyle(color: AppColors.textHint),
+        border: InputBorder.none,
+      ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.accent,
+      ),
+      textTheme: const TextTheme(
+        titleLarge: TextStyle(color: AppColors.textOnDark, fontSize: 18),
+      ),
+    );
+  }
+
   @override
   List<Widget>? buildActions(BuildContext context) {
     return [
-      IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
+      IconButton(
+        icon: const Icon(Icons.clear, color: AppColors.textOnDark),
+        onPressed: () => query = '',
+      ),
     ];
   }
 
   @override
   Widget? buildLeading(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.arrow_back),
+      icon: const Icon(Icons.arrow_back, color: AppColors.textOnDark),
       onPressed: () => close(context, null),
     );
   }
@@ -45,51 +70,78 @@ class BestSellingSearchDelegate extends SearchDelegate {
     }).toList();
 
     if (results.isEmpty) {
-      return const Center(child: Text("No matching books found."));
+      return Container(
+        color: AppColors.background,
+        child: const Center(
+          child: Text(
+            "No matching books found.",
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+      );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(10),
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        final item = results[index];
-        return Card(
-          elevation: 2,
-          margin: const EdgeInsets.symmetric(vertical: 5),
-          child: ListTile(
-            leading: const CircleAvatar(
-              backgroundColor: AppColors.accent,
-              child: Icon(Icons.star, color: Colors.white),
+    return Container(
+      color: AppColors.background,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(10),
+        itemCount: results.length,
+        itemBuilder: (context, index) {
+          final item = results[index];
+          return Card(
+            color: AppColors.cardBg,
+            elevation: 2,
+            margin: const EdgeInsets.symmetric(vertical: 5),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
             ),
-            title: Text(item['book']?['name'] ?? "Unknown Book"),
-            subtitle: Text("Price: \$${item['book']?['price'] ?? '0.00'}"),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () {
-                    close(context, null); // Close search before navigating
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => EditBestSelling(item: item),
-                      ),
-                    ).then((_) => onRefresh());
-                  },
+            child: ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: AppColors.accent,
+                child: Icon(Icons.star, color: Colors.white),
+              ),
+              title: Text(
+                item['book']?['name'] ?? "Unknown Book",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: AppColors.danger),
-                  onPressed: () {
-                    onDelete(item['id']);
-                    close(context, null); // Close search after delete
-                  },
-                ),
-              ],
+              ),
+              subtitle: Text(
+                "Price: \$${item['book']?['price'] ?? '0.00'}",
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.edit,
+                      color: AppColors.warning,
+                    ), // Changed to warning for consistency
+                    onPressed: () {
+                      close(context, null); // Close search before navigating
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EditBestSelling(item: item),
+                        ),
+                      ).then((_) => onRefresh());
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: AppColors.danger),
+                    onPressed: () {
+                      onDelete(item['id']);
+                      close(context, null); // Close search after delete
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
