@@ -3,6 +3,7 @@ import '../../../colors.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'search_user.dart'; // ✅ Import search delegate
 
 class UserView extends StatefulWidget {
   final VoidCallback openDrawer;
@@ -13,6 +14,9 @@ class UserView extends StatefulWidget {
 }
 
 class _UserViewState extends State<UserView> {
+  // We store this to pass to the search delegate
+  List<dynamic> _allUsers = [];
+
   Future<List<dynamic>> fetchUsers() async {
     try {
       final response = await http.get(
@@ -21,7 +25,9 @@ class _UserViewState extends State<UserView> {
       );
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final data = jsonDecode(response.body);
+        _allUsers = data; // ✅ Store data for searching
+        return data;
       } else {
         throw Exception('Failed to load users');
       }
@@ -42,6 +48,22 @@ class _UserViewState extends State<UserView> {
           icon: const Icon(Icons.menu),
           onPressed: widget.openDrawer,
         ),
+        actions: [
+          // ✅ ADD SEARCH ICON
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: UserSearchDelegate(users: _allUsers),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => setState(() {}),
+          ),
+        ],
       ),
       body: FutureBuilder<List<dynamic>>(
         future: fetchUsers(),
@@ -78,13 +100,7 @@ class _UserViewState extends State<UserView> {
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: AppColors.danger),
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('update code more'),
-                          backgroundColor: AppColors.success,
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
+                      // Add your delete logic here
                     },
                   ),
                 ),
