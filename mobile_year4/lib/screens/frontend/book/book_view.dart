@@ -54,7 +54,7 @@ class _BookViewState extends State<BookView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Book Store"),
+        title: const Text("Search Book"),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
