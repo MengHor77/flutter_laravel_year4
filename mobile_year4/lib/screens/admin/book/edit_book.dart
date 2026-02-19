@@ -51,7 +51,6 @@ class _EditBookState extends State<EditBook> {
         setState(() {
           _categories = jsonDecode(response.body);
           try {
-            // កំណត់ ID របស់ Category ដែលមានស្រាប់
             _selectedCategoryId = _categories
                 .firstWhere((c) => c['name'] == widget.book.categoryName)['id']
                 .toString();
@@ -73,23 +72,17 @@ class _EditBookState extends State<EditBook> {
 
     try {
       var request = http.MultipartRequest(
-        'POST', // Keep as POST
+        'POST',
         Uri.parse("${ApiConfig.books}/${widget.book.id}"),
       );
 
-      // 1. Add headers
       request.headers.addAll({"Accept": "application/json"});
-
-      // 2. Add the method spoofing field FIRST
       request.fields['_method'] = 'PUT';
-
-      // 3. Add other text fields
       request.fields['name'] = _nameController.text.trim();
       request.fields['author'] = _authorController.text.trim();
       request.fields['price'] = _priceController.text.trim();
       request.fields['category_id'] = _selectedCategoryId!;
 
-      // 4. Add the image file last
       if (_imageFile != null) {
         request.files.add(
           await http.MultipartFile.fromPath('image', _imageFile!.path),
@@ -103,7 +96,6 @@ class _EditBookState extends State<EditBook> {
         widget.onRefresh();
         if (mounted) Navigator.pop(context);
       } else {
-        // Print the error from Laravel to see exactly what failed (validation, etc.)
         debugPrint("Server Error: ${response.body}");
       }
     } catch (e) {
@@ -113,88 +105,118 @@ class _EditBookState extends State<EditBook> {
     }
   }
 
-  // ✅ ជំនួយការបង្កើត URL រូបភាពឱ្យបានត្រឹមត្រូវ
- String _getImageUrl(String? path) {
-  if (path == null || path.isEmpty) return '';
-  // If the path already starts with http (which your Laravel asset() provides), return it as is
-  if (path.startsWith('http')) return path; 
-  return "${ApiConfig.storage}$path";
-}
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    if (path.startsWith('http')) return path;
+    return "${ApiConfig.storage}$path";
+  }
+
+  // Helper function to keep text fields identical to your Create form style
+  InputDecoration _inputStyle(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: AppColors.accent, size: 20),
+      contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Standardizing the height constraint to match the Add form
+    double maxDialogHeight = MediaQuery.of(context).size.height * 0.7;
+
     return AlertDialog(
       backgroundColor: AppColors.cardBg,
+      // SETTING PADDING TO MATCH ADD FORM
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: const Text(
         "Edit Book",
-        style: TextStyle(color: AppColors.textPrimary),
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
       ),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  height: 120,
-                  width: 120,
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    border: Border.all(color: AppColors.accent),
-                    borderRadius: BorderRadius.circular(10),
+      content: SizedBox(
+        // FORCING WIDTH TO BE EQUAL
+        width: MediaQuery.of(context).size.width,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxDialogHeight),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      height: 160,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        border: Border.all(
+                          color: AppColors.accent.withValues(alpha: 0.2),
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(13),
+                        child: _imageFile != null
+                            ? Image.file(_imageFile!, fit: BoxFit.cover)
+                            : Image.network(
+                                _getImageUrl(widget.book.image),
+                                fit: BoxFit.cover,
+                                errorBuilder: (ctx, err, stack) => const Icon(
+                                  Icons.add_a_photo,
+                                  color: AppColors.accent,
+                                  size: 40,
+                                ),
+                              ),
+                      ),
+                    ),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(9),
-                    child: _imageFile != null
-                        ? Image.file(_imageFile!, fit: BoxFit.cover)
-                        : Image.network(
-                            _getImageUrl(widget.book.image),
-                            fit: BoxFit.cover,
-                            errorBuilder: (ctx, err, stack) => const Icon(
-                              Icons.add_a_photo,
-                              color: AppColors.accent,
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: _inputStyle("Book Name", Icons.book),
+                    validator: (v) => v!.isEmpty ? "Required" : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _authorController,
+                    decoration: _inputStyle("Author", Icons.person),
+                    validator: (v) => v!.isEmpty ? "Required" : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _priceController,
+                    decoration: _inputStyle("Price", Icons.attach_money),
+                    keyboardType: TextInputType.number,
+                    validator: (v) => v!.isEmpty ? "Required" : null,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    value: _selectedCategoryId,
+                    decoration: _inputStyle("Category", Icons.category),
+                    items: _categories
+                        .map(
+                          (c) => DropdownMenuItem(
+                            value: c['id'].toString(),
+                            child: Text(
+                              c['name'],
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                        )
+                        .toList(),
+                    onChanged: (val) =>
+                        setState(() => _selectedCategoryId = val),
+                    validator: (v) => v == null ? "Required" : null,
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: "Name"),
-                validator: (v) => v!.isEmpty ? "Required" : null,
-              ),
-              TextFormField(
-                controller: _authorController,
-                decoration: const InputDecoration(labelText: "Author"),
-                validator: (v) => v!.isEmpty ? "Required" : null,
-              ),
-              TextFormField(
-                controller: _priceController,
-                decoration: const InputDecoration(labelText: "Price"),
-                keyboardType: TextInputType.number,
-                validator: (v) => v!.isEmpty ? "Required" : null,
-              ),
-              const SizedBox(height: 12),
-
-              // ✅ ដំណោះស្រាយសម្រាប់ Warning: ប្តូរពី value ទៅ initialValue
-              DropdownButtonFormField<String>(
-                initialValue: _selectedCategoryId,
-                decoration: const InputDecoration(labelText: "Category"),
-                items: _categories
-                    .map(
-                      (c) => DropdownMenuItem(
-                        value: c['id'].toString(),
-                        child: Text(c['name']),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (val) => setState(() => _selectedCategoryId = val),
-                validator: (v) => v == null ? "Required" : null,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -210,6 +232,9 @@ class _EditBookState extends State<EditBook> {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.textOnDark,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           onPressed: _isSaving ? null : _update,
           child: _isSaving
