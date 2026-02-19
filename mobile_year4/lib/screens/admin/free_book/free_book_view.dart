@@ -1,7 +1,8 @@
+import 'search_bookPDF.dart';
 import '../../../colors.dart';
 import 'edit_free_book_view.dart';
+import '../../../api_config.dart';
 import 'creat_free_book_view.dart';
-import '../../../api_config.dart'; 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/free_book_pdf_provider.dart';
@@ -27,7 +28,7 @@ class _FreeBookViewState extends State<FreeBookView> {
     });
   }
 
-   String _getImageUrl(String? path) {
+  String _getImageUrl(String? path) {
     if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
     if (path.startsWith('http')) {
       // ប្តូរ IP ប្រសិនបើប្រើ Emulator ហើយ Backend នៅ 127.0.0.1
@@ -56,15 +57,28 @@ class _FreeBookViewState extends State<FreeBookView> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Manage Free PDFs"),
+        title: const Text("Free Book PDF"),
         backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.textOnDark,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: widget.openDrawer,
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: "Search PDFs",
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: BookPDFSearchDelegate(
+                  getImageUrl: _getImageUrl,
+                  onDelete: _handleDelete,
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: "Refresh List",
@@ -114,7 +128,7 @@ class _FreeBookViewState extends State<FreeBookView> {
               itemBuilder: (context, index) {
                 final book = provider.freeBooks[index];
 
-                 final String imageUrl = _getImageUrl(book.image);
+                final String imageUrl = _getImageUrl(book.image);
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 10),
@@ -124,7 +138,7 @@ class _FreeBookViewState extends State<FreeBookView> {
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(10),
-                     leading: ClipRRect(
+                    leading: ClipRRect(
                       borderRadius: BorderRadius.circular(5),
                       child: Image.network(
                         imageUrl,
