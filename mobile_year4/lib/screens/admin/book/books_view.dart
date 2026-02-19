@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'edit_book.dart';
 import 'create_book.dart';
+import 'search_book.dart';
 import '../../../colors.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
@@ -101,6 +102,22 @@ class _ManageBooksViewState extends State<ManageBooksView> {
           onPressed: widget.openDrawer,
         ),
         actions: [
+          // ADD THIS SEARCH ICON
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: "Search Books",
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: BookSearchDelegate(
+                  books: _books,
+                  onRefresh: _fetchBooks,
+                  onDelete: _confirmDelete,
+                  getImageUrl: _getImageUrl,
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: "Refresh List",
