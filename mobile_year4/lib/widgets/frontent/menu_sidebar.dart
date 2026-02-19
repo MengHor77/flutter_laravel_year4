@@ -4,7 +4,6 @@ import 'package:mobile_year4/colors.dart';
 import '../../../providers/book_provider.dart';
 import 'package:mobile_year4/screens/auth/login_view.dart';
 
-
 class AppSidebar extends StatelessWidget {
   final String currentRoute;
   final Function(int)? onIndexChanged;
@@ -14,6 +13,56 @@ class AppSidebar extends StatelessWidget {
     this.currentRoute = 'Home',
     this.onIndexChanged,
   });
+
+  // NEW: Logout Confirmation Dialog Function
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Text(
+            "Logout",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text("Are you sure you want to sign out?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), // Close the dialog
+              child: const Text(
+                "CANCEL",
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // Perform logout logic
+                context.read<BookProvider>().logout();
+                // Navigate and clear stack
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginView()),
+                  (route) => false,
+                );
+              },
+              child: const Text(
+                "LOGOUT",
+                style: TextStyle(
+                  color: AppColors.danger,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +87,6 @@ class AppSidebar extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // Shared Menu Items (Indices 0-3)
                 _buildMenuItem(context, Icons.home, 'Home', 0),
                 _buildMenuItem(context, Icons.menu_book_rounded, 'Books', 1),
                 _buildMenuItem(
@@ -53,8 +101,6 @@ class AppSidebar extends StatelessWidget {
                   'Best Selling',
                   3,
                 ),
-
-                // Drawer-Only Items (Indices 4-5)
                 _buildMenuItem(
                   context,
                   Icons.picture_as_pdf_rounded,
@@ -67,11 +113,7 @@ class AppSidebar extends StatelessWidget {
                   'Special Offers',
                   5,
                 ),
-
-                // Profile - Now at Index 6 to match MainWrapper
                 _buildMenuItem(context, Icons.person, 'Profile', 6),
-
-                // Remaining Items (Indices 7-8)
                 _buildMenuItem(
                   context,
                   Icons.support_agent_rounded,
@@ -87,6 +129,7 @@ class AppSidebar extends StatelessWidget {
 
                 const Divider(),
 
+                // MODIFIED: Logout ListTile now triggers the dialog
                 ListTile(
                   leading: const Icon(
                     Icons.logout_rounded,
@@ -99,16 +142,7 @@ class AppSidebar extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  onTap: () {
-                    context.read<BookProvider>().logout();
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginView(),
-                      ),
-                      (route) => false,
-                    );
-                  },
+                  onTap: () => _showLogoutDialog(context),
                 ),
               ],
             ),
