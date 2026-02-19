@@ -14,6 +14,8 @@ import 'package:mobile_year4/screens/frontend/book_pdf_free/book_pdf_view.dart';
 import 'package:mobile_year4/screens/frontend/special_offer/special_offers_view.dart';
 import 'package:mobile_year4/screens/frontend/best_selling_view/best_selling_view.dart';
 import 'package:mobile_year4/screens/frontend/book/book_view.dart' hide handleAddToCartGlobal;
+   
+
 // In main_layout.dart
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -23,6 +25,7 @@ class MainLayout extends StatefulWidget {
 }
 
 class _MainLayoutState extends State<MainLayout> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
@@ -94,6 +97,7 @@ class _MainLayoutState extends State<MainLayout> {
     final bool showSearchIcon = [1, 3].contains(_selectedIndex);
 
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]),
         backgroundColor: AppColors.accent,

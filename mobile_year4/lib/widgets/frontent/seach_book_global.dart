@@ -1,4 +1,6 @@
+import 'dart:async';
 import '../../colors.dart';
+import '../../api_config.dart';
 import '../../models/book_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -22,10 +24,7 @@ class GlobalBookSearchDelegate extends SearchDelegate {
   @override
   List<Widget>? buildActions(BuildContext context) {
     return [
-      IconButton(
-        icon: const Icon(Icons.clear), 
-        onPressed: () => query = '',
-      ),
+      IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
     ];
   }
 
@@ -64,7 +63,7 @@ class GlobalBookSearchDelegate extends SearchDelegate {
           buttonText: "Add to Cart",
           buttonColor: AppColors.success,
           onAction: () {
-            // Trigger the global helper function
+            // This calls the helper function below
             onAddToCart(book);
           },
         );
@@ -73,48 +72,93 @@ class GlobalBookSearchDelegate extends SearchDelegate {
   }
 }
 
-/// Helper function to handle adding to cart from Search or anywhere else
-/// This ensures the SnackBar and Navigation work together.
 void handleAddToCartGlobal(BuildContext context, Book book) async {
   final provider = context.read<BookProvider>();
   final messenger = ScaffoldMessenger.of(context);
 
-  // 1. Add to cart via Provider
-  await provider.addToCart(book);
+  // Unfocus keyboard if search is open
+  FocusManager.instance.primaryFocus?.unfocus();
 
-  // 2. Clear old SnackBars and show the success one
+  // Clear any existing snackbars immediately
+  messenger.removeCurrentSnackBar();
   messenger.clearSnackBars();
-  
-  messenger.showSnackBar(
-    SnackBar(
-      content: Row(
-        children: [
-          const Icon(Icons.check_circle, color: Colors.white, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              "${book.name} added to cart!",
-              style: const TextStyle(color: Colors.white),
-            ),
+
+  // Auth Check
+  if (ApiConfig.userToken == null) {
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text("Please Login first!"),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 2),
+      ),
+    );
+    return;
+  }
+
+  try {
+    // Add to cart via Provider
+    await provider.addToCart(book);
+
+    if (context.mounted) {
+      // 2. Capture the controller into a variable
+      final snackBarController = messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  "${book.name} added to cart!",
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
           ),
-        ],
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2), // Standard duration
+          action: SnackBarAction(
+            label: "VIEW",
+            textColor: Colors.white,
+            onPressed: () {
+              // ✅ INSTANTLY kill the snackbar
+              messenger.removeCurrentSnackBar();
+
+              // ✅ CLOSE SEARCH: If the search overlay is open, close it
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+
+              // ✅ NAVIGATE: Switch to the Order List tab
+              if (provider.onOrderSuccess != null) {
+                provider.onOrderSuccess!(2);
+              }
+            },
+          ),
+        ),
+      );
+
+      // 3. ✅ FORCE CLOSE TIMER
+      // This solves the issue where SnackBars with buttons stay open forever
+      Timer(const Duration(seconds: 2), () {
+        try {
+          snackBarController.close();
+        } catch (e) {
+          // If the user already clicked "VIEW" or swiped it away, ignore the error
+        }
+      });
+    }
+  } catch (e) {
+    debugPrint("DEBUG: ERROR: $e");
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text("Error adding to cart"),
+        backgroundColor: Colors.orange,
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 2),
       ),
-      backgroundColor: AppColors.success,
-      behavior: SnackBarBehavior.floating,
-      duration: const Duration(seconds: 3),
-      action: SnackBarAction(
-        label: "VIEW",
-        textColor: Colors.white,
-        onPressed: () {
-          // Force close the snackbar immediately
-          messenger.clearSnackBars();
-          
-          // Switch to Order List Tab (Index 2)
-          if (provider.onOrderSuccess != null) {
-            provider.onOrderSuccess!(2);
-          }
-        },
-      ),
-    ),
-  );
+    );
+  }
 }

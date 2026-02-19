@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import '../../../../models/book_model.dart';
 import '../../../../providers/book_provider.dart';
 import '../../../../widgets/frontent/book_card.dart';
-import '../../../../widgets/frontent/seach_book_global.dart';
+import '../../../../widgets/frontent/seach_book_global.dart'; // ✅ Import the global helper
 
 class BestSellingView extends StatefulWidget {
   const BestSellingView({super.key});
@@ -18,13 +18,11 @@ class BestSellingView extends StatefulWidget {
 }
 
 class _BestSellingViewState extends State<BestSellingView> {
-  // Use nullable Future to fix the LateInitializationError
   Future<List<dynamic>>? _bestSellerFuture;
 
   @override
   void initState() {
     super.initState();
-    // Initialize once to prevent repeated API calls
     _bestSellerFuture = _fetchBestSellers();
   }
 
@@ -38,7 +36,6 @@ class _BestSellingViewState extends State<BestSellingView> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        // Sync data to Provider so MainLayout search can find it
         if (mounted) {
           final List<Book> books = (data as List)
               .map((item) => Book.fromJson(item['book'] ?? item))
@@ -56,8 +53,6 @@ class _BestSellingViewState extends State<BestSellingView> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ REMOVED: Scaffold and AppBar here.
-    // Just return the body content.
     return FutureBuilder<List<dynamic>>(
       future: _bestSellerFuture,
       builder: (context, snapshot) {
@@ -67,29 +62,22 @@ class _BestSellingViewState extends State<BestSellingView> {
           );
         } else if (snapshot.hasError) {
           return Center(child: Text("Error: ${snapshot.error}"));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text("No best sellers found."));
         }
 
-        final items = snapshot.data!;
+        final items = snapshot.data ?? [];
 
         return ListView.builder(
           padding: const EdgeInsets.all(12),
           itemCount: items.length,
           itemBuilder: (context, index) {
-            final bookData = items[index]['book'];
+            final bookData = items[index]['book'] ?? items[index];
             final book = Book.fromJson(bookData);
 
             return BookCard(
               book: book,
               buttonText: "Add to Cart",
               buttonColor: AppColors.success,
-              onAction: () {
-                // ✅ THIS IS ALL YOU NEED
-                // This function already handles provider.addToCart,
-                // messenger.clearSnackBars, and the "VIEW" button logic.
-                handleAddToCartGlobal(context, book);
-              },
+              onAction: () => handleAddToCartGlobal(context, book), // ✅ Uses Global
             );
           },
         );
