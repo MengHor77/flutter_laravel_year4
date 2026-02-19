@@ -16,13 +16,35 @@ class CategorySearchDelegate extends SearchDelegate {
   @override
   String get searchFieldLabel => "Search categories...";
 
+  /// STYLING: Applies AppColors.primary to the search bar area
+  @override
+  ThemeData appBarTheme(BuildContext context) {
+    return ThemeData(
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnDark,
+        elevation: 0,
+      ),
+      inputDecorationTheme: const InputDecorationTheme(
+        hintStyle: TextStyle(color: AppColors.textHint),
+        border: InputBorder.none,
+      ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.accent,
+      ),
+      textTheme: const TextTheme(
+        titleLarge: TextStyle(color: AppColors.textOnDark, fontSize: 18),
+      ),
+    );
+  }
+
   @override
   List<Widget>? buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: const Icon(Icons.clear),
+        icon: const Icon(Icons.clear, color: AppColors.textOnDark),
         onPressed: () {
-          query = ''; // Clear search query
+          query = '';
         },
       ),
     ];
@@ -31,21 +53,20 @@ class CategorySearchDelegate extends SearchDelegate {
   @override
   Widget? buildLeading(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.arrow_back),
+      icon: const Icon(Icons.arrow_back, color: AppColors.textOnDark),
       onPressed: () {
-        close(context, null); // Close search
+        close(context, null);
       },
     );
   }
 
   @override
-  Widget buildResults(BuildContext context) => _buildSearchResults();
+  Widget buildResults(BuildContext context) => _buildSearchResults(context);
 
   @override
-  Widget buildSuggestions(BuildContext context) => _buildSearchResults();
+  Widget buildSuggestions(BuildContext context) => _buildSearchResults(context);
 
-  Widget _buildSearchResults() {
-    // Filter categories based on query
+  Widget _buildSearchResults(BuildContext context) {
     final results = categories.where((cat) {
       final name = cat['name'].toString().toLowerCase();
       final description = (cat['description'] ?? '').toString().toLowerCase();
@@ -54,55 +75,73 @@ class CategorySearchDelegate extends SearchDelegate {
     }).toList();
 
     if (results.isEmpty) {
-      return const Center(child: Text("No categories match your search."));
+      return Container(
+        color: AppColors.background,
+        child: const Center(
+          child: Text(
+            "No categories match your search.",
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+      );
     }
 
-    return ListView.builder(
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        final cat = results[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(color: Colors.grey.shade200),
-          ),
-          child: ListTile(
-            title: Text(
-              cat['name'],
-              style: const TextStyle(fontWeight: FontWeight.bold),
+    return Container(
+      color: AppColors.background,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        itemCount: results.length,
+        itemBuilder: (context, index) {
+          final cat = results[index];
+          return Card(
+            color: AppColors.cardBg,
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: const BorderSide(color: AppColors.border),
             ),
-            subtitle: Text(cat['description'] ?? ''),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: AppColors.warning),
-                  onPressed: () {
-                    // Close search then open edit dialog
-                    close(context, null);
-                    showDialog(
-                      context: context,
-                      builder: (context) => EditCategory(
-                        category: cat,
-                        onRefresh: () => fetchCategories(),
-                      ),
-                    );
-                  },
+            child: ListTile(
+              title: Text(
+                cat['name'],
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: AppColors.danger),
-                  onPressed: () {
-                    // Close search then show confirm delete
-                    close(context, null);
-                    confirmDelete(cat['id'], cat['name']);
-                  },
-                ),
-              ],
+              ),
+              subtitle: Text(
+                cat['description'] ?? '',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: AppColors.warning),
+                    onPressed: () {
+                      close(context, null);
+                      showDialog(
+                        context: context,
+                        builder: (context) => EditCategory(
+                          category: cat,
+                          onRefresh: () => fetchCategories(),
+                        ),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: AppColors.danger),
+                    onPressed: () {
+                      close(context, null);
+                      confirmDelete(cat['id'], cat['name']);
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
