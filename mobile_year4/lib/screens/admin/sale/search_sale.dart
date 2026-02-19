@@ -10,28 +10,53 @@ class SaleSearchDelegate extends SearchDelegate {
   @override
   String get searchFieldLabel => "Search Book or Customer...";
 
+  /// STYLING: Applying your AppColors.primary (Navy) to the search bar
+  @override
+  ThemeData appBarTheme(BuildContext context) {
+    return ThemeData(
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnDark,
+        elevation: 0,
+      ),
+      inputDecorationTheme: const InputDecorationTheme(
+        hintStyle: TextStyle(color: AppColors.textHint),
+        border: InputBorder.none,
+      ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.accent,
+      ),
+      textTheme: const TextTheme(
+        titleLarge: TextStyle(color: AppColors.textOnDark, fontSize: 18),
+      ),
+    );
+  }
+
   @override
   List<Widget>? buildActions(BuildContext context) {
     return [
-      IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
+      IconButton(
+        icon: const Icon(Icons.clear, color: AppColors.textOnDark),
+        onPressed: () => query = '',
+      ),
     ];
   }
 
   @override
   Widget? buildLeading(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.arrow_back),
+      icon: const Icon(Icons.arrow_back, color: AppColors.textOnDark),
       onPressed: () => close(context, null),
     );
   }
 
   @override
-  Widget buildResults(BuildContext context) => _buildSearchResults();
+  Widget buildResults(BuildContext context) => _buildSearchResults(context);
 
   @override
-  Widget buildSuggestions(BuildContext context) => _buildSearchResults();
+  Widget buildSuggestions(BuildContext context) => _buildSearchResults(context);
 
-  Widget _buildSearchResults() {
+  Widget _buildSearchResults(BuildContext context) {
     // Filter sales based on Book Name or User Name
     final results = saleDetails.where((sale) {
       final bookName = (sale['book']?['name'] ?? "").toString().toLowerCase();
@@ -41,17 +66,28 @@ class SaleSearchDelegate extends SearchDelegate {
     }).toList();
 
     if (results.isEmpty) {
-      return const Center(child: Text("No matching transactions found."));
+      return Container(
+        color: AppColors.background, // Maintain consistent background
+        child: const Center(
+          child: Text(
+            "No matching transactions found.",
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+      );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        final sale = results[index];
-        // Reuse your existing SaleDetailItem widget for consistency
-        return SaleDetailItem(sale: sale);
-      },
+    return Container(
+      color: AppColors.background, // Match dashboard background
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        itemCount: results.length,
+        itemBuilder: (context, index) {
+          final sale = results[index];
+          // Reuse your existing SaleDetailItem widget
+          return SaleDetailItem(sale: sale);
+        },
+      ),
     );
   }
 }
