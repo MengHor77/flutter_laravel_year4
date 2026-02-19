@@ -3,6 +3,7 @@ import '../../../colors.dart';
 import 'edit_best_selling.dart';
 import '../../../api_config.dart';
 import 'create_best_selling.dart';
+import 'search_best_selling.dart'; 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -77,7 +78,7 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Manage Best Selling"),
+        title: const Text("Best Selling"),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -86,6 +87,20 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
           onPressed: widget.openDrawer,
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: "Search",
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: BestSellingSearchDelegate(
+                  bestSellingBooks: _bestSellers,
+                  onDelete: _deleteBestSeller,
+                  onRefresh: _fetchBestSellers,
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: "Fetch Data",
@@ -123,8 +138,12 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
                               backgroundColor: AppColors.accent,
                               child: Icon(Icons.star, color: Colors.white),
                             ),
-                            title: Text(item['book']['name'] ?? "Unknown Book"),
-                            subtitle: Text("Price: \$${item['book']['price']}"),
+                            title: Text(
+                              item['book']?['name'] ?? "Unknown Book",
+                            ),
+                            subtitle: Text(
+                              "Price: \$${item['book']?['price'] ?? '0.00'}",
+                            ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
