@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'edit_category.dart';
 import 'create_category.dart';
 import '../../../colors.dart';
+import 'Search_category.dart';
 import '../../../api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -79,6 +80,20 @@ class _CategoryViewState extends State<CategoryView> {
           onPressed: widget.openDrawer,
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: "Search",
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: CategorySearchDelegate(
+                  categories: categories,
+                  fetchCategories: fetchCategories,
+                  confirmDelete: _confirmDelete,
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: "Refresh Categories",
