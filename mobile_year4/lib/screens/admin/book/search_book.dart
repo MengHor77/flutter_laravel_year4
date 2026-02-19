@@ -19,17 +19,44 @@ class BookSearchDelegate extends SearchDelegate {
   @override
   String get searchFieldLabel => "Search by title or author...";
 
+  /// STYLING: Applies AppColors.primary to the search bar area
+  @override
+  ThemeData appBarTheme(BuildContext context) {
+    return ThemeData(
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnDark,
+        elevation: 0,
+      ),
+      // Styling the text input field
+      inputDecorationTheme: const InputDecorationTheme(
+        hintStyle: TextStyle(color: AppColors.textHint),
+        border: InputBorder.none,
+      ),
+      // Styling the cursor and text color
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.accent,
+      ),
+      textTheme: const TextTheme(
+        titleLarge: TextStyle(color: AppColors.textOnDark, fontSize: 18),
+      ),
+    );
+  }
+
   @override
   List<Widget>? buildActions(BuildContext context) {
     return [
-      IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
+      IconButton(
+        icon: const Icon(Icons.clear, color: AppColors.textOnDark),
+        onPressed: () => query = '',
+      ),
     ];
   }
 
   @override
   Widget? buildLeading(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.arrow_back),
+      icon: const Icon(Icons.arrow_back, color: AppColors.textOnDark),
       onPressed: () => close(context, null),
     );
   }
@@ -48,60 +75,87 @@ class BookSearchDelegate extends SearchDelegate {
     }).toList();
 
     if (results.isEmpty) {
-      return const Center(child: Text("No books found."));
+      return Container(
+        color: AppColors.background,
+        child: const Center(
+          child: Text(
+            "No books found.",
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+      );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(10),
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        final book = results[index];
-        return Card(
-          color: AppColors.cardBg,
-          elevation: 2,
-          margin: const EdgeInsets.only(bottom: 10),
-          child: ListTile(
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: Image.network(
-                getImageUrl(book.image),
-                width: 40,
-                height: 60,
-                fit: BoxFit.cover,
-                errorBuilder: (ctx, err, stack) => const Icon(Icons.book),
+    return Container(
+      color: AppColors.background, // Use global background color
+      child: ListView.builder(
+        padding: const EdgeInsets.all(10),
+        itemCount: results.length,
+        itemBuilder: (context, index) {
+          final book = results[index];
+          return Card(
+            color: AppColors.cardBg, 
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: Container(
+                  width: 40,
+                  height: 60,
+                  color: AppColors.lightGray,
+                  child: Image.network(
+                    getImageUrl(book.image),
+                    fit: BoxFit.cover,
+                    errorBuilder: (ctx, err, stack) => const Icon(
+                      Icons.broken_image,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+              title: Text(
+                book.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              subtitle: Text(
+                book.author,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: AppColors.warning),
+                    onPressed: () {
+                      close(context, null);
+                      showDialog(
+                        context: context,
+                        builder: (ctx) =>
+                            EditBook(book: book, onRefresh: () => onRefresh()),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: AppColors.danger),
+                    onPressed: () {
+                      close(context, null);
+                      onDelete(book);
+                    },
+                  ),
+                ],
               ),
             ),
-            title: Text(
-              book.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(book.author),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: AppColors.warning),
-                  onPressed: () {
-                    close(context, null); // Close search overlay
-                    showDialog(
-                      context: context,
-                      builder: (ctx) =>
-                          EditBook(book: book, onRefresh: () => onRefresh()),
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: AppColors.danger),
-                  onPressed: () {
-                    close(context, null); // Close search overlay
-                    onDelete(book);
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
