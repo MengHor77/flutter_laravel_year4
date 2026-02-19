@@ -14,7 +14,6 @@ class AppSidebar extends StatelessWidget {
     this.onIndexChanged,
   });
 
-  // NEW: Logout Confirmation Dialog Function
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -30,20 +29,12 @@ class AppSidebar extends StatelessWidget {
           content: const Text("Are you sure you want to sign out?"),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context), // Close the dialog
-              child: const Text(
-                "CANCEL",
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("CANCEL", style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
               onPressed: () {
-                // Perform logout logic
                 context.read<BookProvider>().logout();
-                // Navigate and clear stack
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginView()),
@@ -52,10 +43,7 @@ class AppSidebar extends StatelessWidget {
               },
               child: const Text(
                 "LOGOUT",
-                style: TextStyle(
-                  color: AppColors.danger,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: AppColors.danger),
               ),
             ),
           ],
@@ -126,10 +114,7 @@ class AppSidebar extends StatelessWidget {
                   'About Us',
                   8,
                 ),
-
                 const Divider(),
-
-                // MODIFIED: Logout ListTile now triggers the dialog
                 ListTile(
                   leading: const Icon(
                     Icons.logout_rounded,
@@ -159,10 +144,9 @@ class AppSidebar extends StatelessWidget {
     int index,
   ) {
     bool isActive = currentRoute == title;
-
     return ListTile(
       selected: isActive,
-      selectedTileColor: AppColors.accent.withValues(alpha: 0.1),
+      selectedTileColor: AppColors.accent.withOpacity(0.1),
       leading: Icon(
         icon,
         color: isActive ? AppColors.accent : AppColors.textPrimary,
@@ -175,10 +159,8 @@ class AppSidebar extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Navigator.pop(context); // Close the drawer
-        if (onIndexChanged != null) {
-          onIndexChanged!(index); // Pass the index back to MainWrapper
-        }
+        Navigator.pop(context);
+        if (onIndexChanged != null) onIndexChanged!(index);
       },
     );
   }

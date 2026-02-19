@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_year4/colors.dart';
+import 'package:mobile_year4/models/book_model.dart';
 import 'package:mobile_year4/providers/book_provider.dart';
 import 'package:mobile_year4/widgets/frontent/menu_sidebar.dart';
 import 'package:mobile_year4/screens/frontend/home/home_view.dart';
 import 'package:mobile_year4/screens/frontend/book/book_view.dart';
 import 'package:mobile_year4/screens/frontend/profile/profile.dart';
+import 'package:mobile_year4/widgets/frontent/seach_book_global.dart';
 import 'package:mobile_year4/screens/frontend/about/about_us_view.dart';
 import 'package:mobile_year4/screens/frontend/contact_us/contact_us_view.dart';
 import 'package:mobile_year4/screens/frontend/order_list/order_list_view.dart';
@@ -23,7 +25,6 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 0;
 
-  // 1. Pages List: Profile (6) is after Special Offers (5)
   final List<Widget> _pages = [
     const HomeView(), // 0
     const BookView(), // 1
@@ -31,12 +32,11 @@ class _MainLayoutState extends State<MainLayout> {
     const BestSellingView(), // 3
     const BookPdfView(), // 4
     const SpecialOffersView(), // 5
-    const ProfileView(), // 6 (Moved)
+    const ProfileView(), // 6
     const ContactUsView(), // 7
     const AboutUsView(), // 8
   ];
 
-  // 2. Titles List
   final List<String> _titles = [
     'Home',
     'Books',
@@ -44,7 +44,7 @@ class _MainLayoutState extends State<MainLayout> {
     'Best Selling',
     'Book PDF Free',
     'Special Offers',
-    'Profile', // 6
+    'Profile',
     'Contact Us',
     'About Us',
   ];
@@ -54,30 +54,58 @@ class _MainLayoutState extends State<MainLayout> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<BookProvider>().onOrderSuccess = (index) {
-        setState(() {
-          _selectedIndex = index;
-        });
+        setState(() => _selectedIndex = index);
       };
     });
   }
 
-  // Maps the 9 pages to the 5 BottomBar icons
   int _getBottomBarIndex(int index) {
-    if (index == 6) return 4; // Map Profile Page to 5th Icon
-    if (index > 3) return 0; // Map PDF/Offers/Contact/About to 1st Icon (Home)
-    return index; // 0=Home, 1=Books, 2=Order, 3=BestSeller
+    if (index == 6) return 4;
+    if (index > 3) return 0;
+    return index;
+  }
+
+  void _onSearchPressed() {
+    final bookProvider = context.read<BookProvider>();
+    List<Book> searchList = [];
+    String hint = "Search...";
+
+    if (_selectedIndex == 1) {
+      searchList = bookProvider.books;
+      hint = "Search Books...";
+    } else if (_selectedIndex == 3) {
+      searchList = bookProvider.bestSellers;
+      hint = "Search Best Sellers...";
+    }
+
+    showSearch(
+      context: context,
+      delegate: GlobalBookSearchDelegate(
+        items: searchList,
+        hintText: hint,
+        onAddToCart: (book) => handleAddToCartGlobal(context, book),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Determine if the selected item is one of the 5 items in the BottomBar
     final bool isBottomBarPage = [0, 1, 2, 3, 6].contains(_selectedIndex);
+    final bool showSearchIcon = [1, 3].contains(_selectedIndex);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]),
         backgroundColor: AppColors.accent,
         foregroundColor: Colors.white,
+        actions: [
+          if (showSearchIcon)
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: _onSearchPressed,
+            ),
+          const SizedBox(width: 8),
+        ],
       ),
       drawer: AppSidebar(
         currentRoute: _titles[_selectedIndex],
@@ -90,12 +118,7 @@ class _MainLayoutState extends State<MainLayout> {
         currentIndex: _getBottomBarIndex(_selectedIndex),
         onTap: (index) {
           setState(() {
-            // Map the 5th icon click (index 4) back to Profile Page (index 6)
-            if (index == 4) {
-              _selectedIndex = 6;
-            } else {
-              _selectedIndex = index;
-            }
+            _selectedIndex = (index == 4) ? 6 : index;
           });
         },
         type: BottomNavigationBarType.fixed,

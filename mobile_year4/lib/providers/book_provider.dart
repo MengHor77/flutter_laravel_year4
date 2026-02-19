@@ -9,19 +9,33 @@ class BookProvider extends ChangeNotifier {
   bool _isSyncing = false;
   String _userName = "Guest User";
   String _userEmail = "guest@example.com";
-  List<Book> _freeBooks = []; // State for Free Books
 
+  List<Book> _books = [];
+  List<Book> _bestSellers = [];
+  List<Book> _freeBooks = [];
+
+  List<Book> get books => List.unmodifiable(_books);
+  List<Book> get bestSellers => List.unmodifiable(_bestSellers);
+  List<Book> get freeBooks => List.unmodifiable(_freeBooks);
+
+  List<Book> get cart => List.unmodifiable(_cart);
   String get userName => _userName;
   String get userEmail => _userEmail;
-  List<Book> get cart => List.unmodifiable(_cart);
-  List<Book> get freeBooks => List.unmodifiable(_freeBooks); // Getter
-
   int get itemCount => _cart.length;
   bool get isSyncing => _isSyncing;
 
-
   Function(int)? onOrderSuccess;
-  
+
+  void setBooks(List<Book> list) {
+    _books = list;
+    notifyListeners();
+  }
+
+  void setBestSellers(List<Book> list) {
+    _bestSellers = list;
+    notifyListeners();
+  }
+
   void setUser(String name, String email, [String? token]) {
     _userName = name;
     _userEmail = email;
@@ -29,7 +43,6 @@ class BookProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Calculate total price locally
   double get totalCartPrice {
     return _cart.fold(0.0, (sum, item) {
       final String priceString = item.displayPrice.toString().replaceAll(
@@ -40,96 +53,7 @@ class BookProvider extends ChangeNotifier {
     });
   }
 
-  Future<void> fetchSavedOrders() async {
-    _isSyncing = true;
-    notifyListeners();
-    try {
-      final response = await BookService.fetchCart();
-      if (response.statusCode == 200) {
-        final dynamic decodedData = jsonDecode(response.body);
-
-        List<dynamic> rawData = [];
-        if (decodedData is List) {
-          rawData = decodedData;
-        } else if (decodedData is Map) {
-          rawData = decodedData['data'] ?? (decodedData['orders'] ?? []);
-        }
-
-        _cart.clear();
-        for (var item in rawData) {
-          var bookObj = item['book'] ?? item;
-
-          if (bookObj != null && bookObj['id'] != null) {
-            final Map<String, dynamic> bookData = Map<String, dynamic>.from(
-              bookObj,
-            );
-
-            bookData['display_price'] = (item['price'] ?? bookObj['price'])
-                .toString();
-            bookData['quantity'] = item['quantity'] ?? 1;
-
-            _cart.add(Book.fromJson(bookData));
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint("Error fetching saved orders: $e");
-    } finally {
-      _isSyncing = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> addToCart(Book book) async {
-    final existingIndex = _cart.indexWhere((item) => item.id == book.id);
-    if (existingIndex != -1) {
-      _cart[existingIndex].quantity++;
-    } else {
-      _cart.add(book);
-    }
-    notifyListeners();
-
-    if (ApiConfig.userToken == null) return;
-
-    try {
-      final String cleanPrice = book.displayPrice.toString().replaceAll(
-        RegExp(r'[^0-9.]'),
-        '',
-      );
-      final response = await BookService.addToCart(book.id, cleanPrice);
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        debugPrint("✅ [SERVER CART] Sync Success");
-      }
-    } catch (e) {
-      debugPrint("❌ Sync Error: $e");
-    }
-  }
-
-  Future<void> decrementQuantity(int index) async {
-    if (index < 0 || index >= _cart.length) return;
-    final bookId = _cart[index].id;
-    if (_cart[index].quantity > 1) {
-      _cart[index].quantity--;
-    } else {
-      _cart.removeAt(index);
-    }
-    notifyListeners();
-    try {
-      await BookService.decrement(bookId);
-    } catch (e) {
-      debugPrint("Network Error: $e");
-    }
-  }
-
-  void logout() {
-    _userName = "Guest User";
-    _userEmail = "guest@example.com";
-    ApiConfig.userToken = null;
-    _cart.clear();
-    notifyListeners();
-  }
-
+  // ✅ RESTORED: processCheckout Method
   Future<bool> processCheckout() async {
     if (ApiConfig.userToken == null || _cart.isEmpty) return false;
     _isSyncing = true;
@@ -151,6 +75,7 @@ class BookProvider extends ChangeNotifier {
           };
         }).toList(),
       };
+
       final response = await BookService.checkout(checkoutData);
       if (response.statusCode == 200 || response.statusCode == 201) {
         _cart.clear();
@@ -167,7 +92,82 @@ class BookProvider extends ChangeNotifier {
     }
   }
 
-  // 1. Fetch
+  Future<void> fetchSavedOrders() async {
+    _isSyncing = true;
+    notifyListeners();
+    try {
+      final response = await BookService.fetchCart();
+      if (response.statusCode == 200) {
+        final dynamic decodedData = jsonDecode(response.body);
+        List<dynamic> rawData = (decodedData is List)
+            ? decodedData
+            : (decodedData['data'] ?? []);
+        _cart.clear();
+        for (var item in rawData) {
+          var bookObj = item['book'] ?? item;
+          if (bookObj != null && bookObj['id'] != null) {
+            final Map<String, dynamic> bookData = Map<String, dynamic>.from(
+              bookObj,
+            );
+            bookData['display_price'] = (item['price'] ?? bookObj['price'])
+                .toString();
+            bookData['quantity'] = item['quantity'] ?? 1;
+            _cart.add(Book.fromJson(bookData));
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching orders: $e");
+    } finally {
+      _isSyncing = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> addToCart(Book book) async {
+    final existingIndex = _cart.indexWhere((item) => item.id == book.id);
+    if (existingIndex != -1) {
+      _cart[existingIndex].quantity++;
+    } else {
+      _cart.add(book);
+    }
+    notifyListeners();
+    if (ApiConfig.userToken == null) return;
+    try {
+      final String cleanPrice = book.displayPrice.toString().replaceAll(
+        RegExp(r'[^0-9.]'),
+        '',
+      );
+      await BookService.addToCart(book.id, cleanPrice);
+    } catch (e) {
+      debugPrint("Sync Error: $e");
+    }
+  }
+
+  Future<void> decrementQuantity(int index) async {
+    if (index < 0 || index >= _cart.length) return;
+    final bookId = _cart[index].id;
+    if (_cart[index].quantity > 1) {
+      _cart[index].quantity--;
+    } else {
+      _cart.removeAt(index);
+    }
+    notifyListeners();
+    try {
+      await BookService.decrement(bookId);
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  void logout() {
+    _userName = "Guest User";
+    _userEmail = "guest@example.com";
+    ApiConfig.userToken = null;
+    _cart.clear();
+    notifyListeners();
+  }
+
   Future<void> fetchFreeBooks() async {
     _isSyncing = true;
     notifyListeners();
@@ -177,69 +177,23 @@ class BookProvider extends ChangeNotifier {
         final List<dynamic> data = jsonDecode(response.body);
         _freeBooks = data.map((json) => Book.fromJson(json)).toList();
       }
-    } catch (e) {
-      debugPrint("Error fetching free books: $e");
     } finally {
       _isSyncing = false;
       notifyListeners();
     }
   }
 
-  // 2. Add (Create)
-  Future<bool> addFreeBook(Map<String, dynamic> data) async {
-    _isSyncing = true;
-    notifyListeners();
-    try {
-      final response = await BookService.storeFreeBook(data);
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        await fetchFreeBooks(); // Refresh list
-        return true;
-      }
-    } catch (e) {
-      debugPrint("Add Error: $e");
-    } finally {
-      _isSyncing = false;
-      notifyListeners();
-    }
-    return false;
-  }
-
-  // 3. Update
-  Future<bool> updateFreeBook(String id, Map<String, dynamic> data) async {
-    _isSyncing = true;
-    notifyListeners();
-    try {
-      final response = await BookService.updateFreeBook(id, data);
-      if (response.statusCode == 200) {
-        await fetchFreeBooks(); // Refresh list
-        return true;
-      }
-    } catch (e) {
-      debugPrint("Update Error: $e");
-    } finally {
-      _isSyncing = false;
-      notifyListeners();
-    }
-    return false;
-  }
-
- // 4. Delete Free Book Logic
   Future<bool> deleteFreeBook(String id) async {
     try {
       final response = await BookService.deleteFreeBook(id);
-      
       if (response.statusCode == 200) {
-        // Find and remove locally so the UI rebuilds with the correct length
         _freeBooks.removeWhere((book) => book.id == id);
-        
-        // This notifies the Consumer/ListView.builder to redraw
-        notifyListeners(); 
+        notifyListeners();
         return true;
       }
-      return false;
     } catch (e) {
-      debugPrint("Delete Error: $e");
-      return false;
+      debugPrint(e.toString());
     }
+    return false;
   }
 }

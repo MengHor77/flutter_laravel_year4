@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'search_book.dart';
 import '../../../../colors.dart';
 import '../../../../api_config.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +8,6 @@ import 'package:provider/provider.dart';
 import '../../../../models/book_model.dart';
 import '../../../../providers/book_provider.dart';
 import '../../../../widgets/frontent/book_card.dart';
-import '../../../../widgets/frontent/menu_sidebar.dart';
 
 class BookView extends StatefulWidget {
   const BookView({super.key});
@@ -19,7 +17,6 @@ class BookView extends StatefulWidget {
 }
 
 class _BookViewState extends State<BookView> {
-  List<Book> _books = [];
   bool _isLoading = true;
 
   @override
@@ -38,9 +35,12 @@ class _BookViewState extends State<BookView> {
       );
       if (response.statusCode == 200) {
         final List<dynamic> rawData = jsonDecode(response.body);
-        setState(() {
-          _books = rawData.map((json) => Book.fromJson(json)).toList();
-        });
+        final loadedBooks = rawData.map((json) => Book.fromJson(json)).toList();
+
+        if (mounted) {
+          // ✅ SYNC WITH PROVIDER: This makes the search work in MainLayout
+          context.read<BookProvider>().setBooks(loadedBooks);
+        }
       }
     } catch (e) {
       debugPrint("Error fetching books: $e");
@@ -49,31 +49,12 @@ class _BookViewState extends State<BookView> {
     }
   }
 
-  // ✅ Keep your exact logic but made reusable for Search
   @override
   Widget build(BuildContext context) {
+    final books = context.watch<BookProvider>().books;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Search Book"),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              showSearch(
-                context: context,
-                delegate: BookSearchDelegate(
-                  books: _books,
-                  onAddToCart: _handleAddToCart,
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
+      backgroundColor: AppColors.background,
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.accent),
@@ -82,73 +63,88 @@ class _BookViewState extends State<BookView> {
               onRefresh: _fetchBooks,
               child: ListView.builder(
                 padding: const EdgeInsets.all(12),
-                itemCount: _books.length,
-                itemBuilder: (ctx, index) => _buildCard(index),
+                itemCount: books.length,
+                itemBuilder: (ctx, index) {
+                  final book = books[index];
+                  return BookCard(
+                    book: book,
+                    buttonText: "Add to Cart",
+                    buttonColor: AppColors.success,
+                    onAction: () => handleAddToCartGlobal(context, book),
+                  );
+                },
               ),
             ),
     );
   }
+}
 
-  Widget _buildCard(int index) {
-    final book = _books[index];
-    return BookCard(
-      book: book,
-      buttonText: "Add to Cart",
-      buttonColor: AppColors.success,
-      onAction: () => _handleAddToCart(book), // ✅ Using the shared logic
+Future<void> handleAddToCartGlobal(BuildContext context, Book book) async {
+  final provider = context.read<BookProvider>();
+  final messenger = ScaffoldMessenger.of(context);
+
+  FocusManager.instance.primaryFocus?.unfocus();
+
+  // Clear any existing one immediately
+  messenger.clearSnackBars();
+
+  if (ApiConfig.userToken == null) {
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text("Please Login first!"),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 2),
+      ),
     );
+    return;
   }
 
-  Future<void> _handleAddToCart(Book book) async {
-    // 1. Check if user is logged in
-    if (ApiConfig.userToken == null) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please Login first!"),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2),
+  try {
+    await provider.addToCart(book);
+
+    // 1. Capture the controller
+    final controller = messenger.showSnackBar(
+      SnackBar(
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        // Force the duration to be respected even with an action
+        dismissDirection: DismissDirection.horizontal,
+        content: Text("${book.name} added to cart!"),
+        action: SnackBarAction(
+          label: "VIEW",
+          textColor: Colors.white,
+          onPressed: () {
+            messenger.hideCurrentSnackBar();
+            provider.onOrderSuccess?.call(2);
+          },
         ),
-      );
-      return;
-    }
+      ),
+    );
 
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.clearSnackBars();
+    // 2. FORCE CLOSE TIMER (Workaround for Material 3 ignore-duration bug)
+    // This ensures that even if Material 3 tries to keep it open, it dies in 2s.
+    Timer(const Duration(seconds: 2), () {
+      try {
+        controller.close();
+      } catch (e) {
+        // Already closed, ignore
+      }
+    });
 
-    try {
-      // 3. Perform the logic
-      await context.read<BookProvider>().addToCart(book);
-
-      if (!mounted) return;
-
-      // 5. Show Success SnackBar
-      messenger.showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-          content: Text("${book.name} added to cart!"),
-          action: SnackBarAction(
-            label: "VIEW",
-            textColor: Colors.white,
-            onPressed: () {
-              messenger.hideCurrentSnackBar();
-              context.read<BookProvider>().onOrderSuccess?.call(2);
-            },
-          ),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text("Failed to add to cart: $e"),
-          backgroundColor: Colors.orange,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
+    controller.closed.then((reason) {
+      debugPrint("DEBUG: SnackBar closed via: $reason");
+    });
+  } catch (e) {
+    debugPrint("DEBUG: ERROR: $e");
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text("Error adding to cart"),
+        backgroundColor: Colors.orange,
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 }
