@@ -1,6 +1,7 @@
 import 'today_sale.dart';
 import 'total_sale.dart';
-import 'sale_detail.dart'; 
+import 'sale_detail.dart';
+import 'search_sale.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_year4/colors.dart';
@@ -40,6 +41,18 @@ class _SaleViewState extends State<SaleView> {
           onPressed: widget.openDrawer,
         ),
         actions: [
+          // ✅ ADD THIS SEARCH BUTTON
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: SaleSearchDelegate(
+                  saleDetails: saleProvider.saleDetails,
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
