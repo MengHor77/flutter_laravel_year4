@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'search_book.dart';
 import '../../../../colors.dart';
 import '../../../../api_config.dart';
 import 'package:flutter/material.dart';
@@ -48,20 +49,44 @@ class _BookViewState extends State<BookView> {
     }
   }
 
+  // ✅ Keep your exact logic but made reusable for Search
   @override
   Widget build(BuildContext context) {
-    return _isLoading
-        ? const Center(
-            child: CircularProgressIndicator(color: AppColors.accent),
-          )
-        : RefreshIndicator(
-            onRefresh: _fetchBooks,
-            child: ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: _books.length,
-              itemBuilder: (ctx, index) => _buildCard(index),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Book Store"),
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.textPrimary,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: BookSearchDelegate(
+                  books: _books,
+                  onAddToCart: _handleAddToCart,
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.accent),
+            )
+          : RefreshIndicator(
+              onRefresh: _fetchBooks,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(12),
+                itemCount: _books.length,
+                itemBuilder: (ctx, index) => _buildCard(index),
+              ),
             ),
-          );
+    );
   }
 
   Widget _buildCard(int index) {
@@ -70,65 +95,60 @@ class _BookViewState extends State<BookView> {
       book: book,
       buttonText: "Add to Cart",
       buttonColor: AppColors.success,
-      onAction: () async {
-        // 1. Check if user is logged in
-        if (ApiConfig.userToken == null) {
-          // Clear any existing snackbars immediately so this one shows up and starts its 2s timer
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Please Login first!"),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-              duration: Duration(seconds: 2),
-            ),
-          );
-          return;
-        }
-
-        // 2. Clear snackbars before starting the "Add to Cart" process
-        // This prevents the user from seeing a "ghost" snackbar while waiting for the API
-        final messenger = ScaffoldMessenger.of(context);
-        messenger.clearSnackBars();
-
-        try {
-          // 3. Perform the logic
-          await context.read<BookProvider>().addToCart(book);
-
-          // 4. Check if the widget is still in the tree
-          if (!mounted) return;
-
-          // 5. Show Success SnackBar
-          messenger.showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2), // Fixed 2-second timeout
-              persist: false,
-              content: Text("${book.name} added to cart!"),
-              action: SnackBarAction(
-                label: "VIEW",
-                textColor: Colors.white,
-                onPressed: () {
-                  // Hide immediately when clicking the action button
-                  messenger.hideCurrentSnackBar();
-                  // Update MainWrapper index to 2 (Order List)
-                  context.read<BookProvider>().onOrderSuccess?.call(2);
-                },
-              ),
-            ),
-          );
-        } catch (e) {
-           if (!mounted) return;
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text("Failed to add to cart: $e"),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      },
+      onAction: () => _handleAddToCart(book), // ✅ Using the shared logic
     );
+  }
+
+  Future<void> _handleAddToCart(Book book) async {
+    // 1. Check if user is logged in
+    if (ApiConfig.userToken == null) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please Login first!"),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.clearSnackBars();
+
+    try {
+      // 3. Perform the logic
+      await context.read<BookProvider>().addToCart(book);
+
+      if (!mounted) return;
+
+      // 5. Show Success SnackBar
+      messenger.showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          content: Text("${book.name} added to cart!"),
+          action: SnackBarAction(
+            label: "VIEW",
+            textColor: Colors.white,
+            onPressed: () {
+              messenger.hideCurrentSnackBar();
+              context.read<BookProvider>().onOrderSuccess?.call(2);
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text("Failed to add to cart: $e"),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 }
