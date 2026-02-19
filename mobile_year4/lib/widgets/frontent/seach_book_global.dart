@@ -1,8 +1,9 @@
 import '../../colors.dart';
 import '../../models/book_model.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/book_provider.dart';
 import '../../widgets/frontent/book_card.dart';
-import '../../screens/frontend/book/book_view.dart';
 
 class GlobalBookSearchDelegate extends SearchDelegate {
   final List<Book> items;
@@ -21,7 +22,10 @@ class GlobalBookSearchDelegate extends SearchDelegate {
   @override
   List<Widget>? buildActions(BuildContext context) {
     return [
-      IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
+      IconButton(
+        icon: const Icon(Icons.clear), 
+        onPressed: () => query = '',
+      ),
     ];
   }
 
@@ -60,11 +64,57 @@ class GlobalBookSearchDelegate extends SearchDelegate {
           buttonText: "Add to Cart",
           buttonColor: AppColors.success,
           onAction: () {
-            // Close search and trigger the force-close snackbar logic
-            handleAddToCartGlobal(context, book);
+            // Trigger the global helper function
+            onAddToCart(book);
           },
         );
       },
     );
   }
+}
+
+/// Helper function to handle adding to cart from Search or anywhere else
+/// This ensures the SnackBar and Navigation work together.
+void handleAddToCartGlobal(BuildContext context, Book book) async {
+  final provider = context.read<BookProvider>();
+  final messenger = ScaffoldMessenger.of(context);
+
+  // 1. Add to cart via Provider
+  await provider.addToCart(book);
+
+  // 2. Clear old SnackBars and show the success one
+  messenger.clearSnackBars();
+  
+  messenger.showSnackBar(
+    SnackBar(
+      content: Row(
+        children: [
+          const Icon(Icons.check_circle, color: Colors.white, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              "${book.name} added to cart!",
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: AppColors.success,
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 3),
+      action: SnackBarAction(
+        label: "VIEW",
+        textColor: Colors.white,
+        onPressed: () {
+          // Force close the snackbar immediately
+          messenger.clearSnackBars();
+          
+          // Switch to Order List Tab (Index 2)
+          if (provider.onOrderSuccess != null) {
+            provider.onOrderSuccess!(2);
+          }
+        },
+      ),
+    ),
+  );
 }

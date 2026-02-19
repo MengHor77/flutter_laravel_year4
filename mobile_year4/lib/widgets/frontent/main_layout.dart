@@ -5,7 +5,6 @@ import 'package:mobile_year4/models/book_model.dart';
 import 'package:mobile_year4/providers/book_provider.dart';
 import 'package:mobile_year4/widgets/frontent/menu_sidebar.dart';
 import 'package:mobile_year4/screens/frontend/home/home_view.dart';
-import 'package:mobile_year4/screens/frontend/book/book_view.dart';
 import 'package:mobile_year4/screens/frontend/profile/profile.dart';
 import 'package:mobile_year4/widgets/frontent/seach_book_global.dart';
 import 'package:mobile_year4/screens/frontend/about/about_us_view.dart';
@@ -14,7 +13,8 @@ import 'package:mobile_year4/screens/frontend/order_list/order_list_view.dart';
 import 'package:mobile_year4/screens/frontend/book_pdf_free/book_pdf_view.dart';
 import 'package:mobile_year4/screens/frontend/special_offer/special_offers_view.dart';
 import 'package:mobile_year4/screens/frontend/best_selling_view/best_selling_view.dart';
-
+import 'package:mobile_year4/screens/frontend/book/book_view.dart' hide handleAddToCartGlobal;
+// In main_layout.dart
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 

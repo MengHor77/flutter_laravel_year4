@@ -59,7 +59,7 @@ class BestSellingSearchDelegate extends SearchDelegate {
           buttonColor: AppColors.success,
           onAction: () {
             onAddToCart(book);
-            close(context, null); // Close search overlay
+            close(context, null);  
           },
         );
       },
