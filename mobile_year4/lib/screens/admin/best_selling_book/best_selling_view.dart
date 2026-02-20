@@ -3,7 +3,7 @@ import '../../../colors.dart';
 import 'edit_best_selling.dart';
 import '../../../api_config.dart';
 import 'create_best_selling.dart';
-import 'search_best_selling.dart'; 
+import 'search_best_selling.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -49,6 +49,44 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
   }
 
   Future<void> _deleteBestSeller(int id) async {
+    // Show confirmation dialog before proceeding
+    bool confirm =
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              title: const Text("Confirm Delete"),
+              content: const Text(
+                "Are you sure you want to remove this book from Best Sellers?",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () =>
+                      Navigator.pop(context, false), // Return false
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.danger,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () => Navigator.pop(context, true), // Return true
+                  child: const Text("Delete"),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false; // Default to false if dialog is dismissed
+
+    if (!confirm) return; // Exit if user cancelled
+
     try {
       final response = await http.delete(
         Uri.parse("${ApiConfig.bestSelling}/$id"),
@@ -140,6 +178,9 @@ class _AdminBestSellingViewState extends State<BestSellingView> {
                             ),
                             title: Text(
                               item['book']?['name'] ?? "Unknown Book",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             subtitle: Text(
                               "Price: \$${item['book']?['price'] ?? '0.00'}",

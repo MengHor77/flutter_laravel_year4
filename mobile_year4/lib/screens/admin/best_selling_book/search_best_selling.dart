@@ -16,7 +16,6 @@ class BestSellingSearchDelegate extends SearchDelegate {
   @override
   String get searchFieldLabel => "Search by book name...";
 
-  /// STYLING: Applies AppColors.primary to the search bar area
   @override
   ThemeData appBarTheme(BuildContext context) {
     return ThemeData(
@@ -62,8 +61,53 @@ class BestSellingSearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) => _buildSearchResults(context);
 
+  // ✅ ADDED: Internal Confirmation Dialog for Search
+  Future<void> _confirmDelete(
+    BuildContext context,
+    int id,
+    String bookName,
+  ) async {
+    bool confirm =
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              title: const Text("Confirm Delete"),
+              content: Text(
+                "Are you sure you want to remove '$bookName' from Best Sellers?",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.danger,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text("Delete"),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (confirm) {
+      onDelete(id);
+      close(context, null); // Close search after confirmed delete
+    }
+  }
+
   Widget _buildSearchResults(BuildContext context) {
-    // Filter based on item['book']['name']
     final results = bestSellingBooks.where((item) {
       final bookName = (item['book']?['name'] ?? "").toString().toLowerCase();
       return bookName.contains(query.toLowerCase());
@@ -88,6 +132,8 @@ class BestSellingSearchDelegate extends SearchDelegate {
         itemCount: results.length,
         itemBuilder: (context, index) {
           final item = results[index];
+          final String bookName = item['book']?['name'] ?? "Unknown Book";
+
           return Card(
             color: AppColors.cardBg,
             elevation: 2,
@@ -101,7 +147,7 @@ class BestSellingSearchDelegate extends SearchDelegate {
                 child: Icon(Icons.star, color: Colors.white),
               ),
               title: Text(
-                item['book']?['name'] ?? "Unknown Book",
+                bookName,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
@@ -115,12 +161,9 @@ class BestSellingSearchDelegate extends SearchDelegate {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: const Icon(
-                      Icons.edit,
-                      color: AppColors.warning,
-                    ), // Changed to warning for consistency
+                    icon: const Icon(Icons.edit, color: AppColors.warning),
                     onPressed: () {
-                      close(context, null); // Close search before navigating
+                      close(context, null);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -132,8 +175,8 @@ class BestSellingSearchDelegate extends SearchDelegate {
                   IconButton(
                     icon: const Icon(Icons.delete, color: AppColors.danger),
                     onPressed: () {
-                      onDelete(item['id']);
-                      close(context, null); // Close search after delete
+                      // ✅ UPDATED: Now calls the confirmation dialog
+                      _confirmDelete(context, item['id'], bookName);
                     },
                   ),
                 ],
