@@ -168,6 +168,8 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
             const Spacer(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment:
+                  CrossAxisAlignment.end, // Align button with bottom of price
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,17 +192,27 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
                     ),
                   ],
                 ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                // UPDATED BUTTON DESIGN TO MATCH SEARCH VIEW
+                SizedBox(
+                  height: 38, // Fixed height for a cleaner look
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                      elevation: 0, // Search view usually has flat buttons
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                  ),
-                  onPressed: () => handleAddToCartGlobal(context, book),
-                  child: const Text(
-                    "Add",
-                    style: TextStyle(color: Colors.white),
+                    onPressed: () => handleAddToCartGlobal(context, book),
+                    child: const Text(
+                      "Add to Cart",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13, // Slightly smaller font
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
