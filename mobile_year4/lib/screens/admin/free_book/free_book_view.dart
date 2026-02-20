@@ -31,24 +31,56 @@ class _FreeBookViewState extends State<FreeBookView> {
   String _getImageUrl(String? path) {
     if (path == null || path.isEmpty) return 'https://via.placeholder.com/150';
     if (path.startsWith('http')) {
-      // ប្តូរ IP ប្រសិនបើប្រើ Emulator ហើយ Backend នៅ 127.0.0.1
       return path.replaceAll('127.0.0.1', '10.0.2.2');
     }
     return "${ApiConfig.storage}${path.startsWith('/') ? path.substring(1) : path}";
   }
 
-  void _handleDelete(String id) async {
-    final success = await Provider.of<FreeBookPdfProvider>(
-      context,
-      listen: false,
-    ).deleteFreeBook(id);
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("PDF deleted successfully"),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+   Future<void> _handleDelete(String id, String bookName) async {
+    bool confirm =
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            title: const Text("Delete Book"),
+            content: Text("Are you sure you want to delete '$bookName'?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text("No"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text(
+                  "Delete",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (confirm) {
+      final success = await Provider.of<FreeBookPdfProvider>(
+        context,
+        listen: false,
+      ).deleteFreeBook(id);
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("PDF deleted successfully"),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 
@@ -74,7 +106,14 @@ class _FreeBookViewState extends State<FreeBookView> {
                 context: context,
                 delegate: BookPDFSearchDelegate(
                   getImageUrl: _getImageUrl,
-                  onDelete: _handleDelete,
+                  onDelete: (id) {
+                    // We find the book name for the search delete dialog
+                    final book = Provider.of<FreeBookPdfProvider>(
+                      context,
+                      listen: false,
+                    ).freeBooks.firstWhere((b) => b.id == id);
+                    _handleDelete(id, book.name);
+                  },
                 ),
               );
             },
@@ -127,7 +166,6 @@ class _FreeBookViewState extends State<FreeBookView> {
               itemCount: provider.freeBooks.length,
               itemBuilder: (context, index) {
                 final book = provider.freeBooks[index];
-
                 final String imageUrl = _getImageUrl(book.image);
 
                 return Card(
@@ -185,33 +223,7 @@ class _FreeBookViewState extends State<FreeBookView> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text("Delete Book"),
-                                content: Text(
-                                  "Are you sure you want to delete '${book.name}'?",
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx),
-                                    child: const Text("No"),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(ctx);
-                                      _handleDelete(book.id);
-                                    },
-                                    child: const Text(
-                                      "Yes",
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                          onPressed: () => _handleDelete(book.id, book.name),
                         ),
                       ],
                     ),

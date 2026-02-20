@@ -72,10 +72,10 @@ class _CheckoutViewState extends State<CheckoutView> {
                 context.read<BookProvider>().onOrderSuccess?.call(0);
               },
               child: const Text(
-                "ok go to home",
+                "Done",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.accent,
+                  color: AppColors.success,
                 ),
               ),
             ),

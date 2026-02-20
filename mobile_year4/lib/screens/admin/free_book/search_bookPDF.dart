@@ -13,7 +13,6 @@ class BookPDFSearchDelegate extends SearchDelegate {
   @override
   String get searchFieldLabel => "Search by name or author...";
 
-  // Style the search bar to match your AppBar theme
   @override
   ThemeData appBarTheme(BuildContext context) {
     return ThemeData(
@@ -54,6 +53,36 @@ class BookPDFSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) => _buildSearchResults(context);
+
+  // ✅ ADDED: Confirmation Dialog for Search results
+  Future<void> _confirmDelete(BuildContext context, String id, String name) async {
+    bool confirm = await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Text("Delete PDF"),
+        content: Text("Are you sure you want to delete '$name'?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              "Delete",
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    ) ?? false;
+
+    if (confirm) {
+      onDelete(id);
+      close(context, null); // Close search after deletion
+    }
+  }
 
   Widget _buildSearchResults(BuildContext context) {
     final provider = Provider.of<FreeBookPdfProvider>(context, listen: false);
@@ -134,8 +163,8 @@ class BookPDFSearchDelegate extends SearchDelegate {
                   IconButton(
                     icon: const Icon(Icons.delete, color: AppColors.danger),
                     onPressed: () {
-                      close(context, null);
-                      onDelete(book.id);
+                      // ✅ UPDATED: Now triggers the confirmation logic
+                      _confirmDelete(context, book.id, book.name);
                     },
                   ),
                 ],
