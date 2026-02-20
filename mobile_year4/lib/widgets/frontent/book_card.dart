@@ -35,11 +35,15 @@ class BookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //  Detect Dark Mode
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
       elevation: 2,
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: AppColors.cardBg,
+      //  Use dynamic card background
+      color: AppColors.getCardBg(isDark),
       child: ListTile(
         contentPadding: const EdgeInsets.all(12),
         // 1. IMAGE SECTION WITH SALE BADGE
@@ -49,23 +53,23 @@ class BookCard extends StatelessWidget {
               width: 60,
               height: 90,
               decoration: BoxDecoration(
-                color: AppColors.background,
+                // Use dynamic background for image container
+                color: AppColors.getBackground(isDark),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: // Update the Image.network inside BookCard.dart
-                Image.network(
+                child: Image.network(
                   _getImageUrl(book.image),
                   fit: BoxFit.cover,
-                  // ✅ FIX: Handles the "HttpException: Connection closed" error
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      color: Colors.grey[200],
-                      child: const Icon(
+                      // Dark-mode friendly placeholder color
+                      color: isDark ? Colors.grey[800] : Colors.grey[200],
+                      child: Icon(
                         Icons.book,
                         size: 40,
-                        color: Colors.grey,
+                        color: isDark ? Colors.grey[600] : Colors.grey,
                       ),
                     );
                   },
@@ -87,9 +91,10 @@ class BookCard extends StatelessWidget {
                     horizontal: 4,
                     vertical: 2,
                   ),
-                  decoration: const BoxDecoration(
-                    color: AppColors.danger,
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    // Use dynamic danger color
+                    color: AppColors.getDanger(isDark),
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(8),
                       bottomRight: Radius.circular(8),
                     ),
@@ -108,9 +113,10 @@ class BookCard extends StatelessWidget {
         ),
         title: Text(
           book.name,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            // Use dynamic primary text color
+            color: AppColors.getTextPrimary(isDark),
           ),
         ),
         // 2. DYNAMIC PRICE LOGIC IN SUBTITLE
@@ -119,8 +125,9 @@ class BookCard extends StatelessWidget {
           children: [
             Text(
               "By ${book.author}",
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                //  Use dynamic secondary text color
+                color: AppColors.getTextSecondary(isDark),
                 fontSize: 13,
               ),
             ),
@@ -131,8 +138,9 @@ class BookCard extends StatelessWidget {
                   // Special Offer Price (Display Price)
                   Text(
                     "\$${book.displayPrice}",
-                    style: const TextStyle(
-                      color: AppColors.success,
+                    style: TextStyle(
+                      //  Use dynamic success color
+                      color: AppColors.getSuccess(isDark),
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -141,8 +149,9 @@ class BookCard extends StatelessWidget {
                   // Original Price (Strikethrough)
                   Text(
                     "\$${book.price}",
-                    style: const TextStyle(
-                      color: AppColors.danger,
+                    style: TextStyle(
+                      //  Use dynamic danger color for strikethrough
+                      color: AppColors.getDanger(isDark).withOpacity(0.8),
                       fontSize: 12,
                       decoration: TextDecoration.lineThrough,
                     ),
@@ -153,8 +162,9 @@ class BookCard extends StatelessWidget {
               // Regular Price
               Text(
                 "\$${book.price}",
-                style: const TextStyle(
-                  color: AppColors.success,
+                style: TextStyle(
+                  //  Use dynamic success color
+                  color: AppColors.getSuccess(isDark),
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
