@@ -1,6 +1,9 @@
+import 'dart:convert';
 import '../../../colors.dart';
 import 'edit_special_offer.dart';
+import '../../../api_config.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class OfferSearchDelegate extends SearchDelegate {
   final List offers;
@@ -8,7 +11,6 @@ class OfferSearchDelegate extends SearchDelegate {
 
   OfferSearchDelegate({required this.offers, required this.onRefresh});
 
-  /// STYLING: Applies AppColors.primary to the search bar area
   @override
   ThemeData appBarTheme(BuildContext context) {
     return ThemeData(
@@ -30,20 +32,16 @@ class OfferSearchDelegate extends SearchDelegate {
     );
   }
 
-  // Action buttons (Clear text)
   @override
   List<Widget>? buildActions(BuildContext context) {
     return [
       IconButton(
         icon: const Icon(Icons.clear, color: AppColors.textOnDark),
-        onPressed: () {
-          query = '';
-        },
+        onPressed: () => query = '',
       ),
     ];
   }
 
-  // Leading icon (Back button)
   @override
   Widget? buildLeading(BuildContext context) {
     return IconButton(
@@ -52,16 +50,54 @@ class OfferSearchDelegate extends SearchDelegate {
     );
   }
 
-  // Results shown when user hits "Search"
   @override
-  Widget buildResults(BuildContext context) {
-    return _buildSearchResults(context);
-  }
+  Widget buildResults(BuildContext context) => _buildSearchResults(context);
 
-  // Suggestions shown while typing
   @override
-  Widget buildSuggestions(BuildContext context) {
-    return _buildSearchResults(context);
+  Widget buildSuggestions(BuildContext context) => _buildSearchResults(context);
+
+  // --- NEW: Delete Logic ---
+  Future<void> _deleteOffer(BuildContext context, dynamic offer) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirm Delete"),
+        content: const Text("Are you sure you want to remove this offer?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              "Delete",
+              style: TextStyle(color: AppColors.danger),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        final response = await http.delete(
+          Uri.parse("${ApiConfig.specialOffers}/${offer['id']}"),
+        );
+        if (response.statusCode == 200 || response.statusCode == 204) {
+          onRefresh();
+          close(context, null); // Close search after deletion
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Offer deleted"),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint("Delete error: $e");
+      }
+    }
   }
 
   Widget _buildSearchResults(BuildContext context) {
@@ -70,10 +106,9 @@ class OfferSearchDelegate extends SearchDelegate {
       final bookName = (offer['book']?['name'] ?? '').toString().toLowerCase();
       final discount = offer['discount_percentage'].toString();
       final search = query.toLowerCase();
-
       return title.contains(search) ||
           bookName.contains(search) ||
-          discount.contains(search);
+          discount.contains(search.replaceAll('%', ''));
     }).toList();
 
     if (results.isEmpty) {
@@ -95,8 +130,6 @@ class OfferSearchDelegate extends SearchDelegate {
         padding: const EdgeInsets.all(16),
         itemBuilder: (context, index) {
           final offer = results[index];
-          final book = offer['book'];
-
           return Card(
             color: AppColors.cardBg,
             elevation: 2,
@@ -114,17 +147,31 @@ class OfferSearchDelegate extends SearchDelegate {
                 ),
               ),
               subtitle: Text(
-                "${offer['discount_percentage']}% Off on ${book?['name'] ?? 'Book'}\nNow: \$${offer['offer_price']}",
+                "${offer['discount_percentage']}% Off\nNow: \$${offer['offer_price']}",
                 style: const TextStyle(color: AppColors.textSecondary),
               ),
-              onTap: () {
-                // Open edit dialog directly from search results
-                showDialog(
-                  context: context,
-                  builder: (context) =>
-                      EditSpecialOffer(offer: offer, onRefresh: onRefresh),
-                ).then((_) => close(context, null));
-              },
+              // --- FIXED: Added Action Buttons Here ---
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: AppColors.accent),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => EditSpecialOffer(
+                          offer: offer,
+                          onRefresh: onRefresh,
+                        ),
+                      ).then((_) => close(context, null));
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: AppColors.danger),
+                    onPressed: () => _deleteOffer(context, offer),
+                  ),
+                ],
+              ),
             ),
           );
         },

@@ -3,9 +3,9 @@ import '../../../colors.dart';
 import 'edit_special_offer.dart';
 import '../../../api_config.dart';
 import 'create_special_offer.dart';
+import 'search_special_offer.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'search_special_offer.dart'; // ✅ Import the search file
 
 class SpecialOfferView extends StatefulWidget {
   final VoidCallback openDrawer;
@@ -42,17 +42,59 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
     }
   }
 
+  // ✅ UPDATED: Added Confirmation Dialog
   Future<void> _deleteOffer(int id) async {
-    try {
-      final response = await http.delete(
-        Uri.parse("${ApiConfig.specialOffers}/$id"),
-      );
-      if (response.statusCode == 200) {
-        _showSnackBar("Offer removed", AppColors.danger);
-        _fetchOffers();
+    // Show Alert Dialog
+    bool confirm =
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: AppColors.cardBg,
+              title: const Text(
+                "Confirm Delete",
+                style: TextStyle(color: AppColors.textPrimary),
+              ),
+              content: const Text(
+                "Are you sure you want to delete this offer?",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () =>
+                      Navigator.pop(context, false), // Return false
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.danger,
+                  ),
+                  onPressed: () => Navigator.pop(context, true), // Return true
+                  child: const Text(
+                    "Delete",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false; // Default to false if dismissed
+
+    if (confirm) {
+      try {
+        final response = await http.delete(
+          Uri.parse("${ApiConfig.specialOffers}/$id"),
+        );
+        if (response.statusCode == 200) {
+          _showSnackBar("Offer removed", AppColors.danger);
+          _fetchOffers();
+        }
+      } catch (e) {
+        debugPrint("Delete error: $e");
       }
-    } catch (e) {
-      debugPrint("Delete error: $e");
     }
   }
 
@@ -79,7 +121,6 @@ class _SpecialOfferViewState extends State<SpecialOfferView> {
           onPressed: widget.openDrawer,
         ),
         actions: [
-          // ✅ ADDED SEARCH ICON
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
