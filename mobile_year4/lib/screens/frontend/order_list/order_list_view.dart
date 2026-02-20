@@ -17,7 +17,7 @@ class _OrderListViewState extends State<OrderListView> {
   @override
   void initState() {
     super.initState();
-    // ហៅទិន្នន័យនៅពេលទំព័រត្រូវបានបង្កើត
+    // Fetch data when page is created
     Future.microtask(() => context.read<BookProvider>().fetchSavedOrders());
   }
 
@@ -31,109 +31,146 @@ class _OrderListViewState extends State<OrderListView> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<BookProvider>();
-
     debugPrint("Cart Length: ${provider.cart.length}");
-  debugPrint("Is Syncing: ${provider.isSyncing}");
-    return Column(
-      children: [
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () => provider.fetchSavedOrders(),
-            color: AppColors.accent,
-            child: provider.isSyncing && provider.cart.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : provider.cart.isEmpty
-                ? const Center(child: Text("Your cart is empty"))
-                : ListView.builder(
-                    padding: const EdgeInsets.all(8),
-                    itemCount: provider.cart.length,
-                    itemBuilder: (context, index) {
-                      final item = provider.cart[index];
-                      return Card(
-                        elevation: 2,
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        child: ListTile(
-                          leading: Container(
-                            width: 50,
-                            height: 70,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: Image.network(
-                                _getImageUrl(item.image),
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.book, color: Colors.grey),
-                              ),
-                            ),
-                          ),
-                          title: Text(
-                            item.name,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            "\$${item.displayPrice}",
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.remove_circle_outline,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () async {
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).removeCurrentSnackBar();
-                                  await provider.decrementQuantity(index);
-                                },
-                              ),
-                              Text(
-                                "${item.quantity}",
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.add_circle_outline,
-                                  color: Colors.blue,
-                                ),
-                                onPressed: () async {
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).removeCurrentSnackBar();
-                                  await provider.addToCart(item);
-                                },
-                              ),
-                            ],
-                          ),
+    debugPrint("Is Syncing: ${provider.isSyncing}");
+    // Detect if dark mode is active
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      color: AppColors.getBackground(isDark), // Dynamic Background
+      child: Column(
+        children: [
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () => provider.fetchSavedOrders(),
+              color: AppColors.accent,
+              child: provider.isSyncing && provider.cart.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : provider.cart.isEmpty
+                  ? Center(
+                      child: Text(
+                        "Your cart is empty",
+                        style: TextStyle(
+                          color: AppColors.getTextSecondary(isDark),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(8),
+                      itemCount: provider.cart.length,
+                      itemBuilder: (context, index) {
+                        final item = provider.cart[index];
+                        return Card(
+                          elevation: 2,
+                          color: AppColors.getCardBg(
+                            isDark,
+                          ), // Dynamic Card Color
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(
+                              color: AppColors.getBorder(isDark),
+                              width: 0.5,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: ListTile(
+                            leading: Container(
+                              width: 50,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? Colors.grey[800]
+                                    : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: Image.network(
+                                  _getImageUrl(item.image),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(
+                                        Icons.book,
+                                        color: Colors.grey,
+                                      ),
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              item.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppColors.getTextPrimary(
+                                  isDark,
+                                ), // Dynamic Text
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              "\$${item.displayPrice}",
+                              style: TextStyle(
+                                color: AppColors.getSuccess(
+                                  isDark,
+                                ), // Dynamic Success Color
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.remove_circle_outline,
+                                    color: AppColors.getDanger(isDark),
+                                  ),
+                                  onPressed: () async {
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).removeCurrentSnackBar();
+                                    await provider.decrementQuantity(index);
+                                  },
+                                ),
+                                Text(
+                                  "${item.quantity}",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: AppColors.getTextPrimary(isDark),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.add_circle_outline,
+                                    color: AppColors.accent,
+                                  ),
+                                  onPressed: () async {
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).removeCurrentSnackBar();
+                                    await provider.addToCart(item);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
           ),
-        ),
-        //  បង្ហាញ Total Section នៅខាងក្រោម List តែស្ថិតក្នុង Body របស់ MainWrapper
-        if (provider.cart.isNotEmpty) _buildTotal(provider),
-      ],
+          if (provider.cart.isNotEmpty) _buildTotal(provider, isDark),
+        ],
+      ),
     );
   }
 
-  Widget _buildTotal(BookProvider provider) {
+  Widget _buildTotal(BookProvider provider, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.getCardBg(isDark), // Dynamic Bottom Bar
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -144,7 +181,11 @@ class _OrderListViewState extends State<OrderListView> {
         children: [
           Text(
             "Total: \$${provider.totalCartPrice.toStringAsFixed(2)}",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.getTextPrimary(isDark),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -155,8 +196,6 @@ class _OrderListViewState extends State<OrderListView> {
               ),
             ),
             onPressed: () {
-              // សម្រាប់ការទៅកាន់ Checkout យើងប្រើ Navigator.push ធម្មតា
-              // វានឹងបើក Page ថ្មីពីលើ (Full Screen) ដែលជាចំណង់ចំណូលចិត្តទូទៅសម្រាប់ទំព័របង់ប្រាក់
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const CheckoutView()),
