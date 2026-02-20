@@ -48,10 +48,10 @@ static Color getBackground(bool isDark) =>
       isDark ? Colors.white60 : Colors.grey.shade600;
 
   static Color getBorder(bool isDark) => 
-      isDark ? const Color(0xFF2C3E50).withOpacity(0.3) : const Color(0xFFEEEEEE);
+      isDark ? const Color(0xFF2C3E50).withValues(alpha:0.3) : const Color(0xFFEEEEEE);
   
   static Color accentLight(bool isDark) => 
-      isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.withOpacity(0.08);
+      isDark ? Colors.blue.withValues(alpha:0.15) : Colors.blue.withOpacity(0.08);
 
   // Status colors with softer tones for dark mode
   static Color getSuccess(bool isDark) => 
