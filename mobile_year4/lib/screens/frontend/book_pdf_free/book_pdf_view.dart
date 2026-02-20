@@ -32,7 +32,7 @@ class _BookPdfViewState extends State<BookPdfView> {
       return urlPath
           .replaceAll('127.0.0.1', currentHost)
           .replaceAll('localhost', currentHost)
-          .replaceAll('192.168.1.105', currentHost) // Remove old IPs
+          .replaceAll('192.168.1.105', currentHost)
           .replaceAll('192.168.1.104', currentHost);
     }
 
@@ -44,18 +44,21 @@ class _BookPdfViewState extends State<BookPdfView> {
 
   @override
   Widget build(BuildContext context) {
+    // Detect dark mode
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Consumer<FreeBookPdfProvider>(
       builder: (context, provider, child) {
         return Scaffold(
-          backgroundColor: AppColors.background,
-          // Search button removed here because MainLayout handles it
-          body: _buildContent(provider),
+          // Use dynamic background
+          backgroundColor: AppColors.getBackground(isDark),
+          body: _buildContent(provider, isDark),
         );
       },
     );
   }
 
-  Widget _buildContent(FreeBookPdfProvider provider) {
+  Widget _buildContent(FreeBookPdfProvider provider, bool isDark) {
     if (provider.isSyncing) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.accent),
@@ -63,10 +66,10 @@ class _BookPdfViewState extends State<BookPdfView> {
     }
 
     if (provider.freeBooks.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           "No free books available.",
-          style: TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: AppColors.getTextSecondary(isDark)),
         ),
       );
     }
@@ -90,8 +93,14 @@ class _BookPdfViewState extends State<BookPdfView> {
 
           return Card(
             elevation: 4,
+            // Use dynamic card background
+            color: AppColors.getCardBg(isDark),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
+              // Optional subtle border for dark mode depth
+              side: isDark
+                  ? BorderSide(color: AppColors.getBorder(isDark), width: 0.5)
+                  : BorderSide.none,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,10 +116,13 @@ class _BookPdfViewState extends State<BookPdfView> {
                         Image.network(
                           imageUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (c, e, s) =>
-                              const Icon(Icons.book, size: 40),
+                          errorBuilder: (c, e, s) => Icon(
+                            Icons.book,
+                            size: 40,
+                            color: AppColors.getTextSecondary(isDark),
+                          ),
                         ),
-                        _buildBadge(),
+                        _buildBadge(isDark),
                       ],
                     ),
                   ),
@@ -124,14 +136,17 @@ class _BookPdfViewState extends State<BookPdfView> {
                         book.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.getTextPrimary(isDark),
+                        ),
                       ),
                       Text(
                         book.author,
                         maxLines: 1,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: AppColors.getTextSecondary(isDark),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -149,7 +164,7 @@ class _BookPdfViewState extends State<BookPdfView> {
                           ),
                           label: const Text("Download"),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor: AppColors.getSuccess(isDark),
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -168,14 +183,15 @@ class _BookPdfViewState extends State<BookPdfView> {
     );
   }
 
-  Widget _buildBadge() {
+  Widget _buildBadge(bool isDark) {
     return Positioned(
       top: 8,
       left: 8,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.green.withValues(alpha: 0.9),
+          // Using success color for consistency
+          color: AppColors.getSuccess(isDark).withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(5),
         ),
         child: const Text(
