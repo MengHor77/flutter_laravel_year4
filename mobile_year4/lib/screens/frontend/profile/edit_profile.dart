@@ -13,14 +13,12 @@ class EditProfileView extends StatefulWidget {
 class _EditProfileViewState extends State<EditProfileView> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _currentPasswordController;
   late TextEditingController _newPasswordController;
   late TextEditingController _confirmPasswordController;
 
-  // Visibility states
   bool _obscureCurrent = true;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
@@ -28,7 +26,6 @@ class _EditProfileViewState extends State<EditProfileView> {
   @override
   void initState() {
     super.initState();
-    // Use read here as it's a one-time initialization
     final provider = context.read<UserProvider>();
     _nameController = TextEditingController(text: provider.userName);
     _emailController = TextEditingController(text: provider.userEmail);
@@ -49,11 +46,13 @@ class _EditProfileViewState extends State<EditProfileView> {
 
   @override
   Widget build(BuildContext context) {
-    // Listen to loading state to show spinner
+    // Check if system/app is in dark mode
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isLoading = context.watch<UserProvider>().isLoading;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      // Dynamic Background
+      backgroundColor: AppColors.getBackground(isDark),
       appBar: AppBar(
         title: const Text(
           "Edit Profile",
@@ -71,7 +70,6 @@ class _EditProfileViewState extends State<EditProfileView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar Section
               Center(
                 child: Stack(
                   children: [
@@ -103,8 +101,9 @@ class _EditProfileViewState extends State<EditProfileView> {
               ),
               const SizedBox(height: 30),
 
-              _buildLabel("Full Name"),
+              _buildLabel("Full Name", isDark),
               _buildTextField(
+                isDark: isDark,
                 controller: _nameController,
                 hint: "Enter your name",
                 icon: Icons.person_outline,
@@ -113,8 +112,9 @@ class _EditProfileViewState extends State<EditProfileView> {
 
               const SizedBox(height: 20),
 
-              _buildLabel("Email Address"),
+              _buildLabel("Email Address", isDark),
               _buildTextField(
+                isDark: isDark,
                 controller: _emailController,
                 hint: "Enter your email",
                 icon: Icons.email_outlined,
@@ -124,8 +124,9 @@ class _EditProfileViewState extends State<EditProfileView> {
 
               const SizedBox(height: 20),
 
-              _buildLabel("Current Password"),
+              _buildLabel("Current Password", isDark),
               _buildTextField(
+                isDark: isDark,
                 controller: _currentPasswordController,
                 hint: "Enter current password to verify",
                 icon: Icons.lock_open_outlined,
@@ -133,18 +134,16 @@ class _EditProfileViewState extends State<EditProfileView> {
                 obscureText: _obscureCurrent,
                 onToggleVisibility: () =>
                     setState(() => _obscureCurrent = !_obscureCurrent),
-                validator: (val) {
-                  if (val == null || val.isEmpty) {
-                    return "Current password is required";
-                  }
-                  return null;
-                },
+                validator: (val) => (val == null || val.isEmpty)
+                    ? "Current password is required"
+                    : null,
               ),
 
               const SizedBox(height: 20),
 
-              _buildLabel("New Password"),
+              _buildLabel("New Password", isDark),
               _buildTextField(
+                isDark: isDark,
                 controller: _newPasswordController,
                 hint: "Enter at least 8 characters",
                 icon: Icons.lock_outline,
@@ -153,20 +152,19 @@ class _EditProfileViewState extends State<EditProfileView> {
                 onToggleVisibility: () =>
                     setState(() => _obscureNew = !_obscureNew),
                 validator: (val) {
-                  if (val == null || val.isEmpty) {
+                  if (val == null || val.isEmpty)
                     return "New password is required";
-                  }
-                  if (val.length < 8) {
+                  if (val.length < 8)
                     return "Password must be at least 8 characters";
-                  }
                   return null;
                 },
               ),
 
               const SizedBox(height: 20),
 
-              _buildLabel("Confirm New Password"),
+              _buildLabel("Confirm New Password", isDark),
               _buildTextField(
+                isDark: isDark,
                 controller: _confirmPasswordController,
                 hint: "Repeat new password",
                 icon: Icons.check_circle_outline,
@@ -175,19 +173,16 @@ class _EditProfileViewState extends State<EditProfileView> {
                 onToggleVisibility: () =>
                     setState(() => _obscureConfirm = !_obscureConfirm),
                 validator: (val) {
-                  if (val == null || val.isEmpty) {
+                  if (val == null || val.isEmpty)
                     return "Please confirm your password";
-                  }
-                  if (val != _newPasswordController.text) {
+                  if (val != _newPasswordController.text)
                     return "Passwords do not match";
-                  }
                   return null;
                 },
               ),
 
               const SizedBox(height: 40),
 
-              // Save Button
               SizedBox(
                 width: double.infinity,
                 height: 55,
@@ -204,7 +199,6 @@ class _EditProfileViewState extends State<EditProfileView> {
                       ? null
                       : () async {
                           if (_formKey.currentState!.validate()) {
-                            // Capture Messenger and Navigator BEFORE the async gap
                             final messenger = ScaffoldMessenger.of(context);
                             final navigator = Navigator.of(context);
                             final provider = context.read<UserProvider>();
@@ -216,27 +210,26 @@ class _EditProfileViewState extends State<EditProfileView> {
                               newPassword: _newPasswordController.text,
                             );
 
-                            // The standard mounted check with block braces
-                            if (!mounted) {
-                              return;
-                            }
+                            if (!mounted) return;
 
                             if (success) {
                               messenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text("Profile Updated Successfully"),
-                                  backgroundColor: AppColors.success,
+                                SnackBar(
+                                  content: const Text(
+                                    "Profile Updated Successfully",
+                                  ),
+                                  backgroundColor: AppColors.getSuccess(isDark),
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );
                               navigator.pop();
                             } else {
                               messenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text(
+                                SnackBar(
+                                  content: const Text(
                                     "Failed to update. Check current password.",
                                   ),
-                                  backgroundColor: AppColors.danger,
+                                  backgroundColor: AppColors.getDanger(isDark),
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );
@@ -261,21 +254,23 @@ class _EditProfileViewState extends State<EditProfileView> {
     );
   }
 
-  Widget _buildLabel(String text) {
+  Widget _buildLabel(String text, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.bold,
-          color: AppColors.textSecondary,
+          // Dynamic Secondary Text
+          color: AppColors.getTextSecondary(isDark),
         ),
       ),
     );
   }
 
   Widget _buildTextField({
+    required bool isDark,
     required TextEditingController controller,
     required String hint,
     required IconData icon,
@@ -287,30 +282,36 @@ class _EditProfileViewState extends State<EditProfileView> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        // Dynamic Card Background
+        color: AppColors.getCardBg(isDark),
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
+        // Dynamic Border for dark mode to help fields stand out
+        border: Border.all(color: AppColors.getBorder(isDark), width: 1),
       ),
       child: TextFormField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
         validator: validator,
-        style: const TextStyle(color: AppColors.textPrimary),
+        // Dynamic Input Text Color
+        style: TextStyle(color: AppColors.getTextPrimary(isDark)),
         decoration: InputDecoration(
           hintText: hint,
+          // Dynamic Hint Style
+          hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.grey),
           prefixIcon: Icon(icon, color: AppColors.accent),
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
                     obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.grey,
+                    color: isDark ? Colors.white54 : Colors.grey,
                   ),
                   onPressed: onToggleVisibility,
                 )
