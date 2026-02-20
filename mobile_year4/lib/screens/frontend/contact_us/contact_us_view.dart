@@ -6,30 +6,39 @@ class ContactUsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const  Center(
-      child:  Column(
+    // Detect Dark Mode
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      // Ensure the background fills the view with the correct theme color
+      color: AppColors.getBackground(isDark),
+      width: double.infinity,
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-           Icon(
+          const Icon(
             Icons.contact_support,
             size: 80,
+            // Using a standard accent, or you could create getAccent(isDark)
             color: AppColors.accent,
           ),
-           SizedBox(height: 20),
-           Text(
+          const SizedBox(height: 20),
+          Text(
             'Contact Support:',
             style: TextStyle(
               fontSize: 18,
-              color: AppColors.textSecondary,
+              // Dynamic secondary text color
+              color: AppColors.getTextSecondary(isDark),
             ),
           ),
-           SizedBox(height: 10),
-           Text(
+          const SizedBox(height: 10),
+          Text(
             '012 345 678',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.black,
+              // Dynamic primary text color (instead of hardcoded Colors.black)
+              color: AppColors.getTextPrimary(isDark),
             ),
           ),
         ],
