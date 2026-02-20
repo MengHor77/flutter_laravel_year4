@@ -22,7 +22,7 @@ class _CheckoutViewState extends State<CheckoutView> {
     return double.tryParse(cleanPrice) ?? 0.0;
   }
 
-  void _handlePayment(BuildContext context) async {
+  void _handlePayment(BuildContext context, bool isDark) async {
     setState(() => _isProcessing = true);
     final provider = context.read<BookProvider>();
     bool success = await provider.processCheckout();
@@ -31,38 +31,43 @@ class _CheckoutViewState extends State<CheckoutView> {
     setState(() => _isProcessing = false);
 
     if (success) {
-      _showSuccessDialog();
+      _showSuccessDialog(isDark);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Checkout Failed. Please check your connection."),
-          backgroundColor: AppColors.danger, 
+        SnackBar(
+          content: const Text("Checkout Failed. Please check your connection."),
+          backgroundColor: AppColors.getDanger(isDark),
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
   }
 
-  void _showSuccessDialog() {
+  void _showSuccessDialog(bool isDark) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        backgroundColor: AppColors.getCardBg(isDark), // Adaptive Dialog Bg
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Column(
+        title: Column(
           children: [
             Icon(
               Icons.check_circle,
-              color: AppColors.success,
+              color: AppColors.getSuccess(isDark),
               size: 60,
-            ), 
-            SizedBox(height: 10),
-            Text("Success!"),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "Success!",
+              style: TextStyle(color: AppColors.getTextPrimary(isDark)),
+            ),
           ],
         ),
-        content: const Text(
+        content: Text(
           "Your order has been placed successfully.",
           textAlign: TextAlign.center,
+          style: TextStyle(color: AppColors.getTextSecondary(isDark)),
         ),
         actions: [
           Center(
@@ -71,11 +76,11 @@ class _CheckoutViewState extends State<CheckoutView> {
                 Navigator.of(context).popUntil((route) => route.isFirst);
                 context.read<BookProvider>().onOrderSuccess?.call(0);
               },
-              child: const Text(
+              child: Text(
                 "Done",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.success,
+                  color: AppColors.getSuccess(isDark),
                 ),
               ),
             ),
@@ -88,9 +93,11 @@ class _CheckoutViewState extends State<CheckoutView> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<BookProvider>();
+    // Detect Dark Mode
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background, 
+      backgroundColor: AppColors.getBackground(isDark), // Dynamic Background
       appBar: AppBar(
         title: const Text(
           "Checkout Summary",
@@ -103,14 +110,14 @@ class _CheckoutViewState extends State<CheckoutView> {
       ),
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
               "Order Summary",
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: AppColors.accent,
+                color: isDark ? AppColors.accent : AppColors.accentDark,
               ),
             ),
           ),
@@ -120,18 +127,24 @@ class _CheckoutViewState extends State<CheckoutView> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                Expanded(flex: 3, child: _headerText("Product Name")),
-                Expanded(child: _headerText("Qty", align: TextAlign.center)),
-                Expanded(child: _headerText("Price", align: TextAlign.center)),
-                Expanded(child: _headerText("SubTotal", align: TextAlign.end)),
+                Expanded(flex: 3, child: _headerText("Product Name", isDark)),
+                Expanded(
+                  child: _headerText("Qty", isDark, align: TextAlign.center),
+                ),
+                Expanded(
+                  child: _headerText("Price", isDark, align: TextAlign.center),
+                ),
+                Expanded(
+                  child: _headerText("SubTotal", isDark, align: TextAlign.end),
+                ),
               ],
             ),
           ),
-          const Divider(
+          Divider(
             indent: 20,
             endIndent: 20,
             thickness: 1,
-            color: AppColors.border,
+            color: AppColors.getBorder(isDark), // Dynamic Border
           ),
 
           // --- Items List ---
@@ -140,7 +153,7 @@ class _CheckoutViewState extends State<CheckoutView> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               itemCount: provider.cart.length,
               separatorBuilder: (context, index) =>
-                  const Divider(height: 20, color: AppColors.border),
+                  Divider(height: 20, color: AppColors.getBorder(isDark)),
               itemBuilder: (context, index) {
                 final item = provider.cart[index];
                 double unitPrice = _parseSafePrice(item.displayPrice);
@@ -153,9 +166,11 @@ class _CheckoutViewState extends State<CheckoutView> {
                       flex: 3,
                       child: Text(
                         item.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: AppColors.textPrimary,
+                          color: AppColors.getTextPrimary(
+                            isDark,
+                          ), // Dynamic Text
                         ),
                       ),
                     ),
@@ -163,20 +178,19 @@ class _CheckoutViewState extends State<CheckoutView> {
                       child: Text(
                         "${item.quantity}",
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textBlack,
+                          color: AppColors.getTextPrimary(isDark),
                         ),
                       ),
                     ),
-                    // Price Column - Updated to solid black
                     Expanded(
                       child: Text(
                         unitPrice.toStringAsFixed(1),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textBlack,  
+                          color: AppColors.getTextPrimary(isDark),
                         ),
                       ),
                     ),
@@ -184,9 +198,9 @@ class _CheckoutViewState extends State<CheckoutView> {
                       child: Text(
                         subtotal.toStringAsFixed(1),
                         textAlign: TextAlign.end,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textBlack,
+                          color: AppColors.getTextPrimary(isDark),
                         ),
                       ),
                     ),
@@ -197,33 +211,37 @@ class _CheckoutViewState extends State<CheckoutView> {
           ),
 
           // --- Bottom Fixed Section ---
-          _buildBottomSection(provider),
+          _buildBottomSection(provider, isDark),
         ],
       ),
     );
   }
 
-  Widget _headerText(String text, {TextAlign align = TextAlign.start}) {
+  Widget _headerText(
+    String text,
+    bool isDark, {
+    TextAlign align = TextAlign.start,
+  }) {
     return Text(
       text,
       textAlign: align,
-      style: const TextStyle(
+      style: TextStyle(
         fontWeight: FontWeight.bold,
-        color: AppColors.textSecondary,  
+        color: AppColors.getTextSecondary(isDark), // Dynamic Header Text
         fontSize: 13,
       ),
     );
   }
 
-  Widget _buildBottomSection(BookProvider provider) {
+  Widget _buildBottomSection(BookProvider provider, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const  BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: AppColors.getCardBg(isDark), // Dynamic Surface
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow, 
+            color: isDark ? Colors.black45 : AppColors.shadow,
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -236,19 +254,19 @@ class _CheckoutViewState extends State<CheckoutView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   "Total Payable:",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: AppColors.getTextPrimary(isDark),
                   ),
                 ),
                 Text(
                   "\$${provider.totalCartPrice.toStringAsFixed(2)}",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 28,
-                    color: AppColors.success,  
+                    color: AppColors.getSuccess(isDark), // Dynamic Green
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -267,7 +285,9 @@ class _CheckoutViewState extends State<CheckoutView> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: _isProcessing ? null : () => _handlePayment(context),
+                onPressed: _isProcessing
+                    ? null
+                    : () => _handlePayment(context, isDark),
                 child: _isProcessing
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text(
