@@ -15,6 +15,7 @@ static const String _domain = "$baseUrl/api";
   static const String categories = "$_domain/categories";
   static const String books = "$_domain/books";
   static const String users = "$_domain/users";
+  static const String userToggleStatus = "$_domain/users";
 
   // Cart/User Orders (Frontend)
   static const String orders = "$_domain/orders";

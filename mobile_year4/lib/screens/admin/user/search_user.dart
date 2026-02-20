@@ -1,5 +1,8 @@
+import 'dart:convert';
 import '../../../colors.dart';
+import '../../../api_config.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class UserSearchDelegate extends SearchDelegate {
   final List<dynamic> users;
@@ -9,7 +12,6 @@ class UserSearchDelegate extends SearchDelegate {
   @override
   String get searchFieldLabel => "Search by name or email...";
 
-  /// STYLING: Applies AppColors.primary to the search bar area
   @override
   ThemeData appBarTheme(BuildContext context) {
     return ThemeData(
@@ -55,6 +57,69 @@ class UserSearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) => _buildSearchResults(context);
 
+  // --- Logic to toggle status with Confirmation Dialog ---
+  Future<void> _toggleUserStatus(BuildContext context, Map user) async {
+    final bool isActive = user['is_active'] == 1 || user['is_active'] == true;
+    final String action = isActive ? "Deactivate" : "Activate";
+
+    bool confirm =
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: AppColors.cardBg,
+            title: Text(
+              "$action User",
+              style: const TextStyle(color: AppColors.textPrimary),
+            ),
+            content: Text("Are you sure you want to $action ${user['name']}?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text(
+                  "Cancel",
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isActive
+                      ? AppColors.danger
+                      : AppColors.success,
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(
+                  action,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (confirm) {
+      try {
+        final response = await http.post(
+          Uri.parse("${ApiConfig.users}/${user['id']}/toggle-status"),
+          headers: ApiConfig.getHeaders(),
+        );
+
+        if (response.statusCode == 200) {
+          // Close the search after a successful update so the main view refreshes
+          close(context, null);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("User ${action}d successfully"),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint("Toggle Error: $e");
+      }
+    }
+  }
+
   Widget _buildSearchResults(BuildContext context) {
     final results = users.where((user) {
       final name = (user['name'] ?? "").toString().toLowerCase();
@@ -82,6 +147,9 @@ class UserSearchDelegate extends SearchDelegate {
         itemCount: results.length,
         itemBuilder: (context, index) {
           final user = results[index];
+          final bool isActive =
+              user['is_active'] == 1 || user['is_active'] == true;
+
           return Card(
             color: AppColors.cardBg,
             elevation: 2,
@@ -90,9 +158,11 @@ class UserSearchDelegate extends SearchDelegate {
               borderRadius: BorderRadius.circular(10),
             ),
             child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: AppColors.accent,
-                child: Icon(Icons.person, color: AppColors.textOnDark),
+              leading: CircleAvatar(
+                backgroundColor: isActive
+                    ? AppColors.success
+                    : AppColors.textHint,
+                child: const Icon(Icons.person, color: Colors.white),
               ),
               title: Text(
                 user['name'] ?? "No Name",
@@ -105,9 +175,33 @@ class UserSearchDelegate extends SearchDelegate {
                 user['email'] ?? "No Email",
                 style: const TextStyle(color: AppColors.textSecondary),
               ),
-              onTap: () {
-                // You can add logic here to view user profile if needed
-              },
+              // ✅ Updated Trailing: Status Button
+              trailing: InkWell(
+                onTap: () => _toggleUserStatus(context, user),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? AppColors.success.withOpacity(0.1)
+                        : AppColors.danger.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isActive ? AppColors.success : AppColors.danger,
+                    ),
+                  ),
+                  child: Text(
+                    isActive ? "Active" : "Inactive",
+                    style: TextStyle(
+                      color: isActive ? AppColors.success : AppColors.danger,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
             ),
           );
         },

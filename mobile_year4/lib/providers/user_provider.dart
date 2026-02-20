@@ -96,4 +96,35 @@ class UserProvider with ChangeNotifier {
     ApiConfig.userToken = null;
     notifyListeners();
   }
+
+    /// Toggle user status logic
+  Future<bool> toggleUserStatus(int id) async {
+    _setLoading(true);
+    
+    // URL: http://.../api/users/{id}/toggle-status
+    final url = Uri.parse("${ApiConfig.users}/$id/toggle-status");
+
+    try {
+      final response = await http.post(
+        url,
+        headers: ApiConfig.getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        _setLoading(false);
+        // We notify listeners so the UI knows to rebuild with the new status
+        notifyListeners(); 
+        return true;
+      } else {
+        debugPrint("Toggle failed: ${response.body}");
+        _setLoading(false);
+        return false;
+      }
+    } catch (e) {
+      debugPrint("Status Error: $e");
+      _setLoading(false);
+      return false;
+    }
+  }
+  
 }

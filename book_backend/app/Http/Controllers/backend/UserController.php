@@ -32,6 +32,9 @@ class UserController extends Controller
 
         $user = User::where('email', $request->email)->first();
         if ($user && Hash::check($request->password, $user->password)) {
+            if (!$user->is_active) {
+        return response()->json(['message' => 'Your account is deactivated. Please contact admin.'], 403);
+    }
             $token = $user->createToken($request->device_name)->plainTextToken;
             return response()->json([
                 'status' => 'success',
@@ -178,6 +181,24 @@ public function resetPassword(Request $request)
     DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
     return response()->json(['message' => 'Password reset successfully'], 200);
+}
+
+    public function toggleStatus($id)
+{
+    $user = User::find($id);
+    if (!$user) {
+        return response()->json(['message' => 'User not found'], 404);
+    }
+
+    // Flip the status
+    $user->is_active = !$user->is_active;
+    $user->save();
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'User status updated',
+        'is_active' => $user->is_active
+    ], 200);
 }
 
 
