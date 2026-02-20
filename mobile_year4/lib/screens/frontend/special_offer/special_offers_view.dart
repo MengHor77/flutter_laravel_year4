@@ -47,23 +47,33 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
 
   @override
   Widget build(BuildContext context) {
-    // IMPORTANT: No Scaffold or AppBar here.
-    // This content sits inside the MainLayout Scaffold.
+    // Detect Dark Mode
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Consumer<SpecialOffersProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.accent),
+          return Center(
+            child: CircularProgressIndicator(
+              color: isDark ? AppColors.accent : AppColors.accent,
+            ),
           );
         }
 
         if (provider.offers.isEmpty) {
-          return const Center(child: Text('No offers available right now.'));
+          return Center(
+            child: Text(
+              'No offers available right now.',
+              style: TextStyle(color: AppColors.getTextSecondary(isDark)),
+            ),
+          );
         }
 
         return RefreshIndicator(
           onRefresh: () => provider.fetchOffers(),
           color: AppColors.accent,
+          // Match RefreshIndicator background to view background
+          backgroundColor: AppColors.getCardBg(isDark),
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: provider.offers.length,
@@ -76,20 +86,27 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
                 height: 155,
                 margin: const EdgeInsets.only(bottom: 18),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  // USE DYNAMIC CARD BG
+                  color: AppColors.getCardBg(isDark),
                   borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 15,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+                  boxShadow: isDark
+                      ? [] // Shadows usually look bad in dark mode, or use very subtle ones
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 15,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                  // ADD SUBTLE BORDER FOR DARK MODE
+                  border: isDark
+                      ? Border.all(color: AppColors.getBorder(isDark))
+                      : null,
                 ),
                 child: Row(
                   children: [
-                    _buildImage(imageUrl, offer['discount_percentage']),
-                    _buildDetails(book, offer),
+                    _buildImage(imageUrl, offer['discount_percentage'], isDark),
+                    _buildDetails(book, offer, isDark),
                   ],
                 ),
               );
@@ -100,7 +117,7 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
     );
   }
 
-  Widget _buildImage(String url, dynamic discount) {
+  Widget _buildImage(String url, dynamic discount, bool isDark) {
     return Stack(
       children: [
         ClipRRect(
@@ -115,8 +132,12 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
             fit: BoxFit.cover,
             errorBuilder: (c, e, s) => Container(
               width: 110,
-              color: Colors.grey[200],
-              child: const Icon(Icons.broken_image),
+              // DYNAMIC ERROR BG
+              color: isDark ? Colors.grey[900] : Colors.grey[200],
+              child: Icon(
+                Icons.broken_image,
+                color: AppColors.getTextSecondary(isDark),
+              ),
             ),
           ),
         ),
@@ -126,7 +147,8 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.danger,
+              // DYNAMIC DANGER COLOR
+              color: AppColors.getDanger(isDark),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -143,7 +165,7 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
     );
   }
 
-  Widget _buildDetails(Book book, Map offer) {
+  Widget _buildDetails(Book book, Map offer, bool isDark) {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -152,8 +174,9 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
           children: [
             Text(
               offer['title']?.toUpperCase() ?? 'PROMOTION',
-              style: const TextStyle(
-                color: AppColors.danger,
+              style: TextStyle(
+                // DYNAMIC DANGER COLOR
+                color: AppColors.getDanger(isDark),
                 fontWeight: FontWeight.w800,
                 fontSize: 10,
               ),
@@ -161,44 +184,50 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
             const SizedBox(height: 4),
             Text(
               book.name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                // DYNAMIC PRIMARY TEXT
+                color: AppColors.getTextPrimary(isDark),
+              ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             const Spacer(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment:
-                  CrossAxisAlignment.end, // Align button with bottom of price
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       "\$${offer['book']['price']}",
-                      style: const TextStyle(
+                      style: TextStyle(
                         decoration: TextDecoration.lineThrough,
-                        color: Colors.grey,
+                        // DYNAMIC SECONDARY TEXT
+                        color: AppColors.getTextSecondary(isDark),
                         fontSize: 12,
                       ),
                     ),
                     Text(
                       "\$${book.displayPrice}",
-                      style: const TextStyle(
-                        color: AppColors.success,
+                      style: TextStyle(
+                        // DYNAMIC SUCCESS COLOR
+                        color: AppColors.getSuccess(isDark),
                         fontWeight: FontWeight.w900,
                         fontSize: 20,
                       ),
                     ),
                   ],
                 ),
-                // UPDATED BUTTON DESIGN TO MATCH SEARCH VIEW
                 SizedBox(
-                  height: 38, // Fixed height for a cleaner look
+                  height: 38,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                      elevation: 0, // Search view usually has flat buttons
+                      // DYNAMIC SUCCESS COLOR
+                      backgroundColor: AppColors.getSuccess(isDark),
+                      elevation: 0,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -209,7 +238,7 @@ class _SpecialOffersViewState extends State<SpecialOffersView> {
                       "Add to Cart",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 13, // Slightly smaller font
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
