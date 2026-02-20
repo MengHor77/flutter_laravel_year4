@@ -6,10 +6,11 @@ import 'package:mobile_year4/providers/book_provider.dart';
 import 'package:mobile_year4/widgets/frontent/menu_sidebar.dart';
 import 'package:mobile_year4/screens/frontend/home/home_view.dart';
 import 'package:mobile_year4/screens/frontend/book/book_view.dart';
+import 'package:mobile_year4/providers/free_book_pdf_provider.dart';
 import 'package:mobile_year4/screens/frontend/profile/profile.dart';
+import 'package:mobile_year4/providers/special_offers_provider.dart';
 import 'package:mobile_year4/widgets/frontent/seach_book_global.dart';
 import 'package:mobile_year4/screens/frontend/about/about_us_view.dart';
-import 'package:mobile_year4/providers/special_offers_provider.dart'; // Added
 import 'package:mobile_year4/screens/frontend/contact_us/contact_us_view.dart';
 import 'package:mobile_year4/screens/frontend/order_list/order_list_view.dart';
 import 'package:mobile_year4/screens/frontend/book_pdf_free/book_pdf_view.dart';
@@ -33,7 +34,7 @@ class _MainLayoutState extends State<MainLayout> {
     const OrderListView(), // 2
     const BestSellingView(), // 3
     const BookPdfView(), // 4
-    const SpecialOffersView(), // 5 (No Scaffold inside)
+    const SpecialOffersView(), // 5
     const ProfileView(), // 6
     const ContactUsView(), // 7
     const AboutUsView(), // 8
@@ -61,7 +62,7 @@ class _MainLayoutState extends State<MainLayout> {
     });
   }
 
-  // Helper to map search data for Special Offers
+  // Helper for Special Offers Mapping
   Book _mapOfferToBook(Map offerData) {
     return Book(
       id: offerData['book_id'].toString(),
@@ -78,6 +79,8 @@ class _MainLayoutState extends State<MainLayout> {
   void _onSearchPressed() {
     final bookProvider = context.read<BookProvider>();
     final specialProvider = context.read<SpecialOffersProvider>();
+    final pdfProvider = context.read<FreeBookPdfProvider>();
+
     List<Book> searchList = [];
     String hint = "Search...";
 
@@ -87,8 +90,23 @@ class _MainLayoutState extends State<MainLayout> {
     } else if (_selectedIndex == 3) {
       searchList = bookProvider.bestSellers;
       hint = "Search Best Sellers...";
+    } else if (_selectedIndex == 4) {
+       searchList = pdfProvider.freeBooks
+          .map(
+            (pdf) => Book(
+              id: pdf.id.toString(),
+              name: pdf.name,
+              author: pdf.author,
+              price: "0",
+              displayPrice: "FREE",
+              image: pdf.image,
+              categoryName: "Free PDF",
+              isOnSale: false,
+            ),
+          )
+          .toList();
+      hint = "Search Free PDFs...";
     } else if (_selectedIndex == 5) {
-      // Logic for Special Offers Search
       searchList = specialProvider.offers
           .map((o) => _mapOfferToBook(o))
           .toList();
@@ -107,8 +125,8 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
-    // Show search icon if index is 1 (Books), 3 (Best Selling), or 5 (Special Offers)
-    final bool showSearchIcon = [1, 3, 5].contains(_selectedIndex);
+    // Show search icon for Books(1), Best Selling(3), PDF(4), and Offers(5)
+    final bool showSearchIcon = [1, 3, 4, 5].contains(_selectedIndex);
 
     return Scaffold(
       key: _scaffoldKey,

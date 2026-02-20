@@ -1,4 +1,3 @@
-import 'search_book.dart';
 import '../../../colors.dart';
 import 'save_book_to_file.dart';
 import '../../../api_config.dart';
@@ -17,31 +16,24 @@ class _BookPdfViewState extends State<BookPdfView> {
   @override
   void initState() {
     super.initState();
-    // Fetch books when the screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FreeBookPdfProvider>(context, listen: false).fetchFreeBooks();
     });
   }
 
- // ✅ Improved Helper function
   String _formatUrl(String urlPath) {
     if (urlPath.isEmpty) return 'https://via.placeholder.com/150';
 
-    // 1. Handle Full URLs (fixing IP mismatch)
     if (urlPath.startsWith('http')) {
       String fixedUrl = urlPath.replaceAll('127.0.0.1', '10.0.2.2');
-      // Fix the IP change from .105 to .104
       fixedUrl = fixedUrl.replaceAll('192.168.1.105', '192.168.1.104');
       return fixedUrl;
     }
 
-    // 2. Handle Relative Paths
-    // If path starts with "uploads/", add "storage/" prefix
     String cleanPath = urlPath.startsWith('/') ? urlPath.substring(1) : urlPath;
     if (!cleanPath.startsWith('storage/')) {
-        return "${ApiConfig.baseUrl}/storage/$cleanPath";
+      return "${ApiConfig.baseUrl}/storage/$cleanPath";
     }
-    
     return "${ApiConfig.baseUrl}/$cleanPath";
   }
 
@@ -50,7 +42,9 @@ class _BookPdfViewState extends State<BookPdfView> {
     return Consumer<FreeBookPdfProvider>(
       builder: (context, provider, child) {
         if (provider.isSyncing) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.accent),
+          );
         }
 
         if (provider.freeBooks.isEmpty) {
@@ -76,8 +70,6 @@ class _BookPdfViewState extends State<BookPdfView> {
             itemCount: provider.freeBooks.length,
             itemBuilder: (context, index) {
               final book = provider.freeBooks[index];
-
-              // ✅ កែសម្រួលការទាញយក URL រូបភាព និង PDF តាមរយៈ Helper Function
               final imageUrl = _formatUrl(book.image);
               final pdfUrl = _formatUrl(book.pdfFile);
 
@@ -90,32 +82,27 @@ class _BookPdfViewState extends State<BookPdfView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // --- Book Cover ---
                     Expanded(
                       child: ClipRRect(
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(12),
                         ),
                         child: Stack(
+                          fit: StackFit.expand,
                           children: [
                             Image.network(
                               imageUrl,
-                              width: double.infinity,
-                              height: double.infinity,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                debugPrint("❌ Image Load Error: $imageUrl");
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: const Icon(
-                                    Icons.book,
-                                    size: 50,
-                                    color: Colors.grey,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                    color: Colors.grey[200],
+                                    child: const Icon(
+                                      Icons.book,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    ),
                                   ),
-                                );
-                              },
                             ),
-                            // "FREE" badge
                             Positioned(
                               top: 8,
                               left: 8,
@@ -142,8 +129,6 @@ class _BookPdfViewState extends State<BookPdfView> {
                         ),
                       ),
                     ),
-
-                    // --- Book Details ---
                     Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: Column(
@@ -172,26 +157,20 @@ class _BookPdfViewState extends State<BookPdfView> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              // Read Icon
                               _buildActionButton(
                                 icon: Icons.menu_book_rounded,
                                 color: Colors.blue,
-                                tooltip: "Read",
                                 onTap: () =>
                                     _showSnackBar("Opening PDF: ${book.name}"),
                               ),
-                              // Download Icon
                               _buildActionButton(
                                 icon: Icons.download_for_offline_rounded,
                                 color: Colors.green,
-                                tooltip: "Download",
-                                onTap: () {
-                                  BookSaver.saveAndNotify(
-                                    pdfUrl,
-                                    "${book.name}.pdf",
-                                    context,
-                                  );
-                                },
+                                onTap: () => BookSaver.saveAndNotify(
+                                  pdfUrl,
+                                  "${book.name}.pdf",
+                                  context,
+                                ),
                               ),
                             ],
                           ),
@@ -208,11 +187,9 @@ class _BookPdfViewState extends State<BookPdfView> {
     );
   }
 
-  // Action Button Helper
   Widget _buildActionButton({
     required IconData icon,
     required Color color,
-    required String tooltip,
     required VoidCallback onTap,
   }) {
     return InkWell(
@@ -227,11 +204,7 @@ class _BookPdfViewState extends State<BookPdfView> {
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 }
