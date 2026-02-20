@@ -15,7 +15,7 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  // ✅ រក្សាកូដ Logic ដើមសម្រាប់ទាញទិន្នន័យពី API
+  // ✅ រក្សាកូដ Logic ដើមសម្រាប់ទាញទិន្នន័យពី API (Original API Logic)
   Future<List<Book>> _fetchBestSellers() async {
     try {
       final response = await http.get(
@@ -35,70 +35,85 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ លុប Scaffold, AppBar និង Drawer ចេញ ដើម្បីឱ្យវាបង្ហាញ Bottom Nav របស់ MainWrapper
-    return SingleChildScrollView(
-      // ✅ បន្ថែម RefreshIndicator ដើម្បីឱ្យ User អាចអូសចុះក្រោមដើម្បី Update ទិន្នន័យ
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // ឱ្យអក្សរនៅកៀនឆ្វេង
-          children: [
-            const Text(
-              'Best Selling Books',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+    // Check if the current theme is dark
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      // Apply dynamic background color based on theme
+      color: AppColors.getBackground(isDark),
+      child: SingleChildScrollView(
+        // បន្ថែម RefreshIndicator ដើម្បីឱ្យ User អាចអូសចុះក្រោមដើម្បី Update ទិន្នន័យ
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, // ឱ្យអក្សរនៅកៀនឆ្វេង
+            children: [
+              Text(
+                'Best Selling Books',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  //  Use dynamic text color
+                  color: AppColors.getTextPrimary(isDark),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            FutureBuilder<List<Book>>(
-              future: _fetchBestSellers(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SizedBox(
-                    height: 300,
-                    child: Center(
-                      child: CircularProgressIndicator(color: AppColors.accent),
+              const SizedBox(height: 16),
+              FutureBuilder<List<Book>>(
+                future: _fetchBestSellers(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox(
+                      height: 300,
+                      child: Center(
+                        child: CircularProgressIndicator(color: AppColors.accent),
+                      ),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Text(
+                          "Connection Error: pleae check your Server Laravel ",
+                          style: TextStyle(color: AppColors.getDanger(isDark)),
+                        ),
+                      ),
+                    );
+                  }
+
+                  final books = snapshot.data ?? [];
+
+                  if (books.isEmpty) {
+                    return SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: Text(
+                          "No books found.",
+                          style: TextStyle(color: AppColors.getTextSecondary(isDark)),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.55,
                     ),
+                    itemCount: books.length,
+                    itemBuilder: (context, index) {
+                      //  បញ្ជូនទិន្នន័យទៅ BookCard
+                      return BookCard(book: books[index]);
+                    },
                   );
-                } else if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      child: Text("Connection Error: សូមពិនិត្យមើល Server Laravel របស់អ្នក"),
-                    ),
-                  );
-                }
-
-                final books = snapshot.data ?? [];
-
-                if (books.isEmpty) {
-                  return const SizedBox(
-                    height: 200,
-                    child: Center(child: Text("No books found.")),
-                  );
-                }
-
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 0.55,
-                  ),
-                  itemCount: books.length,
-                  itemBuilder: (context, index) {
-                    // ✅ បញ្ជូនទិន្នន័យទៅ BookCard
-                    return BookCard(book: books[index]);
-                  },
-                );
-              },
-            ),
-          ],
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
