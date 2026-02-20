@@ -15,8 +15,7 @@ class FreeBookPdfProvider extends ChangeNotifier {
   List<dynamic> get categories => _categories; 
   bool get isSyncing => _isSyncing;
 
-  // Method 1: Fetch Books (and now Categories)
-  Future<void> fetchFreeBooks() async {
+   Future<void> fetchFreeBooks() async {
     _isSyncing = true;
     notifyListeners();
     try {

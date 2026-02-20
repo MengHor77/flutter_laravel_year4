@@ -47,8 +47,8 @@ class GlobalBookSearchDelegate extends SearchDelegate {
   List<Widget>? buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: const Icon(Icons.clear, color: AppColors.textOnDark), 
-        onPressed: () => query = ''
+        icon: const Icon(Icons.clear, color: AppColors.textOnDark),
+        onPressed: () => query = '',
       ),
     ];
   }
@@ -93,9 +93,10 @@ class GlobalBookSearchDelegate extends SearchDelegate {
         itemCount: results.length,
         itemBuilder: (context, index) {
           final book = results[index];
-          return BookCard(
+          final bool isFreePdf = book.categoryName == "Free PDF";
+           return BookCard(
             book: book,
-            buttonText: "Add to Cart",
+            buttonText: isFreePdf ? "Download" : "Add to Cart",
             buttonColor: AppColors.success, // Already using AppColors
             onAction: () {
               onAddToCart(book);
@@ -138,7 +139,11 @@ void handleAddToCartGlobal(BuildContext context, Book book) async {
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle, color: AppColors.textOnDark, size: 20),
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.textOnDark,
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(

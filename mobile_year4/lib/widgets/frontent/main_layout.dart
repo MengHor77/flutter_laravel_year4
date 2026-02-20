@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_year4/colors.dart';
+import 'package:mobile_year4/api_config.dart';
 import 'package:mobile_year4/models/book_model.dart';
 import 'package:mobile_year4/providers/book_provider.dart';
 import 'package:mobile_year4/widgets/frontent/menu_sidebar.dart';
@@ -14,8 +15,10 @@ import 'package:mobile_year4/screens/frontend/about/about_us_view.dart';
 import 'package:mobile_year4/screens/frontend/contact_us/contact_us_view.dart';
 import 'package:mobile_year4/screens/frontend/order_list/order_list_view.dart';
 import 'package:mobile_year4/screens/frontend/book_pdf_free/book_pdf_view.dart';
+import '../../screens/frontend/book_pdf_free/download_book.dart'; // Corrected path
 import 'package:mobile_year4/screens/frontend/special_offer/special_offers_view.dart';
 import 'package:mobile_year4/screens/frontend/best_selling_view/best_selling_view.dart';
+
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -29,15 +32,15 @@ class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const HomeView(), // 0
-    const BookView(), // 1
-    const OrderListView(), // 2
-    const BestSellingView(), // 3
-    const BookPdfView(), // 4
-    const SpecialOffersView(), // 5
-    const ProfileView(), // 6
-    const ContactUsView(), // 7
-    const AboutUsView(), // 8
+    const HomeView(),
+    const BookView(),
+    const OrderListView(),
+    const BestSellingView(),
+    const BookPdfView(),
+    const SpecialOffersView(),
+    const ProfileView(),
+    const ContactUsView(),
+    const AboutUsView(),
   ];
 
   final List<String> _titles = [
@@ -62,7 +65,6 @@ class _MainLayoutState extends State<MainLayout> {
     });
   }
 
-  // Helper for Special Offers Mapping
   Book _mapOfferToBook(Map offerData) {
     return Book(
       id: offerData['book_id'].toString(),
@@ -70,10 +72,38 @@ class _MainLayoutState extends State<MainLayout> {
       author: offerData['book']['author'] ?? 'Unknown',
       price: offerData['book']['price'].toString(),
       displayPrice: offerData['offer_price'].toString(),
-      image: offerData['book']['image'],
+      image: offerData['book']['image'] ?? '',
       categoryName: 'Special Offer',
       isOnSale: true,
     );
+  }
+
+  void _handlePdfDownload(Book book) {
+    final pdfProvider = context.read<FreeBookPdfProvider>();
+    try {
+      final originalPdf = pdfProvider.freeBooks.firstWhere(
+        (element) => element.id.toString() == book.id,
+      );
+
+      String urlPath = originalPdf.pdfFile;
+      String fullPdfUrl = '';
+
+      if (urlPath.startsWith('http')) {
+        fullPdfUrl = urlPath.replaceAll('127.0.0.1', '10.0.2.2');
+      } else {
+        String cleanPath = urlPath.startsWith('/')
+            ? urlPath.substring(1)
+            : urlPath;
+        fullPdfUrl = cleanPath.startsWith('storage/')
+            ? "${ApiConfig.baseUrl}/$cleanPath"
+            : "${ApiConfig.baseUrl}/storage/$cleanPath";
+      }
+
+      // BookSaver is now recognized because of the fixed import
+      BookSaver.saveAndNotify(fullPdfUrl, "${book.name}.pdf", context);
+    } catch (e) {
+      debugPrint("Search download error: $e");
+    }
   }
 
   void _onSearchPressed() {
@@ -91,7 +121,7 @@ class _MainLayoutState extends State<MainLayout> {
       searchList = bookProvider.bestSellers;
       hint = "Search Best Sellers...";
     } else if (_selectedIndex == 4) {
-       searchList = pdfProvider.freeBooks
+      searchList = pdfProvider.freeBooks
           .map(
             (pdf) => Book(
               id: pdf.id.toString(),
@@ -99,7 +129,7 @@ class _MainLayoutState extends State<MainLayout> {
               author: pdf.author,
               price: "0",
               displayPrice: "FREE",
-              image: pdf.image,
+              image: pdf.image ?? '', // Fixed dead code/null aware warning
               categoryName: "Free PDF",
               isOnSale: false,
             ),
@@ -118,14 +148,19 @@ class _MainLayoutState extends State<MainLayout> {
       delegate: GlobalBookSearchDelegate(
         items: searchList,
         hintText: hint,
-        onAddToCart: (book) => handleAddToCartGlobal(context, book),
+        onAddToCart: (book) {
+          if (_selectedIndex == 4) {
+            _handlePdfDownload(book);
+          } else {
+            handleAddToCartGlobal(context, book);
+          }
+        },
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Show search icon for Books(1), Best Selling(3), PDF(4), and Offers(5)
     final bool showSearchIcon = [1, 3, 4, 5].contains(_selectedIndex);
 
     return Scaffold(
