@@ -19,7 +19,6 @@ import '../../screens/frontend/book_pdf_free/download_book.dart'; // Corrected p
 import 'package:mobile_year4/screens/frontend/special_offer/special_offers_view.dart';
 import 'package:mobile_year4/screens/frontend/best_selling_view/best_selling_view.dart';
 
-
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
@@ -30,6 +29,12 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedIndex = 0;
+  int _getNavIndex(int index) {
+    if (index == 6) return 4;  
+    if (index > 3)
+      return 0;  
+    return index;  
+  }
 
   final List<Widget> _pages = [
     const HomeView(),
@@ -89,7 +94,11 @@ class _MainLayoutState extends State<MainLayout> {
       String fullPdfUrl = '';
 
       if (urlPath.startsWith('http')) {
-        fullPdfUrl = urlPath.replaceAll('127.0.0.1', '10.0.2.2');
+        Uri currentUri = Uri.parse(ApiConfig.baseUrl);
+
+        fullPdfUrl = urlPath
+            .replaceAll('127.0.0.1', currentUri.host)
+            .replaceAll('localhost', currentUri.host);
       } else {
         String cleanPath = urlPath.startsWith('/')
             ? urlPath.substring(1)
@@ -184,9 +193,7 @@ class _MainLayoutState extends State<MainLayout> {
       ),
       body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: (_selectedIndex == 6)
-            ? 4
-            : (_selectedIndex > 3 ? 0 : _selectedIndex),
+        currentIndex: _getNavIndex(_selectedIndex),
         onTap: (index) =>
             setState(() => _selectedIndex = (index == 4) ? 6 : index),
         type: BottomNavigationBarType.fixed,

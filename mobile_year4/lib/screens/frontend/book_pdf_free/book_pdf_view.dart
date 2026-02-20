@@ -27,9 +27,13 @@ class _BookPdfViewState extends State<BookPdfView> {
     }
 
     if (urlPath.startsWith('http')) {
+      Uri currentUri = Uri.parse(ApiConfig.baseUrl);
+      String currentHost = currentUri.host;
       return urlPath
-          .replaceAll('127.0.0.1', '10.0.2.2')
-          .replaceAll('192.168.1.105', '192.168.1.104');
+          .replaceAll('127.0.0.1', currentHost)
+          .replaceAll('localhost', currentHost)
+          .replaceAll('192.168.1.105', currentHost) // Remove old IPs
+          .replaceAll('192.168.1.104', currentHost);
     }
 
     String cleanPath = urlPath.startsWith('/') ? urlPath.substring(1) : urlPath;
@@ -171,7 +175,7 @@ class _BookPdfViewState extends State<BookPdfView> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.green.withValues(alpha:0.9),
+          color: Colors.green.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(5),
         ),
         child: const Text(

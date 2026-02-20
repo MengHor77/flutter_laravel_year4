@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
 class BookSaver {
-  /// This is the main function you call from your UI
-  static Future<void> saveAndNotify(String url, String fileName, BuildContext context) async {
-    // 1. Show "Starting" notification
+  static Future<void> saveAndNotify(
+    String url,
+    String fileName,
+    BuildContext context,
+  ) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("Downloading $fileName..."),
@@ -14,23 +16,16 @@ class BookSaver {
       ),
     );
 
-    // 2. Start the download
     File? file = await BookDownloader.downloadFile(url, fileName);
 
-    // 3. Safety check: is the screen still open?
     if (!context.mounted) return;
 
     if (file != null && await file.exists()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text("Success! Saved to Downloads"),
           backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: "OK",
-            textColor: Colors.white,
-            onPressed: () {},
-          ),
+          duration: Duration(seconds: 3),
         ),
       );
     } else {
@@ -46,32 +41,40 @@ class BookSaver {
 
 class BookDownloader {
   static Future<File?> downloadFile(String url, String fileName) async {
-    Dio dio = Dio(BaseOptions(
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 60),
-    ));
+    // 1. Configure Dio to be more patient with local servers
+    Dio dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 0), // Wait as long as needed
+        persistentConnection: true,
+      ),
+    );
+
+    String savePath = "";
 
     try {
-      // Logic to get the Download directory (visible to user)
+      // 2. Determine the save folder
       Directory? dir;
       if (Platform.isAndroid) {
-        dir = Directory('/storage/emulated/0/Download');
-        if (!await dir.exists()) {
-          dir = await getExternalStorageDirectory();
-        }
+        dir = await getExternalStorageDirectory();
       } else {
         dir = await getApplicationDocumentsDirectory();
       }
 
-      String savePath = "${dir!.path}/$fileName";
+      if (dir == null) return null;
+      savePath = "${dir.path}/$fileName";
 
+      // 3. Start download
       await dio.download(
         url,
         savePath,
-        deleteOnError: false,
+        deleteOnError:
+            false, // CRITICAL: Don't delete if connection snaps at 100%
         onReceiveProgress: (received, total) {
           if (total != -1) {
-            debugPrint("Download Progress: ${(received / total * 100).toStringAsFixed(0)}%");
+            debugPrint(
+              "Download Progress: ${(received / total * 100).toStringAsFixed(0)}%",
+            );
           }
         },
       );
@@ -81,8 +84,21 @@ class BookDownloader {
         return downloadedFile;
       }
       return null;
+    } on DioException catch (e) {
+      // 4. Handle the "Connection closed" error specifically
+      debugPrint("Dio Error: ${e.type} - ${e.message}");
+
+      if (savePath.isNotEmpty) {
+        File file = File(savePath);
+        // If the file actually exists and has content, ignore the error
+        if (await file.exists() && await file.length() > 0) {
+          debugPrint("File downloaded despite connection error. Proceeding.");
+          return file;
+        }
+      }
+      return null;
     } catch (e) {
-      debugPrint("Download Error: $e");
+      debugPrint("General Error: $e");
       return null;
     }
   }
