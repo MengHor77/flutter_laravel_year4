@@ -25,23 +25,28 @@ class GlobalBookSearchDelegate extends SearchDelegate {
   ThemeData appBarTheme(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return ThemeData(
+    // Use a copy of the existing theme to maintain consistency
+    final ThemeData theme = Theme.of(context);
+
+    return theme.copyWith(
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.accent,
         foregroundColor: AppColors.textOnDark,
         elevation: 0,
       ),
-      // FIX: Use dynamic background for the search scaffold
+      // Set the background color for the search scaffold
       scaffoldBackgroundColor: AppColors.getBackground(isDark),
+      // Ensure the search text field is readable
       inputDecorationTheme: const InputDecorationTheme(
-        hintStyle: TextStyle(color: AppColors.textOnDark),
+        hintStyle: TextStyle(color: Colors.white70),
         border: InputBorder.none,
+      ),
+      // Text color while typing in the search bar
+      textTheme: theme.textTheme.copyWith(
+        titleLarge: const TextStyle(color: AppColors.textOnDark, fontSize: 18),
       ),
       textSelectionTheme: const TextSelectionThemeData(
         cursorColor: Colors.white,
-      ),
-      textTheme: const TextTheme(
-        titleLarge: TextStyle(color: AppColors.textOnDark, fontSize: 18),
       ),
     );
   }
@@ -81,20 +86,22 @@ class GlobalBookSearchDelegate extends SearchDelegate {
 
     if (results.isEmpty) {
       return Container(
-        // FIX: Use dynamic background
+        width: double.infinity,
+        height: double.infinity,
         color: AppColors.getBackground(isDark),
         child: Center(
           child: Text(
             "No results found.",
-            // FIX: Use dynamic text color
-            style: TextStyle(color: AppColors.getTextSecondary(isDark)),
+            style: TextStyle(
+              color: AppColors.getTextSecondary(isDark),
+              fontSize: 16,
+            ),
           ),
         ),
       );
     }
 
     return Container(
-      // FIX: Use dynamic background
       color: AppColors.getBackground(isDark),
       child: ListView.builder(
         padding: const EdgeInsets.all(12),
@@ -102,10 +109,10 @@ class GlobalBookSearchDelegate extends SearchDelegate {
         itemBuilder: (context, index) {
           final book = results[index];
           final bool isFreePdf = book.categoryName == "Free PDF";
+          
           return BookCard(
             book: book,
             buttonText: isFreePdf ? "Download" : "Add to Cart",
-            // FIX: Use dynamic success color
             buttonColor: AppColors.getSuccess(isDark),
             onAction: () {
               onAddToCart(book);
@@ -132,7 +139,6 @@ void handleAddToCartGlobal(BuildContext context, Book book) async {
     messenger.showSnackBar(
       SnackBar(
         content: const Text("Please Login first!"),
-        // FIX: Use dynamic danger color
         backgroundColor: AppColors.getDanger(isDark),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
@@ -163,7 +169,6 @@ void handleAddToCartGlobal(BuildContext context, Book book) async {
               ),
             ],
           ),
-          // FIX: Use dynamic success color
           backgroundColor: AppColors.getSuccess(isDark),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
@@ -186,7 +191,9 @@ void handleAddToCartGlobal(BuildContext context, Book book) async {
       Timer(const Duration(seconds: 2), () {
         try {
           snackBarController.close();
-        } catch (e) {}
+        } catch (e) {
+          // SnackBar might already be dismissed
+        }
       });
     }
   } catch (e) {
@@ -194,7 +201,6 @@ void handleAddToCartGlobal(BuildContext context, Book book) async {
     messenger.showSnackBar(
       SnackBar(
         content: const Text("Error adding to cart"),
-        // FIX: Custom dark-mode friendly warning or AppColors.warning
         backgroundColor: isDark ? Colors.orange.shade800 : AppColors.warning,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
