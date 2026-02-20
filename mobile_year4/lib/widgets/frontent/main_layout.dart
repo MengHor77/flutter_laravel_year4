@@ -30,22 +30,26 @@ class _MainLayoutState extends State<MainLayout> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedIndex = 0;
   int _getNavIndex(int index) {
-    if (index == 6) return 4;  
-    if (index > 3)
-      return 0;  
-    return index;  
+    if (index == 0) return 0; // Home
+    if (index == 1) return 1; // Books
+    if (index == 2) return 2; // Order List
+    if (index == 3) return 3; // Best Selling
+    if (index == 6) return 4; // Profile
+
+    // Return -1 for 4 (PDF), 5 (Offers), 7 (Contact), 8 (About)
+    return -1;
   }
 
   final List<Widget> _pages = [
-    const HomeView(),
-    const BookView(),
-    const OrderListView(),
-    const BestSellingView(),
-    const BookPdfView(),
-    const SpecialOffersView(),
-    const ProfileView(),
-    const ContactUsView(),
-    const AboutUsView(),
+    const HomeView(), //0
+    const BookView(), //1
+    const OrderListView(), //2
+    const BestSellingView(), //3
+    const BookPdfView(), //4
+    const SpecialOffersView(), //5
+    const ProfileView(), //6
+    const ContactUsView(), //7
+    const AboutUsView(), //8
   ];
 
   final List<String> _titles = [
@@ -193,11 +197,17 @@ class _MainLayoutState extends State<MainLayout> {
       ),
       body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _getNavIndex(_selectedIndex),
+        currentIndex: _getNavIndex(_selectedIndex) == -1
+            ? 0
+            : _getNavIndex(_selectedIndex),
         onTap: (index) =>
             setState(() => _selectedIndex = (index == 4) ? 6 : index),
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.accent,
+        selectedItemColor: _getNavIndex(_selectedIndex) == -1
+            ? AppColors
+                  .textPrimary // Same color as unselected
+            : AppColors.accent, // Normal active color
+
         unselectedItemColor: AppColors.textPrimary,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
