@@ -23,15 +23,15 @@
     DB_PASSWORD=
 
 + open xampp
-   star apache and mysql
+   start apache and mysql
 
  +  go to http://localhost/phpmyadmin/ 
 
-    - create database name flutter_book
+    - create database name  example: flutter_book
 
     - run commend
 
-    php artisan migrate b
+    php artisan migrate 
     php artian db:seed
     php artisan serve --host=0.0.0.0 --port=8000
 
@@ -39,7 +39,7 @@
 
     D:\flutter\mobile_year4\lib\api_config.dart 
     -change ip 
-    example static const String baseUrl = "http://10.1.42.124:8000";  (actual ip  connet the wifi) 
+    in line static const String baseUrl = "http://10.1.42.124:8000";  (actual ip  connet the wifi) 
 
  + go to folder then run commend in flutter 
     D:\flutter\mobile_year4>
