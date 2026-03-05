@@ -30,4 +30,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('personal_access_tokens');
     }
-};
+}; 
+// how to migrate table only access tokent table php artisan migrate:refresh --path=database/migrations/2026_02_05_134908_create_personal_access_tokens_table.php
