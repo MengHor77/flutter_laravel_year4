@@ -129,7 +129,7 @@ class ProfileView extends StatelessWidget {
       const SizedBox(width: 8),
       Icon(
         Icons.chevron_right_rounded,
-        color: AppColors.getBorder(isDark).withOpacity(0.5),
+        color: AppColors.getBorder(isDark).withValues(alpha:0.5),
       ),
     ],
   ),
