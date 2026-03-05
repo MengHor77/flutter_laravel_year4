@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:mobile_year4/colors.dart';
 import '../../../providers/book_provider.dart';
 import '../../../providers/theme_provider.dart';
+import '../../../providers/language_provider.dart';  
 import '../../../providers/notification_provider.dart';
 import 'package:mobile_year4/screens/frontend/profile/edit_profile.dart';
-import '../../../providers/language_provider.dart'; // Import LanguageProvider
 import 'package:mobile_year4/screens/frontend/profile/notification_view.dart';
 
 class ProfileView extends StatelessWidget {
@@ -80,7 +80,7 @@ class ProfileView extends StatelessWidget {
     final bookProvider = context.watch<BookProvider>();
     final themeProvider = context.watch<ThemeProvider>();
     final notiProvider = context.watch<NotificationProvider>();
-    final lang = context.watch<LanguageProvider>(); // Watch ភាសា
+    final lang = context.watch<LanguageProvider>();
 
     final isDark = themeProvider.isDarkMode;
 
@@ -121,7 +121,8 @@ class ProfileView extends StatelessWidget {
                     bookProvider.userEmail,
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.getTextSecondary(isDark),
+                      // កែសម្រួលឱ្យអក្សរ Email ដិតជាងមុនបន្តិច
+                      color: AppColors.getTextPrimary(isDark).withValues(alpha : 0.7),
                     ),
                   ),
                 ],
@@ -139,7 +140,8 @@ class ProfileView extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: AppColors.getTextSecondary(isDark),
+                      // កែពី getTextSecondary មក getTextPrimary ដើម្បីឱ្យខ្មៅដិត
+                      color: AppColors.getTextPrimary(isDark),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -197,7 +199,9 @@ class ProfileView extends StatelessWidget {
                         const SizedBox(width: 8),
                         Icon(
                           Icons.chevron_right_rounded,
-                          color: AppColors.getBorder(isDark).withOpacity(0.5),
+                          color: AppColors.getTextPrimary(
+                            isDark,
+                          ).withValues(alpha :0.4),
                         ),
                       ],
                     ),
@@ -215,7 +219,7 @@ class ProfileView extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: AppColors.getTextSecondary(isDark),
+                      color: AppColors.getTextPrimary(isDark),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -275,8 +279,9 @@ class ProfileView extends StatelessWidget {
       title: Text(
         title,
         style: TextStyle(
-          fontWeight: FontWeight.w500,
-          color: AppColors.getTextPrimary(isDark), // ប្រើពណ៌ Primary ឱ្យច្បាស់
+          // ដំឡើង FontWeight ឱ្យដិតខ្លាំងដើម្បីឱ្យអក្សរខ្មែរភ្លឺច្បាស់
+          fontWeight: FontWeight.w600,
+          color: AppColors.getTextPrimary(isDark),
         ),
       ),
       trailing: Row(
@@ -286,15 +291,17 @@ class ProfileView extends StatelessWidget {
             Text(
               trailingText,
               style: TextStyle(
-                color: AppColors.getTextSecondary(
-                  isDark,
-                ), // ប្រើពណ៌ Secondary សម្រាប់អក្សរតូច
+                fontWeight: FontWeight.w700,
+                // ប្តូរមកប្រើ getTextPrimary វិញដើម្បីកុំឱ្យវាចេញពណ៌ប្រផេះ
+                color: AppColors.getTextPrimary(isDark),
               ),
             ),
+          const SizedBox(width: 4),
           customTrailing ??
               Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.getBorder(isDark).withOpacity(0.5),
+                // បង្កើន Opacity បន្តិចឱ្យមើលទៅឃើញច្បាស់
+                color: AppColors.getTextPrimary(isDark).withValues(alpha :0.4),
               ),
         ],
       ),

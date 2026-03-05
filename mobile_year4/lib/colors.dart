@@ -41,11 +41,9 @@ class AppColors {
 
   // Avoid pure white; use an off-white for better readability
   static Color getTextPrimary(bool isDark) =>
-      isDark ? const Color(0xFFE1E1E1) : const Color(0xFF2D3436);
-
+isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000); // ខ្មៅសុទ្ធ
   static Color getTextSecondary(bool isDark) =>
-      isDark ? Colors.white60 : Colors.grey.shade600;
-
+isDark ? Colors.white70 : Colors.black54; // ខ្មៅស្រាលតែច្បាស់ជាងមុន
   static Color getBorder(bool isDark) => isDark
       ? const Color(0xFF2C3E50).withValues(alpha: 0.3)
       : const Color(0xFFEEEEEE);

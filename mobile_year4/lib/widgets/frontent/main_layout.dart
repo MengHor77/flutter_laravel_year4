@@ -4,6 +4,7 @@ import 'package:mobile_year4/colors.dart';
 import 'package:mobile_year4/api_config.dart';
 import 'package:mobile_year4/models/book_model.dart';
 import 'package:mobile_year4/providers/book_provider.dart';
+import 'package:mobile_year4/providers/language_provider.dart';
 import 'package:mobile_year4/widgets/frontent/menu_sidebar.dart';
 import '../../screens/frontend/book_pdf_free/download_book.dart';
 import 'package:mobile_year4/providers/notification_provider.dart';
@@ -175,13 +176,31 @@ class _MainLayoutState extends State<MainLayout> {
     //  Detect Dark Mode status
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final bool showSearchIcon = [1, 3, 4, 5].contains(_selectedIndex);
+    final lang = context.watch<LanguageProvider>();
+    final List<String> localizedTitles = [
+      lang.translate('home'),
+      lang.translate('books'),
+      lang.translate('orders'),
+      lang.translate('best_seller'),
+      lang.translate('book_pdf_free'),
+      lang.translate('special_offers'),
+      lang.translate('profile'),
+      lang.translate('contact_us'),
+      lang.translate('about_us'),
+    ];
 
     return Scaffold(
       key: _scaffoldKey,
       //  Dynamic background for the overall screen
       backgroundColor: AppColors.getBackground(isDark),
       appBar: AppBar(
-        title: Text(_titles[_selectedIndex]),
+        title: Text(
+          _titles[_selectedIndex],
+          style: TextStyle(
+            fontWeight: FontWeight.bold, // ធ្វើឱ្យអក្សរដិតដើម្បីឱ្យ "ភ្លឺ"
+            fontSize: lang.isKhmer ? 20 : 18, // អក្សរខ្មែរគួរតែធំជាងបន្តិច
+          ),
+        ),
         // Keep accent color for consistency or dim it if you prefer
         backgroundColor: AppColors.accent,
         foregroundColor: Colors.white,
@@ -213,7 +232,7 @@ class _MainLayoutState extends State<MainLayout> {
         selectedItemColor: _getNavIndex(_selectedIndex) == -1
             ? AppColors.getTextPrimary(isDark)
             : AppColors.accent, // color BottomNavigationBar
-        unselectedItemColor: AppColors.getTextSecondary(isDark),
+        unselectedItemColor: AppColors.getTextPrimary(isDark),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Books'),
