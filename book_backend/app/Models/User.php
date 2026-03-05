@@ -22,9 +22,14 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-public function orders()
-{
-    return $this->hasMany(OrderList::class, 'user_id');
-}
+    public function orders()
+    {
+        return $this->hasMany(OrderList::class, 'user_id');
+    }
 
+    public function notifications()
+    {
+            return $this->hasMany(Notification::class);
+    }
+    
 }

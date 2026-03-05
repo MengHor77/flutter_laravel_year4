@@ -4,6 +4,8 @@ namespace App\Http\Controllers\backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\FreeBookPDF;
+use App\Models\User;         // បន្ថែមនេះ
+use App\Models\Notification; // បន្ថែមនេះ
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -71,6 +73,21 @@ class FreeBookPDFController extends Controller
         }
 
         $book = FreeBookPDF::create($data);
+
+        // --- បន្ថែមកូដថ្មី៖ បង្កើត Notification សម្រាប់គ្រប់ Users ទាំងអស់ ---
+        $users = User::all();
+        foreach ($users as $user) {
+            Notification::create([
+                'user_id' => $user->id,
+                'title' => '📚 New Free E-book!',
+                'message' => 'The book "' . $book->name . '" is now available for free download.',
+                'type' => 'free_pdf',
+                'target_id' => $book->id,
+                'is_read' => false, // កំណត់ថាជា Unread ដើម្បីឱ្យលោតលេខ Badge ក្នុង Flutter
+            ]);
+        }
+        // -----------------------------------------------------------
+
         return response()->json(['message' => 'Book created successfully', 'data' => $book], 201);
     }
 

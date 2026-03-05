@@ -5,8 +5,10 @@ import 'package:mobile_year4/providers/book_provider.dart';
 import 'package:mobile_year4/providers/sale_provider.dart';
 import 'package:mobile_year4/screens/auth/login_view.dart';
 import 'package:mobile_year4/providers/theme_provider.dart';
+import 'package:mobile_year4/providers/notification_provider.dart';
 import 'package:mobile_year4/providers/free_book_pdf_provider.dart';
 import 'package:mobile_year4/providers/special_offers_provider.dart';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +24,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => FreeBookPdfProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: const MyApp(),
     ),

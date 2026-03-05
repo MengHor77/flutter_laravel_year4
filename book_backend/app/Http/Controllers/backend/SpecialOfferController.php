@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\SpecialOffer;
 use App\Models\Book;
+use App\Models\User;         // បន្ថែមនេះ
+use App\Models\Notification; // បន្ថែមនេះ
 use Illuminate\Support\Facades\Validator;
 
 class SpecialOfferController extends Controller
@@ -34,6 +36,7 @@ class SpecialOfferController extends Controller
         $discountAmount = $book->price * ($request->discount_percentage / 100);
         $offerPrice = $book->price - $discountAmount;
 
+        // ១. បង្កើត Special Offer
         $offer = SpecialOffer::create([
             'book_id' => $request->book_id,
             'title' => $request->title,
@@ -42,9 +45,22 @@ class SpecialOfferController extends Controller
             'is_active' => true,
         ]);
 
+        // ២. បន្ថែមកូដថ្មី៖ បង្កើត Notification សម្រាប់គ្រប់ Users ទាំងអស់
+        // ចំណុចនេះនឹងធ្វើឱ្យ unreadCount ក្នុង Flutter កើនឡើង
+        $users = User::all();
+        foreach ($users as $user) {
+            Notification::create([
+                'user_id'   => $user->id,
+                'title'     => 'Promotion: ' . $request->discount_percentage . '% Off!',
+                'message'   => 'Get "' . ($book->name ?? 'this book') . '" now for only $' . number_format($offerPrice, 2),
+                'type'      => 'promotion',
+                'target_id' => $request->book_id,
+                'is_read'   => false, // ដាក់ false ដើម្បីឱ្យលោតលេខ Badge ពណ៌ក្រហម
+            ]);
+        }
+
         return response()->json($offer->load('book'), 201);
     }
-    
 
     public function update(Request $request, $id)
     {
@@ -78,7 +94,6 @@ class SpecialOfferController extends Controller
 
         return response()->json($offer->load('book'), 200);
     }
-
 
     public function destroy($id)
     {

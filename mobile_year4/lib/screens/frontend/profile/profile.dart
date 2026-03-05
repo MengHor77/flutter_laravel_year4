@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_year4/colors.dart';
 import '../../../providers/book_provider.dart';
-import '../../../providers/theme_provider.dart'; 
+import '../../../providers/theme_provider.dart';
+import '../../../providers/notification_provider.dart';
 import 'package:mobile_year4/screens/frontend/profile/edit_profile.dart';
+import 'package:mobile_year4/screens/frontend/profile/notification_view.dart';
+import 'package:mobile_year4/screens/frontend/profile/notification_view.dart';
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
@@ -14,6 +17,7 @@ class ProfileView extends StatelessWidget {
     // Watch theme changes
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
+    final notiProvider = context.watch<NotificationProvider>();
 
     return Scaffold(
       // Use adaptive background color
@@ -102,12 +106,35 @@ class ProfileView extends StatelessWidget {
                       }
                     },
                   ),
-                  _buildProfileItem(
-                    isDark: isDark,
-                    icon: Icons.notifications_none_rounded,
-                    title: "Notifications",
-                    onTap: () {},
-                  ),
+
+            _buildProfileItem(
+  isDark: isDark,
+  icon: Icons.notifications_none_rounded,
+  title: "Notifications",
+  customTrailing: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (notiProvider.unreadCount > 0) // បង្ហាញ Badge តែពេលមានសារមិនទាន់អាន
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.red,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            "${notiProvider.unreadCount}",
+            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+        ),
+      const SizedBox(width: 8),
+      Icon(
+        Icons.chevron_right_rounded,
+        color: AppColors.getBorder(isDark).withOpacity(0.5),
+      ),
+    ],
+  ),
+  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationView())),
+),
 
                   const SizedBox(height: 20),
                   Text(
@@ -127,7 +154,7 @@ class ProfileView extends StatelessWidget {
                     trailingText: "English",
                     onTap: () {},
                   ),
-                  
+
                   // --- Dark Mode Toggle Row ---
                   _buildProfileItem(
                     isDark: isDark,
@@ -188,8 +215,11 @@ class ProfileView extends StatelessWidget {
               trailingText,
               style: TextStyle(color: AppColors.getTextSecondary(isDark)),
             ),
-          customTrailing ?? 
-            Icon(Icons.chevron_right_rounded, color: AppColors.getBorder(isDark).withOpacity(0.5)),
+          customTrailing ??
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.getBorder(isDark).withOpacity(0.5),
+              ),
         ],
       ),
       onTap: onTap,

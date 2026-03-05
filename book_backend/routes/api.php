@@ -12,8 +12,7 @@ use App\Http\Controllers\backend\SaleController;
 use App\Http\Controllers\frontend\OrderController;
 use App\Http\Controllers\backend\FreeBookPDFController;
 use App\Http\Controllers\backend\ProfileController;
-
-// FIX: Import both controllers with different names
+use App\Http\Controllers\backend\NotificationController;
 use App\Http\Controllers\frontend\OrderListController as FrontendOrder;
 use App\Http\Controllers\backend\OrderListController as BackendOrder;
 
@@ -55,6 +54,10 @@ Route::get('/admin-orders', [BackendOrder::class, 'index']);
 // 2. FOR FRONTEND / MOBILE APP (Cart logic filtered by User ID)
 // Use Sanctum middleware to ensure request->user() is not null
 Route::middleware('auth:sanctum')->group(function () {
+    
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    
     
     Route::put('/users/{id}', [UserController::class, 'update']);
 

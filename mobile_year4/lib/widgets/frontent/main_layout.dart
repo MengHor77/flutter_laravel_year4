@@ -6,6 +6,7 @@ import 'package:mobile_year4/models/book_model.dart';
 import 'package:mobile_year4/providers/book_provider.dart';
 import 'package:mobile_year4/widgets/frontent/menu_sidebar.dart';
 import '../../screens/frontend/book_pdf_free/download_book.dart';
+import 'package:mobile_year4/providers/notification_provider.dart';
 import 'package:mobile_year4/screens/frontend/home/home_view.dart';
 import 'package:mobile_year4/screens/frontend/book/book_view.dart';
 import 'package:mobile_year4/providers/free_book_pdf_provider.dart';
@@ -70,6 +71,7 @@ class _MainLayoutState extends State<MainLayout> {
       context.read<BookProvider>().onOrderSuccess = (index) {
         setState(() => _selectedIndex = index);
       };
+      context.read<NotificationProvider>().fetchNotifications();
     });
   }
 
