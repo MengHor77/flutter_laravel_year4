@@ -210,7 +210,7 @@ class _MainLayoutState extends State<MainLayout> {
         //  Dynamic active/inactive colors
         selectedItemColor: _getNavIndex(_selectedIndex) == -1
             ? AppColors.getTextPrimary(isDark)
-            : AppColors.accent,
+            : AppColors.accent, // color BottomNavigationBar
         unselectedItemColor: AppColors.getTextSecondary(isDark),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),

@@ -181,12 +181,12 @@ class AppSidebar extends StatelessWidget {
     return ListTile(
       selected: isActive,
       // Soft highlight color for active item
-      selectedTileColor: activeColor.withValues(alpha:isDark ? 0.15 : 0.1),
+      selectedTileColor: activeColor.withValues(alpha:isDark ? 0.15 : 0.2),
       leading: Icon(icon, color: isActive ? activeColor : inactiveColor),
       title: Text(
         title,
         style: TextStyle(
-          color: isActive ? activeColor : inactiveColor,
+          color: isActive ? activeColor : inactiveColor,  
           fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
         ),
       ),
@@ -197,3 +197,18 @@ class AppSidebar extends StatelessWidget {
     );
   }
 }
+
+
+  /* 
+  condition ? value_if_true : value_if_false;
+
+  condition ជាលក្ខខណ្ឌដែលផ្ដល់លទ្ធផលជា true (ពិត) ឬ false (មិនពិត)។
+
+  ? ជាសញ្ញាសួរដើម្បីសួរថា តើលក្ខខណ្ឌខាងលើពិតមែនទេ?
+
+  value_if_true  ជាតម្លៃដែលនឹងត្រូវយកទៅប្រើ ប្រសិនបើលក្ខខណ្ឌពិត។
+
+  : សញ្ញាចុចពីរ តំណាងឱ្យពាក្យថា "ក្រៅពីនេះ" (Else)។
+
+  value_if_false  ជាតម្លៃដែលនឹងត្រូវយកទៅប្រើ ប្រសិនបើលក្ខខណ្ឌមិនពិត។
+  */
