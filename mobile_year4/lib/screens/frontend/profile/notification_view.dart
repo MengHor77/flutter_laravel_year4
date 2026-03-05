@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../providers/notification_provider.dart';
-// lib/screens/frontend/profile/notification_view.dart
+import 'package:mobile_year4/providers/book_provider.dart';
+import 'package:mobile_year4/providers/free_book_pdf_provider.dart';
 
 class NotificationView extends StatelessWidget {
   const NotificationView({super.key});
@@ -50,9 +51,38 @@ class NotificationView extends StatelessWidget {
                           backgroundColor: Colors.red,
                         )
                       : null,
-                  onTap: () {
+                  onTap: () async {
+                    debugPrint("Notification Type received: '${noti.type}'");
+
+                    // ១. កំណត់ថាអានរួច
                     notiProvider.markAsRead(noti.id);
-                    // បន្ថែម Logic បើកទៅកាន់សៀវភៅ ឬ Promotion នៅទីនេះ
+
+                    // ២. បង្កើត Variable ដើម្បីឆែកមើល Type (ការពារករណី null)
+                    final String notiType = noti.type ?? '';
+
+                    // ៣. ឆែកលក្ខខណ្ឌឱ្យត្រូវនឹងអ្វីដែល API ផ្ញើមក (free_pdf)
+                    if (notiType == 'promotion') {
+                      // ទៅកាន់ទំព័រ Special Offers
+                      context.read<BookProvider>().onOrderSuccess?.call(5);
+                    } else if (notiType == 'free_pdf' ||
+                        notiType == 'free_ebook' ||
+                        notiType == 'pdf') {
+                      // កន្លែងនេះសំខាន់៖ បន្ថែម notiType == 'free_pdf'
+
+                      // Fetch ទិន្នន័យ PDF ទុកមុន
+                      await context
+                          .read<FreeBookPdfProvider>()
+                          .fetchFreeBooks();
+
+                      // ទៅកាន់ទំព័រ Book PDF Free
+                      context.read<BookProvider>().onOrderSuccess?.call(4);
+                    } else {
+                      // ក្រៅពីនោះ ឱ្យទៅទំព័រ Books ធម្មតា
+                      context.read<BookProvider>().onOrderSuccess?.call(1);
+                    }
+
+                    // ៤. បិទផ្ទាំង Notification
+                    if (context.mounted) Navigator.pop(context);
                   },
                 );
               },
