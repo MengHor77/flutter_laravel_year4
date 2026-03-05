@@ -5,11 +5,11 @@ import 'package:mobile_year4/providers/book_provider.dart';
 import 'package:mobile_year4/providers/sale_provider.dart';
 import 'package:mobile_year4/screens/auth/login_view.dart';
 import 'package:mobile_year4/providers/theme_provider.dart';
+import 'package:mobile_year4/providers/language_provider.dart';
 import 'package:mobile_year4/providers/notification_provider.dart';
 import 'package:mobile_year4/providers/free_book_pdf_provider.dart';
 import 'package:mobile_year4/providers/special_offers_provider.dart';
-
-
+ 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -25,6 +25,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
       child: const MyApp(),
     ),
@@ -36,16 +37,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ហៅ Provider ទាំងពីរមកប្រើក្នុង build ដើម្បីឱ្យវា Rebuild ពេលមានការផ្លាស់ប្តូរ
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final langProvider = Provider.of<LanguageProvider>(context);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Book Store',
+      
+       locale: langProvider.currentLocale,  
+      
       themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+         fontFamily: langProvider.isKhmer ? 'Kantumruy' : 'Roboto', 
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
@@ -54,6 +61,7 @@ class MyApp extends StatelessWidget {
           seedColor: Colors.blue,
           brightness: Brightness.dark,
         ),
+        fontFamily: langProvider.isKhmer ? 'Kantumruy' : 'Roboto',
       ),
       builder: (context, child) {
         return MediaQuery(
